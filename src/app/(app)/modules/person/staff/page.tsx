@@ -1,0 +1,188 @@
+import Link from "next/link";
+import { Pencil } from "lucide-react";
+import { ListPagination } from "@/components/core/list-pagination";
+import { PersonCsvExportLink } from "@/components/person/person-csv-export-link";
+import { PersonDeactivateButton } from "@/components/person/person-deactivate-button";
+import { PersonListFilters } from "@/components/person/person-list-filters";
+import { buttonVariants } from "@/components/ui/button";
+import { buildPersonListUrl } from "@/lib/person/list-url";
+import {
+  canDeletePerson,
+  canWritePerson,
+} from "@/lib/person/permissions";
+import {
+  PERSON_PAGE_SIZE,
+  countPeople,
+  listPeoplePage,
+  listSchoolsForPersonFilter,
+  listWorkgroupsForPersonFilter,
+  parsePersonListParams,
+  resolvePersonListPage,
+} from "@/lib/person/queries";
+import { requirePersonScope } from "@/lib/person/scope";
+import { cn } from "@/lib/utils";
+
+type Props = {
+  searchParams: Promise<{
+    page?: string;
+    q?: string;
+    status?: string;
+    org?: string;
+    schoolId?: string;
+    workgroupId?: string;
+  }>;
+};
+
+export default async function PersonStaffPage({ searchParams }: Props) {
+  const { user, perms, scope } = await requirePersonScope();
+  const params = await searchParams;
+  const parsed = parsePersonListParams(params);
+  const page = await resolvePersonListPage(scope, parsed);
+
+  const [rows, total, schools, workgroups] = await Promise.all([
+    listPeoplePage({ ...parsed, page, scope }),
+    countPeople(
+      scope,
+      parsed.q,
+      parsed.status,
+      parsed.org,
+      parsed.schoolId,
+      parsed.workgroupId,
+    ),
+    scope.kind === "district" ? listSchoolsForPersonFilter() : Promise.resolve([]),
+    scope.kind === "district" ? listWorkgroupsForPersonFilter() : Promise.resolve([]),
+  ]);
+
+  const totalPages = Math.max(1, Math.ceil(total / PERSON_PAGE_SIZE));
+  const canWrite = canWritePerson(user, perms);
+  const canDelete = canDeletePerson(user, perms);
+
+  return (
+    <section className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-primary">รายชื่อบุคลากร</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {total.toLocaleString("th-TH")} คน
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <PersonCsvExportLink
+            q={parsed.q}
+            status={parsed.status}
+            org={parsed.org}
+            schoolId={parsed.schoolId}
+            workgroupId={parsed.workgroupId}
+          />
+          {canWrite ? (
+            <Link
+              href="/modules/person/staff/new"
+              className={cn(buttonVariants(), "inline-flex min-h-11")}
+            >
+              เพิ่มบุคลากร
+            </Link>
+          ) : null}
+        </div>
+      </div>
+
+      <PersonListFilters
+        q={parsed.q}
+        status={parsed.status}
+        org={parsed.org}
+        schoolId={parsed.schoolId}
+        workgroupId={parsed.workgroupId}
+        showDistrictFilters={scope.kind === "district"}
+        schools={schools}
+        workgroups={workgroups}
+      />
+
+      <div className="overflow-x-auto rounded-xl border bg-card shadow-sm">
+        <table className="w-full min-w-[880px] text-sm">
+          <thead>
+            <tr className="border-b bg-muted/50 text-left">
+              <th className="px-3 py-3 font-medium">เลขบัตร</th>
+              <th className="px-3 py-3 font-medium">ชื่อ-นามสกุล</th>
+              <th className="px-3 py-3 font-medium">ระดับ</th>
+              <th className="px-3 py-3 font-medium">หน่วยงาน</th>
+              <th className="px-3 py-3 font-medium">ตำแหน่ง</th>
+              <th className="px-3 py-3 text-center font-medium">สถานะ</th>
+              <th className="px-3 py-3 text-center font-medium">แก้ไข</th>
+              {canDelete ? (
+                <th className="px-3 py-3 text-center font-medium">ปิด</th>
+              ) : null}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={canDelete ? 8 : 7}
+                  className="px-3 py-8 text-center text-muted-foreground"
+                >
+                  ไม่พบข้อมูล
+                </td>
+              </tr>
+            ) : (
+              rows.map((row, i) => (
+                <tr
+                  key={row.id}
+                  className={i % 2 === 0 ? "bg-card" : "bg-muted/20"}
+                >
+                  <td className="px-3 py-2.5 font-mono text-xs">{row.personId}</td>
+                  <td className="px-3 py-2.5">{row.displayName}</td>
+                  <td className="px-3 py-2.5">
+                    {row.organizationType === "school" ? "โรงเรียน" : "เขต"}
+                  </td>
+                  <td className="px-3 py-2.5 text-muted-foreground">
+                    {row.schoolName ?? row.workgroupName ?? "—"}
+                  </td>
+                  <td className="px-3 py-2.5">{row.positionLabel}</td>
+                  <td className="px-3 py-2.5 text-center">
+                    <span
+                      className={cn(
+                        "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
+                        row.status === 0
+                          ? "bg-green-100 text-green-800 dark:bg-green-950/50 dark:text-green-200"
+                          : "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      {row.status === 0 ? "ใช้งาน" : "ปิด"}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2.5 text-center">
+                    {canWrite ? (
+                      <Link
+                        href={`/modules/person/staff/${row.id}/edit`}
+                        className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md hover:bg-muted"
+                        aria-label="แก้ไข"
+                      >
+                        <Pencil className="size-4" />
+                      </Link>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                  {canDelete ? (
+                    <td className="px-3 py-2.5 text-center">
+                      {row.status === 0 ? (
+                        <PersonDeactivateButton id={row.id} />
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                  ) : null}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <ListPagination
+        page={page}
+        totalPages={totalPages}
+        hrefForPage={(p) => buildPersonListUrl({ ...parsed, page: p })}
+      />
+    </section>
+  );
+}

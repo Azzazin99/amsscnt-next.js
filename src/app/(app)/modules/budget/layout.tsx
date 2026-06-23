@@ -1,0 +1,49 @@
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
+import { AppBreadcrumb } from "@/components/app-shell/app-breadcrumb";
+import { BudgetNav } from "@/components/budget/budget-nav";
+import {
+  canManageBudgetSettings,
+  canViewBudget,
+  canWriteBudgetDisburse,
+  canWriteBudgetReceive,
+  getBudgetPermissions,
+} from "@/lib/budget/permissions";
+
+export default async function BudgetLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const session = await auth();
+  if (!session?.user) redirect("/login");
+
+  const perms = await getBudgetPermissions(session.user.personId);
+  if (!canViewBudget(session.user, perms)) redirect("/home");
+
+  return (
+    <div className="px-4 py-6 lg:px-8">
+      <AppBreadcrumb
+        items={[
+          { label: "หน้าแรก", href: "/home" },
+          { label: "การเงินและบัญชี" },
+        ]}
+      />
+
+      <div className="mb-4">
+        <h1 className="text-xl font-semibold">การเงินและบัญชี</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          โมดูล budget — MVP: ปีงบประมาณ + ทะเบียนรับ/จ่ายงบประมาณ
+        </p>
+      </div>
+
+      <BudgetNav
+        canWriteReceive={canWriteBudgetReceive(session.user, perms)}
+        canWriteDisburse={canWriteBudgetDisburse(session.user, perms)}
+        showAdmin={canManageBudgetSettings(session.user, perms)}
+      />
+
+      {children}
+    </div>
+  );
+}

@@ -1,0 +1,56 @@
+import { redirect } from "next/navigation";
+import { ListPagination } from "@/components/core/list-pagination";
+import { LeaveRequestQueueTable } from "@/components/leave/leave-request-queue-table";
+import { canAccessGroupApprovalInbox } from "@/lib/leave/approval-nav";
+import { PAGE_SIZE } from "@/lib/leave/queries";
+import {
+  countGroupApproval,
+  listGroupApprovalPage,
+  resolveInboxPage,
+} from "@/lib/leave/inbox-queries";
+import { requireLeaveScope } from "@/lib/leave/scope";
+
+type Props = {
+  searchParams: Promise<{ page?: string }>;
+};
+
+export default async function LeaveGroupApprovalPage({ searchParams }: Props) {
+  const { user, scope } = await requireLeaveScope();
+  if (scope.kind !== "district") {
+    redirect("/modules/leave/requests");
+  }
+  if (!(await canAccessGroupApprovalInbox(user))) {
+    redirect("/modules/leave/requests");
+  }
+
+  const params = await searchParams;
+  const page = Math.max(1, Number(params.page) || 1);
+
+  const total = await countGroupApproval(user.personId);
+  const resolvedPage = await resolveInboxPage(total, page);
+  const rows = await listGroupApprovalPage({
+    viewerPersonId: user.personId,
+    page: resolvedPage,
+  });
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  return (
+    <section className="space-y-4">
+      <div>
+        <h2 className="text-lg font-semibold text-primary">ผอ.กลุ่ม</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          คำขอลารอความเห็นผู้อำนวยการกลุ่ม — {total.toLocaleString("th-TH")}{" "}
+          รายการ
+        </p>
+      </div>
+
+      <LeaveRequestQueueTable rows={rows} />
+
+      <ListPagination
+        page={resolvedPage}
+        totalPages={totalPages}
+        basePath="/modules/leave/approvals/group"
+      />
+    </section>
+  );
+}

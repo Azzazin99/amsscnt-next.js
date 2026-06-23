@@ -39,3 +39,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local file storage (PDFs)
+/storage/*
+!/storage/.gitkeep
+
+# IDE / agent (local only)
+.cursor/
+.claude/
+.agents/
+.gemini/
+.opencode/
+.impeccable/

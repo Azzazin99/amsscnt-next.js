@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AMSS/SMSS — Project Context (สพป.ชัยนาท)</title>
+  <style>
+    :root,
+    [data-theme="light"] {
+      /* โหมดราชการ — น้ำเงินเข้ม + พื้นขาว สไตล์หน่วยงานรัฐ */
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #cbd5e1;
+      --surface: #f1f5f9;
+      --page: #ffffff;
+      --accent: #1e3a8a;
+      --accent-gold: #996515;
+      --accent-soft: #dbeafe;
+      --code-bg: #eff6ff;
+      --pre-bg: #f8fafc;
+      --callout-bg: #eff6ff;
+      --callout-danger-bg: #fef2f2;
+      --badge-warn-bg: #fef3c7;
+      --badge-warn-text: #92400e;
+      --badge-ok-bg: #dcfce7;
+      --badge-ok-text: #166534;
+      --switcher-bg: #ffffff;
+      --switcher-border: #cbd5e1;
+      --switcher-shadow: 0 2px 8px rgba(30, 58, 138, 0.08);
+      --switcher-active: #1e3a8a;
+      --switcher-active-text: #ffffff;
+    }
+
+    [data-theme="dark"] {
+      /* โหมดมืด — นavy ราชการ ลดเมื่อยตา */
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --border: #334155;
+      --surface: #1e293b;
+      --page: #0f172a;
+      --accent: #93c5fd;
+      --accent-gold: #fbbf24;
+      --accent-soft: #1e3a5f;
+      --code-bg: #1e293b;
+      --pre-bg: #172033;
+      --callout-bg: #1e293b;
+      --callout-danger-bg: #3b1c1c;
+      --badge-warn-bg: #422006;
+      --badge-warn-text: #fcd34d;
+      --badge-ok-bg: #14532d;
+      --badge-ok-text: #86efac;
+      --switcher-bg: #1e293b;
+      --switcher-border: #334155;
+      --switcher-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+      --switcher-active: #3b82f6;
+      --switcher-active-text: #0f172a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: "Sarabun", "Segoe UI", sans-serif;
+      line-height: 1.65;
+      color: var(--text);
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 3rem;
+      background: var(--page);
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      border-bottom: 3px solid var(--accent);
+      padding-bottom: 0.5rem;
+      box-shadow: inset 0 -1px 0 var(--accent-gold);
+    }
+    h2 { font-size: 1.25rem; margin-top: 2rem; color: var(--accent); }
+    h3 { font-size: 1.05rem; margin-top: 1.25rem; }
+    p, li { font-size: 0.95rem; }
+    .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+
+    .theme-switcher {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 100;
+      display: inline-flex;
+      align-items: stretch;
+      gap: 0;
+      padding: 0.2rem;
+      background: var(--switcher-bg);
+      border: 1px solid var(--switcher-border);
+      border-radius: 999px;
+      box-shadow: var(--switcher-shadow);
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .theme-switcher button {
+      font-family: inherit;
+      font-size: 0.78rem;
+      padding: 0.35rem 0.65rem;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      color: var(--muted);
+      background: transparent;
+      transition: background 0.15s ease, color 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .theme-switcher button:hover { color: var(--accent); }
+    .theme-switcher button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .theme-switcher button[aria-pressed="true"] {
+      background: var(--switcher-active);
+      color: var(--switcher-active-text);
+      font-weight: 600;
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--accent-soft);
+      color: var(--accent);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .badge-warn { background: var(--badge-warn-bg); color: var(--badge-warn-text); }
+    .badge-ok { background: var(--badge-ok-bg); color: var(--badge-ok-text); }
+
+    .menu-tree { list-style: none; margin: 0.35rem 0; padding-left: 1.25rem; border-left: 2px solid var(--border); }
+    .menu-tree > li { margin: 0.2rem 0; }
+    .menu-tree .menu-task { font-size: 0.8em; color: var(--muted); margin-left: 0.35rem; }
+    .menu-tree-toc { font-size: 0.9rem; margin: 0.75rem 0 1rem; line-height: 1.8; }
+    .menu-tree-toc a { margin-right: 0.25rem; }
+    details.legacy-menu-group { margin: 0.75rem 0 1rem; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+    details.legacy-menu-group > summary { font-weight: 600; color: var(--accent); cursor: pointer; }
+    details.legacy-menu-module { margin: 0.5rem 0 0.5rem 0.5rem; }
+    details.legacy-menu-module > summary { font-weight: 500; cursor: pointer; }
+    details.legacy-menu-dir { margin: 0.35rem 0 0.35rem 1rem; }
+    details.legacy-menu-dir > summary { font-weight: 500; font-size: 0.92rem; cursor: pointer; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 0.75rem 0 1rem; }
+    th, td { border: 1px solid var(--border); padding: 0.45rem 0.6rem; text-align: left; vertical-align: top; }
+    th { background: var(--surface); font-weight: 600; }
+
+    code {
+      background: var(--code-bg);
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+      font-size: 0.85em;
+    }
+
+    pre {
+      background: var(--pre-bg);
+      border: 1px solid var(--border);
+      padding: 1rem;
+      overflow-x: auto;
+      font-size: 0.82rem;
+      border-radius: 6px;
+      color: var(--text);
+    }
+
+    .callout {
+      background: var(--callout-bg);
+      border-left: 4px solid var(--accent);
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .callout-danger { background: var(--callout-danger-bg); border-left-color: #dc2626; }
+
+    ul { padding-left: 1.25rem; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+    strong { color: var(--text); }
+
+    a { color: var(--accent); }
+    a:hover { text-decoration: underline; }
+
+    @media (max-width: 640px) {
+      body { padding: 1.25rem 1rem 2.5rem; padding-top: 3.5rem; }
+      h1 { font-size: 1.4rem; }
+      h2 { font-size: 1.1rem; }
+      .theme-switcher { top: 0.65rem; right: 0.65rem; flex-wrap: wrap; max-width: calc(100% - 1.3rem); border-radius: 12px; }
+      .theme-switcher button { font-size: 0.72rem; padding: 0.3rem 0.5rem; }
+      table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      pre { font-size: 0.75rem; padding: 0.75rem; }
+    }
+
+    .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.25rem; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+    .toc ol { margin: 0.5rem 0 0; padding-left: 1.25rem; columns: 2; column-gap: 2rem; }
+    @media (max-width: 640px) { .toc ol { columns: 1; } }
+    .toc a { text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+
+    .page-id { font-family: ui-monospace, monospace; font-size: 0.8em; white-space: nowrap; }
+    h2 { scroll-margin-top: 4rem; }
+  </style>
+  <script>
+    (function () {
+      var STORAGE_KEY = "amss-context-theme";
+      var THEMES = ["light", "dark"];
+      var LABELS = { light: "ราชการ", dark: "มืด" };
+
+      function applyTheme(theme) {
+        if (THEMES.indexOf(theme) === -1) theme = "light";
+        document.documentElement.setAttribute("data-theme", theme);
+        localStorage.setItem(STORAGE_KEY, theme);
+        document.querySelectorAll("[data-theme-pick]").forEach(function (btn) {
+          var active = btn.getAttribute("data-theme-pick") === theme;
+          btn.setAttribute("aria-pressed", active ? "true" : "false");
+        });
+      }
+
+      applyTheme(localStorage.getItem(STORAGE_KEY) || "light");
+
+      window.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll("[data-theme-pick]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            applyTheme(btn.getAttribute("data-theme-pick"));
+          });
+        });
+      });
+    })();
+  </script>
+</head>
+<body>
+
+<div class="theme-switcher" role="group" aria-label="เลือกโหมดสี">
+  <button type="button" data-theme-pick="light" aria-pressed="true" title="โหมดราชการ — น้ำเงินเข้ม">ราชการ</button>
+  <button type="button" data-theme-pick="dark" aria-pressed="false" title="โหมดมืด">มืด</button>
+</div>
+
+<h1>AMSS / SMSS — บริบทโปรเจกต์สำหรับ Cursor</h1>
+<p class="meta">
+  อัปเดต: มิ.ย. 2569 &nbsp;|&nbsp;
+  Repo: <code>amsscnt-next.js</code> &nbsp;|&nbsp;
+  สถานะโมดูล: <span class="badge badge-ok">platform done</span> · <span class="badge badge-ok">bookregister done</span> · <span class="badge badge-warn">18 โมดูล PDF implement — UAT</span> · <span class="badge badge-warn">+15 เมนู legacy ยังไม่ migrate</span> · <a href="#s2-1">เมนูครบ</a> · <a href="#s2-2">hierarchy</a> · <a href="docs/TESTING-MODULES.md">คู่มือทดสอบ</a>
+</p>
+
+<nav class="toc" aria-label="สารบัญ">
+  <strong>สารบัญ</strong>
+  <ol>
+    <li><a href="#s1">ภาพรวม</a></li>
+    <li><a href="#s2">Legacy / โมดูล</a> — <a href="#s2-1">เมนู amsscnt.com ครบ</a> · <a href="#s2-2">hierarchy smart_kpp2</a></li>
+    <li><a href="#s3">ผู้ใช้และสิทธิ์</a></li>
+    <li><a href="#s4">ทะเบียนหนังสือ</a> — <a href="#s4-1">ระเบียบ 2546 + checklist</a></li>
+    <li><a href="#s-leave-2555">ระบบการลา</a> — <a href="#s-leave-2555-1">ระเบียบ 2555 + checklist</a></li>
+    <li><a href="#s5">สถาปัตยกรรม Next.js</a></li>
+    <li><a href="#s6">เฟส A→H</a></li>
+    <li><a href="#s7">Deploy</a></li>
+    <li><a href="#s8">ความเสี่ยง</a></li>
+    <li><a href="#s9">Responsive</a> — <a href="#s9-pagination">Pagination</a></li>
+    <li><a href="#s10">ทดสอบทีละโมดูล</a></li>
+    <li><a href="#s10-1">Appendix P### (dev)</a></li>
+    <li><a href="#s11">Cursor AI</a></li>
+    <li><a href="#s12">Decisions lock</a></li>
+    <li><a href="#s13">Auth / Dev / Locale</a></li>
+    <li><a href="#s14">UI / Branding</a></li>
+    <li><a href="#s15">นอก scope v1</a></li>
+  </ol>
+</nav>
+
+<h2 id="s1">1. ภาพรวมโปรเจกต์</h2>
+<p>
+  พัฒนาระบบ <strong>AMSS++ / SMSS</strong> (Smart Management Support System สำหรับสำนักงานเขตพื้นที่การศึกษา)
+  ใหม่ทั้งหมดด้วย <strong>Next.js + PostgreSQL</strong>
+  สำหรับ <strong>สำนักงานเขตพื้นที่การศึกษาประถมศึกษาชัยนาท (สพป.ชัยนาท)</strong>
+  โดย deploy บน <strong>เซิร์ฟเวอร์ภายในเขต (on-prem)</strong> ไม่ใช้ Vercel/cloud เป็น production
+</p>
+<div class="callout">
+  <strong>เป้าหมาย production:</strong> โดเมน <code>amsscnt.com</code> (หรือ URL ภายในเขต) บน Linux + Nginx + Node.js + PostgreSQL
+</div>
+
+<h3>ไฟล์อ้างอิงหลักใน repo นี้</h3>
+<table>
+  <tr><th>ไฟล์</th><th>บทบาท</th><th>สถานะ</th></tr>
+  <tr>
+    <td><code>context.html</code></td>
+    <td>เอกสาร context นี้ — ใช้ @ mention ใน Cursor เมื่อ build with doc</td>
+    <td><span class="badge badge-ok">พร้อมใช้งาน</span></td>
+  </tr>
+  <tr>
+    <td>ระเบียบงานสารบรรณ ฉบับปรับปรุง พ.ศ. 2546</td>
+    <td>มาตรฐานราชการหลัก — <strong>lock แล้ว</strong> (§4.1, §12); ไม่มีไฟล์ใน repo — อ้างอิงข้อความระเบียบภายนอก</td>
+    <td><span class="badge badge-ok">lock</span></td>
+  </tr>
+  <tr>
+    <td><code>manual_smss_203_0.pdf</code></td>
+    <td>คู่มือ AMSS++ v3.1 (138 หน้า) — สเปกฟีเจอร์ 18 โมดูล (ไม่ใช่ข้อความระเบียบ)</td>
+    <td><span class="badge badge-ok">มีแล้ว</span></td>
+  </tr>
+  <tr>
+    <td><code>smart_area_postgres.sql</code></td>
+    <td>Database dump demo (~109,000 บรรทัด, ~200 ตาราง) จาก สพป.สงขลา 2 — ใช้ทดสอบ/UAT</td>
+    <td><span class="badge badge-ok">มีแล้ว</span></td>
+  </tr>
+  <tr>
+    <td><code>docs/project-context.md</code></td>
+    <td>Mirror เนื้อหานี้ในรูป markdown</td>
+    <td><span class="badge badge-ok">มีแล้ว</span></td>
+  </tr>
+</table>
+
+<h3>โปรเจกต์ที่เกี่ยวข้อง (อ้างอิง domain เท่านั้น — ห้าม copy โค้ด)</h3>
+<ul>
+  <li><code>../amsscnt-go</code> — Laravel 13 + Filament 4 + PostgreSQL</li>
+  <li><code>../amsscnt-nuxt</code> — Nuxt 4 + Cloudflare D1 (prototype โมดูลทะเบียนหนังสือ)</li>
+  <li><code>../Amssplus</code> — <strong>PHP legacy source บน amsscnt.com</strong> (อ่าน logic/flow — ห้าม copy โค้ด)</li>
+  <li><code>../smart_kpp2</code> — PHP legacy อีก fork (ไม่ใช่ production ชัยนาท)</li>
+  <li><code>../cntdev_vercel</code> — เว็บกลุ่มพัฒนาครู สพป.ชัยนาท (คนละระบบ ไม่ใช่ AMSS)</li>
+</ul>
+<div class="callout callout-danger">
+  <strong>ข้อกำหนดจากผู้พัฒนา:</strong> เริ่ม Next.js ใหม่ทั้งหมด ไม่ merge โค้ดจาก Laravel/Nuxt/PHP legacy
+  ใช้โปรเจกต์อื่นเป็น reference ด้าน domain และ UX เท่านั้น
+</div>
+
+<hr>
+
+<h2 id="s2">2. ระบบเดิม (Legacy AMSS++)</h2>
+<p>
+  ระบบเดิมเป็น monolithic PHP + MySQL ชื่อ schema <code>smart_area</code>
+  ใช้งานจริงในหลายเขต (demo dump มาจาก GDCC สพป.สงขลา 2)
+  มีผู้ใช้ทั้งระดับ <strong>เขต (district)</strong> และ <strong>โรงเรียน (school)</strong>
+</p>
+
+<h3>กลุ่มเมนูหลัก (จาก <code>system_menugroup</code>)</h3>
+<table>
+  <tr><th>ID</th><th>ชื่อกลุ่ม</th><th>ลำดับ</th></tr>
+  <tr><td>1</td><td>บริหารงานทั่วไป</td><td>2</td></tr>
+  <tr><td>2</td><td>บริหารงบประมาณ</td><td>4</td></tr>
+  <tr><td>3</td><td>บริหารงานบุคคล</td><td>6</td></tr>
+  <tr><td>4</td><td>บริหารงานวิชาการ</td><td>10</td></tr>
+  <tr><td>5</td><td>แจ้งเตือน</td><td>12</td></tr>
+</table>
+
+<h3>โมดูลทั้ง 18 ตามคู่มือ AMSS++ v3.1 (<code>system_module</code>)</h3>
+<p><em>18 โมดูลนี้คือขอบเขต v1 ที่ commit implement — ไม่ใช่เมนูทั้งหมดบน amsscnt.com</em></p>
+<table>
+  <tr><th>#</th><th>Module key</th><th>ชื่อไทย</th><th>กลุ่ม</th><th>ตาราง SQL หลัก</th></tr>
+  <tr><td>1</td><td>—</td><td>Platform: Auth, org, เมนู</td><td>—</td><td><code>system_user</code>, <code>system_khet</code>, <code>system_school</code>, <code>system_workgroup</code></td></tr>
+  <tr><td>2</td><td>core</td><td>จัดการระบบ</td><td>—</td><td><code>system_module</code>, <code>system_module_admin</code>, <code>system_menugroup</code></td></tr>
+  <tr><td>3</td><td>person</td><td>ระบบบริหารงานบุคคล</td><td>3</td><td><code>person_main</code>, <code>person_position</code>, <code>person_permission</code></td></tr>
+  <tr><td>4</td><td>plan</td><td>การวางแผน</td><td>2</td><td><code>plan_proj</code>, <code>plan_acti</code>, <code>plan_year</code></td></tr>
+  <tr><td>5</td><td>budget</td><td>การเงินและบัญชี</td><td>2</td><td><code>budget_*</code> (~37 ตาราง)</td></tr>
+  <tr><td>6</td><td>mail</td><td>ระบบส่งหนังสือเวียน</td><td>1</td><td><code>mail_main</code>, <code>mail_group</code>, <code>mail_permission</code></td></tr>
+  <tr><td>7</td><td>meeting</td><td>ระบบจองห้องประชุม</td><td>1</td><td><code>meeting_main</code>, <code>meeting_room</code></td></tr>
+  <tr><td>8</td><td>affair</td><td>ภารกิจผู้อำนวยการ</td><td>1</td><td><code>affair_main</code>, <code>affair_permission</code></td></tr>
+  <tr><td>9</td><td>leave</td><td>ระบบการลา</td><td>1</td><td><code>la_main</code>, <code>la_year</code>, <code>la_permission</code></td></tr>
+  <tr><td>10</td><td>permission</td><td>ขออนุมัติไปราชการ</td><td>1</td><td><code>permission_main</code>, <code>permission_year</code></td></tr>
+  <tr><td>11</td><td>car</td><td>ยานพาหนะ</td><td>1</td><td><code>car_main</code>, <code>car_car</code>, <code>car_driver</code></td></tr>
+  <tr><td>12</td><td>cabinet</td><td>ตู้เอกสาร / วาระประชุม QR-CODE</td><td>1</td><td><code>cabinet_main</code>, <code>cabinet_file</code></td></tr>
+  <tr><td>13</td><td>news</td><td>ข่าว</td><td>1</td><td><code>news_news</code>, <code>news_section</code></td></tr>
+  <tr><td>14</td><td>achievement</td><td>ผลสัมฤทธิ์ทางการเรียน</td><td>4</td><td><code>achievement_main</code></td></tr>
+  <tr><td>15</td><td>student_main</td><td>ข้อมูลนักเรียน</td><td>4</td><td><code>student_main_main</code></td></tr>
+  <tr><td>16</td><td>book</td><td>รับส่งหนังสือราชการ</td><td>1</td><td><code>book_main</code>, <code>book_group</code>, <code>book_filebook</code></td></tr>
+  <tr><td>17</td><td>bookregister</td><td>ทะเบียนหนังสือราชการ</td><td>1</td><td><code>bookregister_receive/send/command/certificate</code></td></tr>
+  <tr><td>18</td><td>spacial_student</td><td>นักเรียนพิเศษ</td><td>4</td><td><code>spacial_student_*</code></td></tr>
+</table>
+
+<h3 id="s2-1">เมนูทั้งหมดใน legacy DB (<code>system_module</code> → amsscnt.com)</h3>
+<p>
+  บน production มี<strong>มากกว่า 18 โมดูล</strong> — แต่ละเขตเปิด/ปิดด้วย <code>module_active</code>
+  ชื่อเมนูจริงมาจาก <code>module_desc</code> (ไม่ใช่ชื่อย่อในแผน dev)
+  ตารางด้านล่างจาก dump อ้างอิง (<code>smart_area_postgres.sql</code>); สพป.ชัยนาท UAT ต้องเทียบเมนูจริงบน
+  <a href="https://amsscnt.com">amsscnt.com</a> อีกครั้ง
+  · เมนูย่อยในโมดูล (hierarchy L0–L4) — ดู <a href="#s2-2">§2.2</a> (สร้างจาก <code>../smart_kpp2</code>)
+</p>
+<p><strong>ชื่อเมนู <code>mail</code> — สองแหล่ง:</strong></p>
+<ul>
+  <li><strong>คู่มือ PDF v3.1 + dump dev</strong> (<code>smart_area_postgres.sql</code> สงขลา): <code>module_desc</code> = «ระบบส่งหนังสือเวียน»</li>
+  <li><strong>amsscnt.com สพป.ชัยนาท (UAT baseline):</strong> «<strong>ไปรษณีย์</strong>» — ใช้ชื่อนี้เทียบ regression</li>
+</ul>
+<p>slug โค้ดยังคือ <code>mail</code> · ตาราง legacy <code>mail_*</code> · คนละโมดูลกับ <code>book</code> (รับส่งหนังสือราชการ)</p>
+
+<h4>กลุ่ม 1 — บริหารงานทั่วไป</h4>
+<table>
+  <tr><th>slug</th><th>ชื่อเมนู (module_desc)</th><th>active*</th><th>v1 Next.js</th><th>หมายเหตุ</th></tr>
+  <tr><td><code>la</code> → <code>leave</code></td><td>ระบบการลา</td><td>1</td><td><span class="badge badge-warn">implement — UAT</span></td><td>legacy DB slug <code>la</code> · โฟลเดอร์ PHP / Next.js = <code>leave</code></td></tr>
+  <tr><td><code>permission</code></td><td>ขออนุมัติไปราชการ</td><td>1</td><td><span class="badge badge-warn">implement — UAT</span></td><td>PDF</td></tr>
+  <tr><td><code>idocument</code></td><td>ระบบบันทึกข้อความ</td><td>1</td><td><span class="badge badge-warn">นอก v1</span></td><td>ใช้บ่อยในเขต — ยังไม่ migrate</td></tr>
+  <tr><td><code>car</code></td><td>ยานพาหนะ</td><td>1</td><td><span class="badge badge-warn">implement — UAT</span></td><td>PDF</td></tr>
+  <tr><td><code>security_duty</code></td><td>เวรรักษาการณ์</td><td>0</td><td><span class="badge badge-warn">นอก v1</span></td><td>บางเขตเปิดใช้</td></tr>
+  <tr><td><code>affair</code></td><td>ภารกิจผู้อำนวยการ</td><td>1</td><td><span class="badge badge-warn">implement — UAT</span></td><td>PDF</td></tr>
+  <tr><td><code>bookpv</code></td><td>รับส่งหนังสือราชการศธจ.</td><td>0</td><td><span class="badge badge-warn">นอก v1</span></td><td>เชื่อม ศธจ.</td></tr>
+  <tr><td><code>delegate</code></td><td>การรักษาราชการแทน</td><td>1</td><td><span class="badge badge-warn">นอก v1</span></td><td>ใช้บ่อย — ยังไม่ migrate</td></tr>
+  <tr><td><code>bookobec</code></td><td>รับส่งหนังสือราชการสพฐ</td><td>1</td><td><span class="badge badge-warn">นอก v1</span></td><td>เชื่อม สพฐ. — ใช้บ่อย</td></tr>
+  <tr><td><code>bookregister</code></td><td>ทะเบียนหนังสือราชการ</td><td>1</td><td><span class="badge badge-ok">done</span></td><td>PDF</td></tr>
+  <tr><td><code>book</code></td><td>รับส่งหนังสือราชการ</td><td>1</td><td><span class="badge badge-warn">Phase 2 UAT</span></td><td>PDF · คนละโมดูลกับ <code>mail</code></td></tr>
+  <tr><td><code>mail</code></td><td>ไปรษณีย์ <em>(amsscnt.com)</em> · dump สงขลา: ระบบส่งหนังสือเวียน</td><td>1</td><td><span class="badge badge-ok">done</span></td><td>PDF P100 · slug <code>mail</code></td></tr>
+  <tr><td><code>meeting</code></td><td>ระบบจองห้องประชุม</td><td>1</td><td><span class="badge badge-warn">implement — UAT</span></td><td>PDF</td></tr>
+  <tr><td><code>work</code></td><td>ลงเวลาการปฏิบัติราชการ</td><td>0</td><td><span class="badge badge-warn">นอก v1</span></td><td>ต่างจาก <code>time</code></td></tr>
+  <tr><td><code>cabinet</code></td><td>ระบบวาระประชุมแผ่นเดียว QR-CODE</td><td>0†</td><td><span class="badge badge-warn">implement — UAT</span></td><td>PDF · †dump ปิด แต่คู่มือมี</td></tr>
+  <tr><td><code>time</code></td><td>ระบบลงเวลา</td><td>0</td><td><span class="badge badge-warn">นอก v1</span></td><td>—</td></tr>
+</table>
+
+<h4>กลุ่ม 2 — บริหารงบประมาณ</h4>
+<table>
+  <tr><th>slug</th><th>ชื่อเมนู</th><th>active*</th><th>v1 Next.js</th></tr>
+  <tr><td><code>asset</code></td><td>ระบบบริหารพัสดุ</td><td>1</td><td><span class="badge badge-warn">นอก v1</span></td></tr>
+  <tr><td><code>plan</code></td><td>การวางแผน</td><td>1</td><td><span class="badge badge-warn">implement — UAT</span></td></tr>
+  <tr><td><code>budget</code></td><td>การเงินและบัญชี</td><td>1</td><td><span class="badge badge-warn">implement — UAT (MVP)</span></td></tr>
+</table>
+
+<h4>กลุ่ม 3 — บริหารงานบุคคล</h4>
+<table>
+  <tr><th>slug</th><th>ชื่อเมนู</th><th>active*</th><th>v1 Next.js</th></tr>
+  <tr><td><code>award</code></td><td>ระบบรายงานการได้รับรางวัลประเภทต่างๆ</td><td>1</td><td><span class="badge badge-warn">นอก v1</span></td></tr>
+  <tr><td><code>homework</code></td><td>ขออนุญาตปฏิบัติราชการที่บ้าน</td><td>0</td><td><span class="badge badge-warn">นอก v1</span></td></tr>
+  <tr><td><code>person</code></td><td>ระบบบริหารงานบุคลากร</td><td>1</td><td><span class="badge badge-warn">implement — UAT</span></td></tr>
+</table>
+
+<h4>กลุ่ม 4 — บริหารงานวิชาการ</h4>
+<table>
+  <tr><th>slug</th><th>ชื่อเมนู</th><th>active*</th><th>v1 Next.js</th></tr>
+  <tr><td><code>warroom</code></td><td>วิเคราะห์สภาพการณ์</td><td>1</td><td><span class="badge badge-warn">นอก v1</span></td></tr>
+  <tr><td><code>opportunity</code></td><td>สิทธิและโอกาสทางการศึกษา</td><td>1</td><td><span class="badge badge-warn">นอก v1</span></td></tr>
+  <tr><td><code>supervision</code></td><td>นิเทศ ติดตาม และประเมินผล</td><td>1</td><td><span class="badge badge-warn">นอก v1</span></td></tr>
+  <tr><td><code>student_main</code></td><td>ข้อมูลนักเรียน</td><td>1</td><td><span class="badge badge-warn">implement — UAT</span></td></tr>
+  <tr><td><code>achievement</code></td><td>ผลสัมฤทธิ์ทางการเรียน</td><td>1</td><td><span class="badge badge-warn">implement — UAT</span></td></tr>
+  <tr><td><code>bets</code></td><td>ระบบทดสอบการศึกษา</td><td>1</td><td><span class="badge badge-warn">นอก v1</span></td></tr>
+  <tr><td><code>spacial_student</code></td><td>นักเรียนพิเศษ</td><td>1</td><td><span class="badge badge-warn">implement — UAT</span></td></tr>
+  <tr><td><code>news</code></td><td>ข่าว</td><td>—</td><td><span class="badge badge-warn">implement — UAT</span></td></tr>
+</table>
+<p><em><code>news</code> อยู่ในคู่มือ 18 โมดูล แต่ไม่ปรากฏใน dump สงขลา — ชัยนาทอาจมีใน dump จริง</em></p>
+
+<h4>กลุ่ม 5 — แจ้งเตือน</h4>
+<table>
+  <tr><th>slug</th><th>ชื่อเมนู</th><th>active*</th><th>v1 Next.js</th></tr>
+  <tr><td><code>alert</code></td><td>แจ้งเตือน (LINE notify ฯลฯ)</td><td>1</td><td><span class="badge badge-warn">นอก v1</span></td></tr>
+</table>
+
+<p class="meta">* <code>module_active</code> จาก dump อ้างอิง — ชัยนาท production อาจต่าง · จัดการระบบ (<code>core</code>) ไม่มีแถวใน <code>system_module</code> — อยู่เมนู admin แยก</p>
+
+<h4>สรุปขอบเขต v1 vs เมนูที่ยังไม่ migrate</h4>
+<table>
+  <tr><th>กลุ่ม</th><th>ใน v1 (18 โมดูล PDF)</th><th>นอก v1 — มักใช้บ่อย / ต้องวางแผนต่อ</th></tr>
+  <tr><td>สารบรรณ/ธุรการ</td><td>leave, permission, car, mail, meeting, affair, cabinet, book, bookregister, news</td><td><code>idocument</code>, <code>delegate</code>, <code>bookobec</code>, <code>bookpv</code>, <code>work</code>, <code>time</code></td></tr>
+  <tr><td>งบ/พัสดุ</td><td>plan, budget (MVP)</td><td><code>asset</code></td></tr>
+  <tr><td>บุคคล</td><td>person</td><td><code>award</code>, <code>homework</code></td></tr>
+  <tr><td>วิชาการ</td><td>achievement, student_main, spacial_student</td><td><code>supervision</code>, <code>opportunity</code>, <code>warroom</code>, <code>bets</code></td></tr>
+  <tr><td>แจ้งเตือน</td><td>—</td><td><code>alert</code></td></tr>
+</table>
+
+<h3>โมดูลใน DB เดิมที่อยู่นอกคู่มือ v3.1 (planned ภายหลัง)</h3>
+<p>รายการครบพร้อมชื่อเมนูไทย — ดู <a href="#s2-1">§2.1</a> · เมนูย่อยแบบไล่ตาม hierarchy — <a href="#s2-2">§2.2</a> · <a href="#s15">§15</a></p>
+
+<h3 id="s2-2">โครงสร้างเมนู Legacy — hierarchy (<code>smart_kpp2</code>)</h3>
+<p>
+  แผนที่ไล่เมนูจาก PHP legacy ใน <code>../smart_kpp2</code>
+  (<code>smart_area.sql</code> + <code>modules/*/menu.php</code> + root <code>menu.php</code>)
+  — ไม่ใช่ production สพป.ชัยนาท 100% แต่ใช้เทียบ flow / task ได้
+</p>
+<table>
+  <tr><th>ระดับ</th><th>แหล่ง</th><th>ตัวอย่าง</th></tr>
+  <tr><td><strong>L0</strong></td><td>root <code>menu.php</code></td><td>ผู้ใช้ (User) → เปลี่ยนรหัสผ่าน / ลงทะเบียน</td></tr>
+  <tr><td><strong>L1</strong></td><td><code>system_menugroup</code></td><td>บริหารงานทั่วไป</td></tr>
+  <tr><td><strong>L2</strong></td><td><code>system_module</code></td><td><code>la</code> ระบบการลา <span class="badge badge-ok">active</span></td></tr>
+  <tr><td><strong>L3</strong></td><td><code>class='dir'</code> ใน <code>menu.php</code></td><td>ขออนุญาตลา · ตั้งค่าระบบ · รายงาน</td></tr>
+  <tr><td><strong>L4</strong></td><td><code>&lt;li&gt;&lt;a&gt;</code> ภายใต้ dir</td><td>บันทึกขออนุญาตลา → <code>task=main/leave_main</code></td></tr>
+</table>
+<p class="meta">
+  กรองเมนูตาม <code>login_status</code> + <code>where_work</code> บนเว็บจริง —
+  อ้างอิง <code>menu.php</code> (root) และ <code>src/lib/modules/menu-access.ts</code> (Next.js)
+</p>
+<p><strong>slug / โฟลเดอร์ที่ต่างกัน:</strong></p>
+<ul>
+  <li><code>la</code> ใน DB → โฟลเดอร์ PHP <code>modules/leave/</code> → Next.js slug <code>leave</code></li>
+</ul>
+<p class="meta">อัปเดตต้นไม้ด้านล่าง: <code>npm run legacy:extract-menu</code></p>
+
+<!-- LEGACY-MENU-STRUCTURE:START -->
+<p class="meta">สร้างอัตโนมัติจาก <code>npm run legacy:extract-menu</code> · 2026-06-15</p>
+<nav class="menu-tree-toc" aria-label="สารบัญเมนู legacy"><a href="#legacy-menu-user">ผู้ใช้ (User)</a> · <a href="#legacy-menu-g1">บริหารงานทั่วไป</a> · <a href="#legacy-menu-g2">บริหารงบประมาณ</a> · <a href="#legacy-menu-g3">บริหารงานบุคคล</a> · <a href="#legacy-menu-g4">บริหารงานวิชาการ</a> · <a href="#legacy-menu-g5">แจ้งเตือน</a> · <a href="#legacy-menu-orphans">โฟลเดอร์นอก DB</a></nav>
+<details class="legacy-menu-group" id="legacy-menu-user" open>
+  <summary>L0 — ผู้ใช้ (User)</summary>
+  <ul class="menu-tree"><li>เปลี่ยนรหัสผ่าน <code class="menu-task">file=user_change_pwd</code></li><li>ลงทะเบียนผู้ใช้ <code class="menu-task">file=register</code></li><li>เปลี่ยน Token Line ใหม่ <code class="menu-task">file=user_change_token</code></li></ul>
+</details>
+<details class="legacy-menu-group" id="legacy-menu-g1" open>
+  <summary>L1 — บริหารงานทั่วไป</summary>
+  <details class="legacy-menu-module" id="legacy-menu-la">
+  <summary><code>la</code> — ระบบการลา <span class="badge badge-ok">active</span> <span class="meta">(โฟลเดอร์: <code>leave/</code>)</span></summary>
+  <ul class="menu-tree"><li>รายการหลัก</li></ul>
+<details class="legacy-menu-dir"><summary>ตั้งค่าระบบ</summary><ul class="menu-tree"><li>กำหนดปีงบประมาณ <code class="menu-task">task=budget_year</code></li><li>กำหนดเจ้าหน้าที่ <code class="menu-task">task=permission</code></li><li>กำหนดผู้อนุมัติ(ในสพท) <code class="menu-task">task=set_grant_person</code></li><li>กำหนดผู้อนุมัติผอ.โรงเรียน <code class="menu-task">task=permission2</code></li><li>วันลาสะสม <code class="menu-task">task=main/collection</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ขออนุญาตลา</summary><ul class="menu-tree"><li>บันทึกขออนุญาตลา <code class="menu-task">task=main/leave_main</code></li><li>รับมอบงาน <code class="menu-task">task=main/job_person</code></li><li>เจ้าหน้าที่การลา <code class="menu-task">task=main/leave_officer_comment</code></li><li>ผู้บังคับบัญชาขั้นต้น (ผอ.กลุ่ม) <code class="menu-task">task=main/basic_comment</code></li><li>ผู้บังคับบัญชาขั้นต้น (รอง ผอ.สพท.) <code class="menu-task">task=main/basic_comment2</code></li><li>ผู้บังคับบัญชา (ผู้อนุมัติ) <code class="menu-task">task=main/grant</code></li><li>ผู้ปฏิบัติราชการแทนอนุมัติในส่วนโรงเรียน <code class="menu-task">task=main/grant2</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ขออนุญาตลา</summary><ul class="menu-tree"><li>บันทึกขออนุญาตลา <code class="menu-task">task=main/leave_main</code></li><li>ขอยกเลิกวันลา <code class="menu-task">task=main/leave_cancel</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ขอยกเลิกวันลา</summary><ul class="menu-tree"><li>ขอยกเลิกวันลา <code class="menu-task">task=main/leave_cancel</code></li><li>เจ้าหน้าที่การลา <code class="menu-task">task=main/cancel_leave_officer_comment</code></li><li>ผู้บังคับบัญชาขั้นต้น <code class="menu-task">task=main/cancel_basic_comment</code></li><li>ผู้บังคับบัญชา (ผู้อนุมัติ) <code class="menu-task">task=main/cancel_grant</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>รายงาน</summary><ul class="menu-tree"><li>ขออนุญาตลาวันนี้ <code class="menu-task">task=main/report_1</code></li><li>ขออนุญาตลาทั้งหมด <code class="menu-task">task=main/report_2</code></li><li>ขอยกเลิกวันลาทั้งหมด <code class="menu-task">task=main/report_3</code></li><li>สถิติการลาป่วย กิจ คลอด <code class="menu-task">task=main/report_4</code></li><li>สถิติการลาพักผ่่อน <code class="menu-task">task=main/report_5</code></li><li>สถิติการลาผอ.โรงเรียน <code class="menu-task">task=main/report_4_sch</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>รายงาน</summary><ul class="menu-tree"><li>สถิติการลาป่วย กิจ คลอด <code class="menu-task">task=main/report_4_sch2</code></li><li>ขอยกเลิกวันลา <code class="menu-task">task=main/report_3_sch</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>คู่มือ</summary><ul class="menu-tree"><li>คู่มือการลา <code class="menu-task">modules/leave/manual/la.pdf</code></li></ul></details>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-permission">
+  <summary><code>permission</code> — ขออนุมัติไปราชการ <span class="badge badge-ok">active</span></summary>
+  <ul class="menu-tree"><li>รายการหลัก</li></ul>
+<details class="legacy-menu-dir"><summary>ตั้งค่าระบบ</summary><ul class="menu-tree"><li>กำหนดเจ้าหน้าที่ <code class="menu-task">task=permission</code></li><li>กำหนดปีปฏิทิน สพท. <code class="menu-task">task=year</code></li><li>กำหนดปีปฏิทิน รร. <code class="menu-task">task=year_sch</code></li><li>อัพโหลดลายเซ็นต์ ผู้อนุมัติ <code class="menu-task">task=main/sign</code></li><li>กำหนดผู้อนุมัติ <code class="menu-task">task=set_grant_person</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ตั้งค่าระบบ</summary><ul class="menu-tree"><li>กำหนดปีปฏิทิน รร. <code class="menu-task">task=year_sch</code></li><li>อัพโหลดลายเซ็นต์ ผู้อนุมัติ <code class="menu-task">task=main/sign_sch</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ทะเบียนไปราชการ(ส่วนบุคคล)</summary><ul class="menu-tree"><li>บันทึกขออนุมัติไปราชการ <code class="menu-task">task=main/permission_main</code></li><li>ผู้บังคับบัญชาขั้นต้น <code class="menu-task">task=main/basic_comment</code></li><li>เสนอผู้บังคับบัญชาอนุมัติ (คำขอโรงเรียน) <code class="menu-task">task=main/basic_comment_sch</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ทะเบียนไปราชการ(ส่วนบุคคล)</summary><ul class="menu-tree"><li>ขอไปราชการ(ผอ.รร./รก.) <code class="menu-task">task=main/permission_main</code></li><li>ขอไปราชการ(ในจังหวัด) <code class="menu-task">task=main/permission_main_sch</code></li><li>ผู้บังคับบัญชาอนุมัติ <code class="menu-task">task=main/grant_permission_sch</code></li><li>ขออนุมัติไปราชการ <code class="menu-task">task=main/permission_main_sch</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ทะเบียนไปราชการ(โรงเรียน)</summary><ul class="menu-tree"><li>รออนุมัติ <code class="menu-task">task=main/report_2_sch_wait</code></li><li>อนุมัติแล้ว <code class="menu-task">task=main/report_2_sch_ok</code></li><li>ไม่อนุมัติ <code class="menu-task">task=main/report_2_sch_no</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>อนุมัติ บุคลากรเขต</summary><ul class="menu-tree"><li>ความเห็น รอง ผอ.สพท. <code class="menu-task">task=main/basic_comment2</code></li><li>รออนุมัติ <code class="menu-task">task=main/grant</code></li><li>อนุมัติแล้ว <code class="menu-task">task=main/grant_ok</code></li><li>ไม่อนุมัติ <code class="menu-task">task=main/grant_no</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>อนุมัติ โรงเรียน (ผอ.รร.)</summary><ul class="menu-tree"><li>รออนุมัติ <code class="menu-task">task=main/grant_sch</code></li><li>อนุมัติแล้ว <code class="menu-task">task=main/grant_ok_sch</code></li><li>ไม่อนุมัติ <code class="menu-task">task=main/grant_no_sch</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>รายงาน</summary><ul class="menu-tree"><li>ขออนุมัติฯวันนี้ <code class="menu-task">task=main/report_1</code></li><li>ขออนุมัติทั้งหมด <code class="menu-task">task=main/report_2</code></li><li>พิมพ์ขออนุมัติ(ส่วนบุคคล) <code class="menu-task">task=main/print_report</code></li><li>พิมพ์ขออนุมัติ(เขตพื้นที่) <code class="menu-task">task=main/print_report_area</code></li><li>พิมพ์ขออนุมัติ(โรงเรียน) <code class="menu-task">task=main/print_report_school</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ทะเบียนไปราชการ(สำหรับเจ้าหน้าที่)</summary><ul class="menu-tree"><li>ทะเบียนขออนุมัติ(เขตพื้นที่) <code class="menu-task">task=main/print_report_area</code></li><li>ทะเบียนขออนุมัติ(โรงเรียน) <code class="menu-task">task=main/print_report_school_all</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>คู่มือ</summary><ul class="menu-tree"><li>คู่มือการขออนุมัติไปราชการ <code class="menu-task">modules/permission/manual/permission.pdf</code></li></ul></details>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-idocument">
+  <summary><code>idocument</code> — ระบบบันทึกข้อความ <span class="badge badge-ok">active</span></summary>
+  <p class="meta"><em>(menu.php ว่าง)</em></p>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-car">
+  <summary><code>car</code> — ยานพาหนะ <span class="badge badge-ok">active</span></summary>
+  <ul class="menu-tree"><li>รายการหลัก</li></ul>
+<details class="legacy-menu-dir"><summary>ตั้งค่าระบบ</summary><ul class="menu-tree"><li>กำหนดเจ้าหน้าที่ <code class="menu-task">task=main/permission</code></li><li>กำหนดประเภท <code class="menu-task">task=main/car_type</code></li><li>กำหนดยานพาหนะ <code class="menu-task">task=main/car_list</code></li><li>กำหนดพนักงานขับรถ <code class="menu-task">task=main/set_driver</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ขอใช้ยานพาหนะ</summary><ul class="menu-tree"><li>ขอใช้รถราชการ <code class="menu-task">task=main/car_request</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>เจ้าหน้าที่</summary><ul class="menu-tree"><li>แก้ไขการขอใช้รถราชการ <code class="menu-task">task=main/car_request</code></li><li>เจ้าหน้าที่ลงความเห็น <code class="menu-task">task=main/car_officer</code></li><li>ใบเบิกน้ำมัน <code class="menu-task">task=main/oil_withdraw</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ลงความเห็น/อนุมัติ</summary><ul class="menu-tree"><li>ผู้ให้ความเห็นชอบ <code class="menu-task">task=main/car_group</code></li><li>ผู้อนุมัติ <code class="menu-task">task=main/car_commander</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>รายงาน</summary><ul class="menu-tree"><li>รายงานการใช้ยานหานะ <code class="menu-task">task=main/car_report</code></li><li>ปฏิทินการใช้ยานพาหนะ <code class="menu-task">task=main/car_calendar</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>คู่มือ</summary><ul class="menu-tree"><li>คู่มือ <code class="menu-task">modules/car/manual/car.pdf</code></li></ul></details>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-security_duty">
+  <summary><code>security_duty</code> — เวรรักษาการณ์ <span class="badge badge-warn">ปิด</span></summary>
+  <p class="meta"><em>ไม่มี menu.php</em></p>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-affair">
+  <summary><code>affair</code> — ภารกิจผู้อำนวยการ <span class="badge badge-ok">active</span></summary>
+  <ul class="menu-tree"><li>รายการหลัก</li></ul>
+<details class="legacy-menu-dir"><summary>ตั้งค่าระบบ</summary><ul class="menu-tree"><li>กำหนดเจ้าหน้าที่ <code class="menu-task">task=permission</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>บันทึกข้อมูล</summary><ul class="menu-tree"><li>ภารกิจผู้อำนวยการ <code class="menu-task">task=main/affair</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>รายงาน</summary><ul class="menu-tree"><li>ภารกิจผู้อำนวยการ <code class="menu-task">task=main/report_affair</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>คู่มือ</summary><ul class="menu-tree"><li>คู่มือ <code class="menu-task">modules/affair/manual/affair.pdf</code></li></ul></details>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-bookpv">
+  <summary><code>bookpv</code> — รับส่งหนังสือราชการศธจ. <span class="badge badge-warn">ปิด</span></summary>
+  <p class="meta"><em>ไม่มี menu.php</em></p>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-delegate">
+  <summary><code>delegate</code> — การรักษาราชการแทน <span class="badge badge-ok">active</span></summary>
+  <ul class="menu-tree"><li>รายการหลัก</li></ul>
+<details class="legacy-menu-dir"><summary>ตั้งค่าระบบ</summary><ul class="menu-tree"><li>กำหนดเจ้าหน้าที่ <code class="menu-task">task=permission</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>บันทึกข้อมูล</summary><ul class="menu-tree"><li>การรักษาราชการแทน <code class="menu-task">task=main/delegate</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>รายงาน</summary><ul class="menu-tree"><li>การรักษาราชการแทน <code class="menu-task">task=main/report_delegate</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>คู่มือ</summary><ul class="menu-tree"><li>คู่มือการรักษาราชการแทน <code class="menu-task">modules/delegate/manual/delegate.pdf</code></li></ul></details>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-bookobec">
+  <summary><code>bookobec</code> — รับส่งหนังสือราชการสพฐ <span class="badge badge-ok">active</span></summary>
+  <ul class="menu-tree"><li>รายการหลัก</li></ul>
+<details class="legacy-menu-dir"><summary>ตั้งค่าระบบ</summary><ul class="menu-tree"><li>กำหนดเจ้าหน้าที่ <code class="menu-task">task=permission</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>รับหนังสือ</summary><ul class="menu-tree"><li>รับหนังสือ <code class="menu-task">task=main/receive</code></li><li>รับหนังสือพร้อมลงทะเบียน <code class="menu-task">task=main/receive_register</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>รายการหนังสือรับ</summary><ul class="menu-tree"><li>รายการหนังสือรับ สพฐ. <code class="menu-task">task=main/receive_other</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ส่งหนังสือ</summary><ul class="menu-tree"><li>ส่งหนังสือ สพฐ. <code class="menu-task">task=main/send</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>รายการหนังสือส่ง</summary><ul class="menu-tree"><li>รายการหนังสือส่ง สพฐ. <code class="menu-task">task=main/send_report</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>คู่มือ</summary><ul class="menu-tree"><li>คู่มือ <code class="menu-task">modules/bookobec/manual/bookobec.pdf</code></li></ul></details>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-bookregister">
+  <summary><code>bookregister</code> — ทะเบียนหนังสือราชการ <span class="badge badge-ok">active</span></summary>
+  <ul class="menu-tree"><li>รายการหลัก</li></ul>
+<details class="legacy-menu-dir"><summary>ตั้งค่าระบบ</summary><ul class="menu-tree"><li>กำหนดเจ้าหน้าที่ <code class="menu-task">task=permission</code></li><li>กำหนดปีปฏิทิน <code class="menu-task">task=year</code></li><li>กำหนดเลขที่หนังสือ <code class="menu-task">task=main/office_no</code></li><li>กำหนดผู้ลงนามเกียรติบัตร <code class="menu-task">task=main/cer_sign</code></li><li>กำหนดผู้ตรวจสอบการลงทะเบียนเกียรติบัตร <code class="menu-task">task=cer_officer</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ตั้งค่าระบบ(ร.ร.)</summary><ul class="menu-tree"><li>กำหนดเจ้าหน้าที่ <code class="menu-task">task=permission_sch</code></li><li>กำหนดปีปฏิทิน <code class="menu-task">task=year_sch</code></li><li>กำหนดเลขที่หนังสือ <code class="menu-task">task=main/office_no_sch</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ทะเบียนหนังสือรับ</summary><ul class="menu-tree"><li>ทะเบียนหนังสือรับ <code class="menu-task">task=main/receive</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ทะเบียนหนังสือส่ง</summary><ul class="menu-tree"><li>ทะเบียนหนังสือส่ง <code class="menu-task">task=main/send</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ทะเบียนคำสั่ง</summary><ul class="menu-tree"><li>ทะเบียนคำสั่ง <code class="menu-task">task=main/command</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ทะเบียนเกียรติบัตร</summary><ul class="menu-tree"><li>ทะเบียนเกียรติบัตร <code class="menu-task">task=main/certificate</code></li><li>เจ้าหน้าที่ทะเบียนเกียรติบัตร <code class="menu-task">task=main/certificate_officer</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ทะเบียนหนังสือรับ</summary><ul class="menu-tree"><li>ทะเบียนหนังสือรับ <code class="menu-task">task=main/receive_sch</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ทะเบียนหนังสือส่ง</summary><ul class="menu-tree"><li>ทะเบียนหนังสือส่ง <code class="menu-task">task=main/send_sch</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ทะเบียนคำสั่ง</summary><ul class="menu-tree"><li>ทะเบียนคำสั่ง <code class="menu-task">task=main/command_sch</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ทะเบียนเกียรติบัตร</summary><ul class="menu-tree"><li>ทะเบียนเกียรติบัตร <code class="menu-task">task=main/certificate_sch</code></li><li>เกียรติบัตร สพท. <code class="menu-task">task=main/certificate_school_print</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>คู่มือ</summary><ul class="menu-tree"><li>คู่มือ <code class="menu-task">modules/bookregister/manual/bookregister.pdf</code></li></ul></details>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-book">
+  <summary><code>book</code> — รับส่งหนังสือราชการ <span class="badge badge-ok">active</span></summary>
+  <ul class="menu-tree"><li>รายการหลัก</li></ul>
+<details class="legacy-menu-dir"><summary>ตั้งค่าระบบ</summary><ul class="menu-tree"><li>กำหนดสารบรรณ สพท, <code class="menu-task">task=permission</code></li><li>กำหนดสารบรรณ สถานศึกษา <code class="menu-task">task=permission_sch_khet</code></li><li>กำหนดกลุ่มสถานศึกษา <code class="menu-task">task=main/group</code></li><li>กำหนดสมาชิกกลุ่มสถานศึกษา <code class="menu-task">task=main/group_member</code></li><li>รายงานกลุ่มและสมาชิก <code class="menu-task">task=main/group_member_report</code></li><li>ย้ายหนังสือราชการเกิน 2 ปี ไปเก็บสำรอง <code class="menu-task">task=main/move_book</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>กำหนดเจ้าหน้าที่</summary><ul class="menu-tree"><li>กำหนดเจ้าหน้าที่ <code class="menu-task">task=permission_sch</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>หนังสือรับ</summary><ul class="menu-tree"><li>หนังสือรับมา <code class="menu-task">task=main/receive</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>หนังสือส่ง</summary><ul class="menu-tree"><li>หนังสือส่งไป <code class="menu-task">task=main/send</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ส่งหนังสือราชการ</summary><ul class="menu-tree"><li>ส่งหนังสือราชการ <code class="menu-task">task=main/send</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>หนังสืออายุเกิน 2 ปี</summary><ul class="menu-tree"><li>หนังสือรับ <code class="menu-task">task=main/report_1</code></li><li>หนังสือส่ง <code class="menu-task">task=main/report_2</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>คู่มือ</summary><ul class="menu-tree"><li>คู่มือ <code class="menu-task">modules/book/manual/book.pdf</code></li></ul></details>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-mail">
+  <summary><code>mail</code> — ระบบส่งหนังสือเวียน <span class="badge badge-ok">active</span></summary>
+  <ul class="menu-tree"><li>รายการหลัก</li></ul>
+<details class="legacy-menu-dir"><summary>ตั้งค่าระบบ</summary><ul class="menu-tree"><li>กำหนดเจ้าหน้าที่ <code class="menu-task">task=main/permission</code></li><li>กำหนดกลุ่มบุคลากร <code class="menu-task">task=main/group</code></li><li>กำหนดสมาชิกกลุ่มบุคลากร <code class="menu-task">task=main/group_member</code></li><li>รายงานกลุ่มและสมาชิก <code class="menu-task">task=main/group_member_report</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ทะเบียนรับ</summary><ul class="menu-tree"><li>ทะเบียนหนังสือเวียนรับมา <code class="menu-task">task=main/receive</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ทะเบียนส่ง</summary><ul class="menu-tree"><li>ทะเบียนจหนังสือเวียนส่งไป <code class="menu-task">task=main/send</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ส่งหนังสือเวียน</summary><p class="meta"><em>(ไม่มีรายการย่อย)</em></p></details>
+<details class="legacy-menu-dir"><summary>คู่มือ</summary><ul class="menu-tree"><li>คู่มือ <code class="menu-task">modules/mail/manual/mail.pdf</code></li></ul></details>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-meeting">
+  <summary><code>meeting</code> — ระบบจองห้องประชุม <span class="badge badge-ok">active</span></summary>
+  <ul class="menu-tree"><li>รายการหลัก</li></ul>
+<details class="legacy-menu-dir"><summary>ตั้งค่าระบบ</summary><ul class="menu-tree"><li>กำหนดเจ้าหน้าที่ <code class="menu-task">task=main/permission</code></li><li>กำหนดห้องประชุม <code class="menu-task">task=main/set_room</code></li><li>กำหนดประเภทการใช้งาน <code class="menu-task">task=main/set_type_obj</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>จองห้องประชุม</summary><ul class="menu-tree"><li>จองห้องประชุม <code class="menu-task">task=main/meeting</code></li><li>อนุญาตให้ใช้ห้องประชุม <code class="menu-task">task=main/officer</code></li><li>ปฎิทินการใช้ห้องประชุม <code class="menu-task">task=calendar/fullcalendar</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>รายงาน</summary><p class="meta"><em>(ไม่มีรายการย่อย)</em></p></details>
+<details class="legacy-menu-dir"><summary>คู่มือ</summary><ul class="menu-tree"><li>คู่มือจองห้องประชุม <code class="menu-task">modules/meeting/manual/meeting.pdf</code></li></ul></details>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-work">
+  <summary><code>work</code> — ลงเวลาการปฏิบัติราชการ <span class="badge badge-warn">ปิด</span></summary>
+  <ul class="menu-tree"><li>รายการหลัก</li></ul>
+<details class="legacy-menu-dir"><summary>ตั้งค่าระบบ</summary><ul class="menu-tree"><li>กำหนดเจ้าหน้าที่ <code class="menu-task">task=permission</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>บันทึกข้อมูล</summary><ul class="menu-tree"><li>บันทึกข้อมูลการปฏิบัติราชการวันนี้ <code class="menu-task">task=check</code></li><li>บันทึกข้อมูลการปฏิบัติราชการย้อนหลัง <code class="menu-task">task=check_2</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>รายงาน</summary><ul class="menu-tree"><li>สรุปการปฏิบัติราชการรายวัน <code class="menu-task">task=report_1</code></li><li>สรุปการปฏิบัติราชการรอบเดือน <code class="menu-task">task=report_2</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>คู่มือ</summary><ul class="menu-tree"><li>คู่มือการปฏิบัติราชการ <code class="menu-task">modules/work/manual/work.pdf</code></li></ul></details>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-cabinet">
+  <summary><code>cabinet</code> — ระบบวาระประชุมแผ่นเดียว QR-CODE <span class="badge badge-warn">ปิด</span></summary>
+  <ul class="menu-tree"><li>รายการหลัก</li></ul>
+<details class="legacy-menu-dir"><summary>ตั้งค่าระบบ</summary><ul class="menu-tree"><li>กำหนดเจ้าหน้าที่ <code class="menu-task">task=main/permission</code></li><li>กำหนดตู้เอกสาร <code class="menu-task">task=main/cabinet_set</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ลิ้นชักและแฟ้ม</summary><ul class="menu-tree"><li>ตู้เอกสารกลาง <code class="menu-task">task=main/ctr_tray_set</code></li><li>ตู้เอกสารส่วนบุคคล <code class="menu-task">task=main/private_tray_set</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>เอกสาร</summary><ul class="menu-tree"><li>เอกสารตู้กลาง <code class="menu-task">task=main/ctr_document</code></li><li>เอกสารตู้ส่วนบุคคล <code class="menu-task">task=main/private_document</code></li><li>ค้นหาเอกสาร <code class="menu-task">task=main/search_document</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>คู่มือ</summary><ul class="menu-tree"><li>คู่มือตู้เอกสาร <code class="menu-task">modules/cabinet/manual/cabinet.pdf</code></li></ul></details>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-time">
+  <summary><code>time</code> — ระบบลงเวลา <span class="badge badge-warn">ปิด</span></summary>
+  <p class="meta"><em>ไม่มี menu.php</em></p>
+</details>
+</details>
+<details class="legacy-menu-group" id="legacy-menu-g2">
+  <summary>L1 — บริหารงบประมาณ</summary>
+  <details class="legacy-menu-module" id="legacy-menu-asset">
+  <summary><code>asset</code> — ระบบบริหาร พัสดุ <span class="badge badge-ok">active</span></summary>
+  <p class="meta"><em>ไม่มี menu.php</em></p>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-plan">
+  <summary><code>plan</code> — การวางแผน <span class="badge badge-ok">active</span></summary>
+  <ul class="menu-tree"><li>รายการหลัก</li></ul>
+<details class="legacy-menu-dir"><summary>ตรวจสอบ</summary><ul class="menu-tree"><li>ทะเบียนเงินงวด <code class="menu-task">task=check/receive_report</code></li></ul></details>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-budget">
+  <summary><code>budget</code> — การเงินและบัญชี <span class="badge badge-ok">active</span></summary>
+  <ul class="menu-tree"><li>รายการหลัก</li></ul>
+<details class="legacy-menu-dir"><summary>ตั้งค่าระบบ</summary><ul class="menu-tree"><li>เจ้าหน้าที่การเงินฯ <code class="menu-task">task=main/permission</code></li><li>ปีงบประมาณ <code class="menu-task">task=main/budget_year</code></li><li>แผนงาน <code class="menu-task">task=category/plan_project</code></li><li>ผลผลิตโครงการ <code class="menu-task">task=category/proj_product</code></li><li>กิจกรรมหลัก <code class="menu-task">task=category/key_activity</code></li><li>แหล่งของเงิน <code class="menu-task">task=category/money_source</code></li><li>งบรายจ่าย <code class="menu-task">task=category/pay_type</code></li><li>ประเภท(หลัก)ของเงิน <code class="menu-task">task=category/edit_category</code></li><li>ประเภท(ย่อย)ของเงิน <code class="menu-task">task=category/edit_type</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ทะเบียนรับ</summary><ul class="menu-tree"><li>รับการจัดสรรงบประมาณ <code class="menu-task">task=budget_unit/receive</code></li><li>รับเงินงบประมาณ <code class="menu-task">task=main/receive_bud</code></li><li>รับเงินนอกงบประมาณ <code class="menu-task">task=main/receive_ex_bud</code></li><li>รับเงินรายได้แผ่นดิน <code class="menu-task">task=main/receive_income_bud</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ทะเบียนขอเบิก</summary><ul class="menu-tree"><li>ทะเบียนขอเบิก/ขอยืมเงินโครงการ <code class="menu-task">task=main/withdraw</code></li><li>***ทะเบียนคืนเงินโครงการ <code class="menu-task">task=main/return_withdraw</code></li><li>ทะเบียนขอเบิกเงินคงคลัง <code class="menu-task">task=deega/deega</code></li><li>***ทะเบียนคืนเงินคงคลัง <code class="menu-task">task=deega/return_deega</code></li><li>***ยกเลิกฎีกา <code class="menu-task">task=main/cancel_deega</code></li><li>ทะเบียนเงินกันเหลื่อมปี <code class="menu-task">task=deega/po</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ทะเบียนจ่าย</summary><ul class="menu-tree"><li>สั่งจ่ายเงินงบประมาณ <code class="menu-task">task=main/pay_bud</code></li><li>สั่งจ่ายเงินนอกงบประมาณ <code class="menu-task">task=main/pay_ex_bud</code></li><li>สั่งจ่ายเงินรายได้แผ่นดิน <code class="menu-task">task=main/pay_income_bud</code></li><li>เงินทดรองราชการ <code class="menu-task">task=main/reserve_money</code></li><li>อนุมัติจ่ายเงินประเภทหลัก <code class="menu-task">task=main/approve</code></li><li>อนุมัติจ่ายเงินทดรองราชการ <code class="menu-task">task=main/approve_reserve</code></li><li>จ่ายเงินประเภทหลัก <code class="menu-task">task=main/pay_check</code></li><li>จ่ายเงินทดรองราชการ <code class="menu-task">task=main/pay_check_reserve</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>เปลี่ยนแปลงสถานะ</summary><ul class="menu-tree"><li>เงินงบประมาณ <code class="menu-task">task=main/change_bud</code></li><li>เงินนอกงบประมาณ <code class="menu-task">task=main/change_ex_bud</code></li><li>เงินรายได้แผ่นดิน <code class="menu-task">task=main/change_income_bud</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ตรวจสอบ</summary><ul class="menu-tree"><li>ตรวจสอบการจัดสรรงบประมาณ <code class="menu-task">task=check/check_2</code></li><li>รายงานเงินประจำงวด <code class="menu-task">task=main/report_10</code></li><li>จ่ายเงินประเภทหลัก <code class="menu-task">task=main/report_pay_check</code></li><li>จ่ายเงินทดรองราชการ <code class="menu-task">task=main/report_pay_check_reserve</code></li><li>เลขที่ฎีกาที่ไม่มีในระบบ <code class="menu-task">task=check/check_3</code></li><li>ฎีกากับการตัดโครงการจำแนกตามใบงวด <code class="menu-task">task=check/check_4</code></li><li>ฎีกากับการอ้างอิงการขอเบิกจำแนกตามฎีกา <code class="menu-task">task=check/check_5</code></li><li>รายการขอเบิกฯที่ยังไม่ได้วางฎีกา <code class="menu-task">task=check/check_6</code></li><li>รายการขอเบิกฯที่วางฎีกาผิดใบงวด <code class="menu-task">task=check/check_7</code></li><li>รายการการจ่ายเงินรายวัน <code class="menu-task">task=check/check_8</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>รายงาน</summary><ul class="menu-tree"><li>รายงานการจัดสรรงบประมาณ <code class="menu-task">task=main/report_9</code></li><li>รายงานการใช้จ่ายจำแนกตามโครงการ <code class="menu-task">task=main/report_1</code></li><li>ทะเบียนเงินงวด <code class="menu-task">task=budget_unit/receive_report</code></li><li>รายงานการใช้จ่ายจำแนกตามรหัสงบประมาณ <code class="menu-task">task=main/report_12</code></li><li>รายงานการใช้จ่ายจำแนกตามประเภทรายการจ่าย <code class="menu-task">task=main/report_5</code></li><li>รายงานเงินคงเหลือประจำวัน <code class="menu-task">task=main/today_report</code></li><li>สมุดเงินสด <code class="menu-task">task=main/cash_book</code></li><li>รายงานเงินงบประมาณ <code class="menu-task">task=main/bud_book</code></li><li>รายงานเงินนอกงบประมาณ <code class="menu-task">task=main/ex_bud_book</code></li><li>รายงานเงินรายได้แผ่นดิน <code class="menu-task">task=main/income_bud_book</code></li><li>รายงานลูกหนี้เงินยืม <code class="menu-task">task=main/report_8</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>คู่มือ</summary><ul class="menu-tree"><li>คู่มือการเงินและบัญชี <code class="menu-task">modules/budget/manual/budget.pdf</code></li></ul></details>
+</details>
+</details>
+<details class="legacy-menu-group" id="legacy-menu-g3">
+  <summary>L1 — บริหารงานบุคคล</summary>
+  <details class="legacy-menu-module" id="legacy-menu-award">
+  <summary><code>award</code> — ระบบรายงานการได้รับรางวัลประเภทต่างๆ <span class="badge badge-ok">active</span></summary>
+  <ul class="menu-tree"><li>รายการหลัก</li></ul>
+<details class="legacy-menu-dir"><summary>ตั้งค่าระบบ</summary><ul class="menu-tree"><li>กำหนดเจ้าหน้าที่ <code class="menu-task">task=main/permission</code></li><li>กำหนดชื่อเรื่อง <code class="menu-task">task=main/mainitem</code></li><li>กำหนดประเภท <code class="menu-task">task=main/section</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>บันทึกรางวัล</summary><ul class="menu-tree"><li>บันทึกรางวัลครูรายบุคคล <code class="menu-task">task=main/award</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>รายงาน</summary><ul class="menu-tree"><li>รายงานรางวัล <code class="menu-task">task=main/report1</code></li><li>รายงานเรียกได้จากภายนอก AMSS++ <code class="menu-task">modules/award/main/report2.php</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>คู่มือ</summary><ul class="menu-tree"><li>คู่มือการรายงาน <code class="menu-task">modules/award/manual/award.pdf</code></li></ul></details>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-homework">
+  <summary><code>homework</code> — ขออนุญาตปฏิบัติราชการที่บ้าน <span class="badge badge-warn">ปิด</span></summary>
+  <p class="meta"><em>ไม่มี menu.php</em></p>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-person">
+  <summary><code>person</code> — ระบบบริหารงานบุคคล <span class="badge badge-ok">active</span></summary>
+  <ul class="menu-tree"><li>หน้าแรก - งานบุคลากร <code class="menu-task">?option=person</code></li></ul>
+<details class="legacy-menu-dir"><summary>ตั้งค่าระบบ</summary><ul class="menu-tree"><li>เจ้าหน้าที่งานบุคคล สพท. <code class="menu-task">task=permission</code></li><li>เจ้าหน้าที่งานบุคลากร สถานศึกษา <code class="menu-task">task=permission_sch_khet</code></li><li>กำหนดตำแหน่งครูและบุคลากรในสพท. <code class="menu-task">task=position</code></li><li>กำหนดตำแหน่งครูและบุคลากรในสถานศึกษา <code class="menu-task">task=position</code></li><li>กำหนดวิทยฐานะ <code class="menu-task">task=position_class</code></li><li>กำหนดระดับการศึกษา <code class="menu-task">task=education_class</code></li><li>นำเข้าข้อมูลครูและบุคลากรในสพท.จาก Text File <code class="menu-task">task=person_import</code></li><li>ปรับปรุงข้อมูลรูปภาพบุคลากร สพท. <code class="menu-task">task=update_picture1</code></li><li>นำเข้าข้อมูลครูและบุคลากรในสถานศึกษาจาก Text File <code class="menu-task">task=person_import</code></li><li>ปรับปรุงข้อมูลรูปภาพบุคลากรสถานศึกษา <code class="menu-task">task=update_picture2</code></li><li>ชื่อและรหัสสถานศึกษา <code class="menu-task">task=school</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>กำหนดเจ้าหน้าที่</summary><ul class="menu-tree"><li>กำหนดเจ้าหน้าที่ <code class="menu-task">task=permission_sch</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>งานบำเน็จความชอบ</summary><ul class="menu-tree"><li>นำเข้าไฟล์ แจ้งผลการเลื่อนเงินเดือน <code class="menu-task">task=bonus</code></li><li>ตรวจสอบ ผลการเลื่อนเงินเดือน <code class="menu-task">task=bonus_list</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>งานทะเบียนประวัติ</summary><ul class="menu-tree"><li>แฟ้มประวัติ ครูและบุคลากร สพท. <code class="menu-task">task=history_records</code></li><li>แฟ้มประวัติ ครูและบุคลากร สถานศึกษา <code class="menu-task">task=history_records</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ครูและบุคลากรปัจจุบัน</summary><ul class="menu-tree"><li>ครูและบุคลากร สพท. <code class="menu-task">task=person</code></li><li>ครูและบุคลากร สถานศึกษา <code class="menu-task">task=person</code></li><li>ครูและบุคลากร สถานศึกษารอการรับรอง <code class="menu-task">task=person_sch2</code></li><li>บุคลากรในสถานศึกษาปฏิบัติงานมากกว่า 1 แห่ง <code class="menu-task">task=person_sch_other</code></li><li>รักษาการในตำแหน่ง ผอ.รร. <code class="menu-task">task=delegate_sch</code></li><li>เรียกข้อมูลจากSMSS <code class="menu-task">task=getxml_person</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ครูและบุคลากรในอดีต</summary><ul class="menu-tree"><li>ครูและบุคลากร สพท. <code class="menu-task">task=change_status_person</code></li><li>ครูและบุคลากร สถานศึกษา <code class="menu-task">task=change_status_person</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>งานทะเบียนประวัติ</summary><ul class="menu-tree"><li>แฟ้มประวัติ ครูและบุคลากร สถานศึกษา <code class="menu-task">task=history_records</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ครูและบุคลากรปัจจุบัน</summary><ul class="menu-tree"><li>ครูและบุคลากร สถานศึกษา <code class="menu-task">task=person</code></li><li>รักษาการในตำแหน่ง ผอ.รร. <code class="menu-task">task=delegate_sch</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>รายงาน</summary><ul class="menu-tree"><li>ครูและบุคลากร สพท. <code class="menu-task">task=person_report1</code></li><li>ครูและบุคลากร สถานศึกษา <code class="menu-task">task=person_report1</code></li><li>ส่งออกข้อมูลครูและบุคลากรสพท.เป็นไฟล์ Excel <code class="menu-task">modules/person/export_to_excel.php</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>คู่มือ</summary><ul class="menu-tree"><li>คู่มือข้อมูลพื้นฐานบุคลากร <code class="menu-task">modules/person/manual/person.pdf</code></li><li>คู่มือ สพป.เลย เขต ๑ <code class="menu-task">modules/person/manual/person-loei1.pdf</code></li><li>ตัวอย่างไฟล์ Excel ข้อมูลครูและบุคลากรในสพท. <code class="menu-task">modules/person/manual/person.xls</code></li><li>ตัวอย่างไฟล์ Excel ข้อมูลครูและบุคลากรในสถานศึกษา <code class="menu-task">modules/person/manual/school_person.xls</code></li></ul></details>
+</details>
+</details>
+<details class="legacy-menu-group" id="legacy-menu-g4">
+  <summary>L1 — บริหารงานวิชาการ</summary>
+  <details class="legacy-menu-module" id="legacy-menu-warroom">
+  <summary><code>warroom</code> — วิเคราะห์สภาพการณ์ <span class="badge badge-ok">active</span></summary>
+  <p class="meta"><em>ไม่มี menu.php</em></p>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-opportunity">
+  <summary><code>opportunity</code> — สิทธิและโอกาสทางการศึกษา <span class="badge badge-ok">active</span></summary>
+  <p class="meta"><em>ไม่มี menu.php</em></p>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-supervision">
+  <summary><code>supervision</code> — นิเทศ ติดตาม และประเมินผล <span class="badge badge-ok">active</span></summary>
+  <ul class="menu-tree"><li>รายการหลัก</li></ul>
+<details class="legacy-menu-dir"><summary>ตั้งค่าระบบ</summary><ul class="menu-tree"><li>กำหนดเจ้าหน้าที่ <code class="menu-task">task=main/permission</code></li><li>รายการนิเทศฯ <code class="menu-task">task=main/supervision_item</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>มาตรฐานการจัดการศึกษา</summary><ul class="menu-tree"><li>มาตรฐาน <code class="menu-task">task=main/supervision_year</code></li><li>รายการมาตรฐาน <code class="menu-task">task=main/standard</code></li><li>รายการตัวชี้วัด <code class="menu-task">task=main/indicator</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>นิเทศ ติดตาม ประเมินผล</summary><ul class="menu-tree"><li>บันทึกการนิเทศ ฯ <code class="menu-task">task=main/sp1</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>รายงาน</summary><ul class="menu-tree"><li>รายงานการนิเทศ <code class="menu-task">task=main/report_1</code></li><li>รายงานผลการประเมิน <code class="menu-task">task=main/report_2</code></li><li>รายงานการนิเทศฯ ระดับเขต <code class="menu-task">task=main/report_3</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>คู่มือ</summary><ul class="menu-tree"><li>คู่มือไปรษณีย์ <code class="menu-task">modules/supervision/manual/supervision.pdf</code></li></ul></details>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-student_main">
+  <summary><code>student_main</code> — ข้อมูลนักเรียน <span class="badge badge-ok">active</span></summary>
+  <ul class="menu-tree"><li>รายการหลัก</li></ul>
+<details class="legacy-menu-dir"><summary>ตั้งค่าระบบ</summary><ul class="menu-tree"><li>กำหนดเจ้าหน้าที่ ระดับสพท. <code class="menu-task">task=permission</code></li><li>กำหนดปีการศึกษา <code class="menu-task">task=ed_year</code></li><li>กำหนดเจ้าหน้าที่ ระดับสถานศึกษา <code class="menu-task">task=permission_sch_khet</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ข้อมูลนักเรียน(เจ้าหน้าที่)</summary><ul class="menu-tree"><li>นำเข้าข้อมูลจากไฟล์ <code class="menu-task">task=student_import</code></li><li>ปรับปรุงข้อมูลนักเรียน <code class="menu-task">task=student_khet_update</code></li><li>เลื่อนชั้นนักเรียน <code class="menu-task">task=student_tranfer</code></li><li>Student_XML <code class="menu-task">task=student_getxml</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>กำหนดเจ้าหน้าที่</summary><ul class="menu-tree"><li>กำหนดเจ้าหน้าที่ <code class="menu-task">task=permission_sch</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ปรับปรุงข้อมูลนักเรียน</summary><ul class="menu-tree"><li>ปรับปรุงข้อมูลนักเรียน <code class="menu-task">task=student_sch_update</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>รายงานข้อมูลนักเรียน</summary><ul class="menu-tree"><li>รายชื่อนักเรียน <code class="menu-task">task=student_report1</code></li><li>จำนวนนักเรียนรายชั้น <code class="menu-task">task=student_report2</code></li><li>ค้นหานักเรียน <code class="menu-task">task=student_report3</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>คู่มือ</summary><ul class="menu-tree"><li>คู่มือข้อมูลนักเรียน <code class="menu-task">modules/student_main/manual/student.pdf</code></li><li>ตัวอย่างไฟล์สำหรับนำเข้าข้อมูล <code class="menu-task">modules/student_main/manual/student.csv</code></li></ul></details>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-achievement">
+  <summary><code>achievement</code> — ผลสัมฤทธิ์ทางการเรียน <span class="badge badge-ok">active</span></summary>
+  <ul class="menu-tree"><li>รายการหลัก</li></ul>
+<details class="legacy-menu-dir"><summary>ตั้งค่าระบบ</summary><ul class="menu-tree"><li>กำหนดเจ้าหน้าที่ <code class="menu-task">task=main/permission</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>บันทึกคะแนน</summary><ul class="menu-tree"><li>บันทึกคะแนน O-NET <code class="menu-task">task=main/add_score_1</code></li><li>บันทึกคะแนน NT <code class="menu-task">task=main/add_score_2</code></li><li>บันทึกคะแนน LAS <code class="menu-task">task=main/add_score_3</code></li><li>นำเข้าข้อมูลจากไฟล์ CSV <code class="menu-task">task=main/test_import</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>รายงาน(กราฟ)</summary><ul class="menu-tree"><li>O-NET แบบ 1 <code class="menu-task">task=main/report1</code></li><li>O-NET แบบ 2 <code class="menu-task">task=main/report11</code></li><li>NT แบบที่ 1 <code class="menu-task">task=main/report4</code></li><li>NT แบบที่ 2 <code class="menu-task">task=main/report41</code></li><li>LAS แบบที่ 1 <code class="menu-task">task=main/report6</code></li><li>LAS แบบที่ 2 <code class="menu-task">task=main/report61</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>รายงาน(ข้อมูล)</summary><ul class="menu-tree"><li>O-NET แบบที่ 1 <code class="menu-task">task=main/report1_1</code></li><li>O-NET แบบที่ 2 <code class="menu-task">task=main/report1_2</code></li><li>NT แบบที่ 1 <code class="menu-task">task=main/report4_1</code></li><li>NT แบบที่ 2 <code class="menu-task">task=main/report4_2</code></li><li>LAS แบบที่ 1 <code class="menu-task">task=main/report6_1</code></li><li>LAS แบบที่ 2 <code class="menu-task">task=main/report6_2</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>คู่มือ</summary><ul class="menu-tree"><li>คู่มือผลสัมฤทธิ์ทางการเรียน <code class="menu-task">modules/achievement/manual/achievement.pdf</code></li><li>ตัวอย่างไฟล์ CSV <code class="menu-task">modules/achievement/manual/onet_p6_55.csv</code></li></ul></details>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-bets">
+  <summary><code>bets</code> — ระบบทดสอบการศึกษา <span class="badge badge-ok">active</span></summary>
+  <ul class="menu-tree"><li>รายการหลัก</li></ul>
+<details class="legacy-menu-dir"><summary>ตั้งค่าระบบ</summary><ul class="menu-tree"><li>กำหนดเจ้าหน้าที่ <code class="menu-task">task=main/permission</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>มาตรฐานการศึกษา</summary><ul class="menu-tree"><li>หลักสูตรแกนกลาง <code class="menu-task">task=main/curriculum</code></li><li>สาระ <code class="menu-task">task=main/substance</code></li><li>มาตรฐานการศึกษา <code class="menu-task">task=main/standard</code></li><li>ตัวชี้ัวัด <code class="menu-task">task=main/indicator</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ข้อสอบและแบบทดสอบ</summary><ul class="menu-tree"><li>คลังข้อสอบ <code class="menu-task">task=main/test_item</code></li><li>แบบทดสอบ(ต้นฉบับ) <code class="menu-task">task=main/test_master</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>บริหารการสอบ(สพท.)</summary><ul class="menu-tree"><li>บริหารการสอบ <code class="menu-task">task=main/test_admin</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>บริหารการสอบ(สถานศึกษา)</summary><ul class="menu-tree"><li>รายการทดสอบ(สพท) <code class="menu-task">task=main/test_sch</code></li><li>รายการสอบของสถานศึกษา <code class="menu-task">task=main/test_sch_2</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>ทดสอบ</summary><ul class="menu-tree"><li>รายการสอบ <code class="menu-task">task=main/test_student</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>รายงานผลการสอบ</summary><ul class="menu-tree"><li>ภาพรวมเขตพื้นที่การศึกษา <code class="menu-task">task=main/khet_report_1</code></li><li>รายละเอียดรายสถานศึกษา <code class="menu-task">task=main/khet_report_2</code></li><li>รายงานผลการสอบ <code class="menu-task">task=main/sch_report_1</code></li><li>รายงานผลการสอบ <code class="menu-task">task=main/student_report_1</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>คู่มือ</summary><ul class="menu-tree"><li>คู่มือระบบทดสอบการศึกษา <code class="menu-task">modules/bets/manual/bets.pdf</code></li></ul></details>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-spacial_student">
+  <summary><code>spacial_student</code> — นักเรียนพิเศษ <span class="badge badge-ok">active</span></summary>
+  <ul class="menu-tree"><li>รายการหลัก</li></ul>
+<details class="legacy-menu-dir"><summary>ตั้งค่าระบบ</summary><ul class="menu-tree"><li>กำหนดเจ้าหน้าที่ ระดับสพท. <code class="menu-task">task=permission</code></li><li>กำหนดเจ้าหน้าที่ ระดับสถานศึกษา <code class="menu-task">task=permission_sch_khet</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>งานเจ้าหน้าที่(สพท)</summary><ul class="menu-tree"><li>นักเรียนที่มีความต้องการพิเศษ <code class="menu-task">task=student_khet_disable</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>กำหนดเจ้าหน้าที่</summary><ul class="menu-tree"><li>กำหนดเจ้าหน้าที่ <code class="menu-task">task=permission_sch</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>งานเจ้าหน้าที่(สถานศึกษา)</summary><ul class="menu-tree"><li>นักเรียนที่มีความต้องการพิเศษ <code class="menu-task">task=student_sch_disable</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>รายงาน</summary><ul class="menu-tree"><li>สรุปจำนวนนักเรียนพิเศษ <code class="menu-task">task=student_sch_disable_report3</code></li><li>รายละเอียดนักเรียนพิเศษ <code class="menu-task">task=student_sch_disable_report2</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>รายงาน</summary><ul class="menu-tree"><li>นักเรียนพิเศษ <code class="menu-task">task=student_sch_disable_report1</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>คู่มือ</summary><ul class="menu-tree"><li>คู่มือนักเรียนพิเศษ <code class="menu-task">modules/spacial_student/manual/spacial_student.pdf</code></li></ul></details>
+</details>
+</details>
+<details class="legacy-menu-group" id="legacy-menu-g5">
+  <summary>L1 — แจ้งเตือน</summary>
+  <details class="legacy-menu-module" id="legacy-menu-alert">
+  <summary><code>alert</code> — แจ้งเตือน <span class="badge badge-ok">active</span></summary>
+  <ul class="menu-tree"><li>รายการหลัก</li></ul>
+</details>
+</details>
+<details class="legacy-menu-group" id="legacy-menu-orphans">
+  <summary>โฟลเดอร์ PHP ที่มี menu.php แต่ไม่มีใน system_module</summary>
+  <details class="legacy-menu-module" id="legacy-menu-line_notify">
+  <summary><code>line_notify</code> — line_notify <span class="badge badge-warn">ปิด</span></summary>
+  <ul class="menu-tree"><li>รายการหลัก</li></ul>
+<details class="legacy-menu-dir"><summary>ตั้งค่าระบบ</summary><ul class="menu-tree"><li>กำหนดรหัส Token Line กลุ่ม <code class="menu-task">task=line_group</code></li></ul></details>
+</details>
+<details class="legacy-menu-module" id="legacy-menu-news">
+  <summary><code>news</code> — news <span class="badge badge-warn">ปิด</span></summary>
+  <ul class="menu-tree"><li>รายการหลัก</li></ul>
+<details class="legacy-menu-dir"><summary>ตั้งค่าระบบ</summary><ul class="menu-tree"><li>กำหนดเจ้าหน้าที่ <code class="menu-task">task=main/permission</code></li><li>กำหนดชื่อเรื่อง <code class="menu-task">task=main/mainitem</code></li><li>กำหนดประเภท <code class="menu-task">task=main/section</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>บันทึกข่าว</summary><ul class="menu-tree"><li>บันทึกข่าวเรื่องปัจจุบัน <code class="menu-task">task=main/news</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>รายงาน</summary><ul class="menu-tree"><li>รายงานข่าวเรื่องปัจจุบัน <code class="menu-task">task=main/report1</code></li><li>รายงานเรียกได้จากภายนอก AMSS++ <code class="menu-task">modules/news/main/report2.php</code></li></ul></details>
+<details class="legacy-menu-dir"><summary>คู่มือ</summary><ul class="menu-tree"><li>คู่มือการรายงานข่าว <code class="menu-task">modules/news/manual/news.pdf</code></li></ul></details>
+</details>
+</details>
+<!-- LEGACY-MENU-STRUCTURE:END -->
+
+<hr>
+
+<h2 id="s3">3. โมเดลผู้ใช้และสิทธิ์</h2>
+<h3>ตารางผู้ใช้ (<code>system_user</code>)</h3>
+<table>
+  <tr><th>ฟิลด์</th><th>ความหมาย</th></tr>
+  <tr><td><code>person_id</code></td><td>เลขบัตรประชาชน 13 หลัก (FK ไป <code>person_main</code>)</td></tr>
+  <tr><td><code>username</code></td><td>ชื่อ login (มักเป็นเลขบัตร หรือ <code>admin</code>)</td></tr>
+  <tr><td><code>userpass</code></td><td>รหัสผ่าน MD5 ในระบบเดิม — <strong>ต้องแปลงเป็น bcrypt ในระบบใหม่</strong></td></tr>
+  <tr><td><code>smss_admin</code></td><td>1 = ผู้ดูแลระบบ SMSS ทั้งหมด</td></tr>
+  <tr><td><code>school_user</code></td><td>0 = ผู้ใช้ระดับเขต, 1 = ผู้ใช้ระดับโรงเรียน</td></tr>
+  <tr><td><code>status</code></td><td>1 = ใช้งาน, 0 = ปิด</td></tr>
+</table>
+
+<h3>สิทธิ์ระดับโมดูล (<code>{module}_permission</code>)</h3>
+<table>
+  <tr><th>ค่า</th><th>ความหมาย</th></tr>
+  <tr><td><code>p1 = 1</code></td><td>ดูรายการ</td></tr>
+  <tr><td><code>p2 = 1</code></td><td>บันทึก / แก้ไข</td></tr>
+  <tr><td><code>p3 = 1</code></td><td>ลบ</td></tr>
+</table>
+
+<h3>ผู้ดูแลโมดูล (<code>system_module_admin</code>)</h3>
+<p>กำหนดว่า <code>person_id</code> ใดเป็น admin ของ module ใด (เช่น book, leave, person)</p>
+
+<h3>Organization context ในระบบใหม่</h3>
+<ul>
+  <li><code>organization_type</code>: <code>district</code> | <code>school</code></li>
+  <li>ผู้ใช้เขต: เห็นข้อมูลทั้งเขต + โรงเรียนในเครือข่าย</li>
+  <li>ผู้ใช้โรงเรียน: scope ตาม <code>school_id</code> — ตาราง legacy ลงท้าย <code>_sch</code></li>
+  <li>หนังสือลับ (<code>secret</code>): ซ่อนจากผู้ไม่มี <code>can_view_secret</code> หรือ admin</li>
+</ul>
+
+<hr>
+
+<h2 id="s4">4. โดเมนสำคัญ — ทะเบียนหนังสือ (bookregister)</h2>
+<p>Core business ของ สพป.ชัยนาท — มี 4 ชนิดทะเบียน:</p>
+<table>
+  <tr><th>ทะเบียน</th><th>ตาราง legacy</th><th>ตารางใหม่ (แนว)</th></tr>
+  <tr><td>รับ</td><td><code>bookregister_receive</code></td><td><code>register_receives</code></td></tr>
+  <tr><td>ส่ง</td><td><code>bookregister_send</code></td><td><code>register_sends</code></td></tr>
+  <tr><td>คำสั่ง</td><td><code>bookregister_command</code></td><td><code>register_commands</code></td></tr>
+  <tr><td>เกียรติบัตร</td><td><code>bookregister_certificate</code></td><td><code>register_certificates</code></td></tr>
+</table>
+
+<h3>ฟิลด์หลักทะเบียนรับ/ส่ง</h3>
+<table>
+  <tr><th>ฟิลด์</th><th>ความหมาย</th></tr>
+  <tr><td><code>year</code></td><td>ปีทะเบียน (พ.ศ.)</td></tr>
+  <tr><td><code>register_number</code></td><td>เลขลำดับในปี — ไม่ซ้ำต่อปี แยกรับ/ส่ง</td></tr>
+  <tr><td><code>book_no</code></td><td>เลขที่หนังสือ</td></tr>
+  <tr><td><code>signdate</code></td><td>วันที่ลงนาม</td></tr>
+  <tr><td><code>book_from</code> / <code>book_to</code></td><td>จาก / ถึง</td></tr>
+  <tr><td><code>subject</code></td><td>เรื่อง</td></tr>
+  <tr><td><code>operation</code></td><td>ผู้ปฏิบัติ / การปฏิบัติ</td></tr>
+  <tr><td><code>workgroup</code></td><td>กลุ่มงานรับผิดชอบ</td></tr>
+  <tr><td><code>register_date</code></td><td>วันที่ลงทะเบียน</td></tr>
+  <tr><td><code>ref_id</code></td><td>รหัสอ้างอิง <code>{unix}x{random}</code></td></tr>
+  <tr><td><code>secret</code></td><td>หนังสือลับ</td></tr>
+</table>
+
+<h3>กฎธุรกิจ</h3>
+<ul>
+  <li><code>UNIQUE (year, register_number)</code> แยกตารางรับและส่ง</li>
+  <li>ออกเลขทะเบียนใน transaction + row lock (<code>RegistryNumberService</code>)</li>
+  <li>ตั้งค่าปี: <code>bookregister_year</code> — start_receive_num, start_send_num, start_command_num, start_certificate_num</li>
+  <li>ไฟล์ PDF: เก็บนอก <code>public/</code> — ดาวน์โหลดผ่าน API ที่ authorize เท่านั้น</li>
+  <li>Soft delete บนทะเบียนรับ/ส่ง</li>
+</ul>
+
+<h3>ที่เก็บไฟล์แนบ (legacy PHP → ระบบใหม่)</h3>
+<p>ชื่อไฟล์ใน DB (<code>bookregister_*_filebook.file_name</code> หรือ <code>register_*_files.file_name</code>) ต้องตรงกับไฟล์บนดิสก์ในโฟลเดอร์ด้านล่าง</p>
+<table>
+  <tr><th>ชนิดทะเบียน</th><th>โฟลเดอร์ PHP (Amssplus / smart_kpp2)</th><th>ตาราง metadata</th><th>ระบบใหม่</th></tr>
+  <tr><td>รับ</td><td><code>modules/bookregister/upload_files1/</code></td><td><code>bookregister_receive_filebook</code></td><td><code>storage/bookregister/receive/</code></td></tr>
+  <tr><td>ส่ง</td><td><code>modules/bookregister/upload_files2/</code></td><td><code>bookregister_send_filebook</code></td><td><code>storage/bookregister/send/</code></td></tr>
+  <tr><td>คำสั่ง</td><td><code>modules/bookregister/upload_files3/</code></td><td><code>bookregister_command</code> (<code>file_name</code>)</td><td><code>storage/bookregister/command/</code></td></tr>
+  <tr><td>เกียรติบัตร</td><td><code>modules/bookregister/upload_files4/</code></td><td><code>bookregister_certificate</code></td><td><code>storage/bookregister/certificate/</code> (เร็วๆ นี้)</td></tr>
+</table>
+<p><code>../smart_kpp2</code> ใช้โครงสร้างเดียวกับ Amssplus — clone local มักมีแค่ <code>index.php</code> ใน <code>upload_files*</code> (ไม่มี PDF จริง); ไฟล์จริงอยู่บน server production หรือ backup แยก</p>
+
+<h3>ระดับเขต vs ระดับโรงเรียน (<code>*_sch</code>)</h3>
+<table>
+  <tr><th>ระดับ</th><th>ตาราง legacy</th><th>ใครใช้</th></tr>
+  <tr><td>เขต</td><td><code>bookregister_receive/send/command/certificate</code></td><td><code>school_user = 0</code></td></tr>
+  <tr><td>โรงเรียน</td><td><code>bookregister_*_sch</code> (+ filebook_sch)</td><td><code>school_user = 1</code> — scope ตามโรงเรียนของ user</td></tr>
+</table>
+<p>ระบบใหม่: ใช้ตารางเดียวกัน + คอลัมน์ <code>school_id</code> (null = เขต) แทนแยกตาราง <code>_sch</code></p>
+
+<h3 id="s4-1">อ้างอิงระเบียบงานสารบรรณ ฉบับปรับปรุง พ.ศ. 2546</h3>
+<div class="callout">
+  <strong>Lock (มิ.ย. 2569):</strong> ออกแบบและตรวจสอบฟีเจอร์สารบรรณตาม
+  <em>ระเบียบสำนักนายกรัฐมนตรีว่าด้วยงานสารบรรณ ฉบับปรับปรุง พ.ศ. 2546</em>
+  (ต่อจาก พ.ศ. 2526) — ไม่ใช่แค่เทียบ <a href="https://amsscnt.com">amsscnt.com</a> หรือคู่มือ AMSS++ อย่างเดียว
+</div>
+
+<h4>ลำดับความสำคัญเมื่อแหล่งขัดกัน</h4>
+<ol>
+  <li><strong>ระเบียบ 2546</strong> — ฟิลด์ทะเบียน, รูปแบบเลขที่, ชั้นความเร็ว/ลับ, workflow สารบรรณ, แบบพิมพ์</li>
+  <li><strong>คู่มือ AMSS++ v3.1</strong> (<code>manual_smss_203_0.pdf</code>) — ขอบเขต 18 โมดูล / หน้าจอที่คู่มือระบุ</li>
+  <li><strong>amsscnt.com + legacy PHP</strong> — UX, validation ที่เขตใช้จริง; ใช้เทียบ regression เมื่อไม่ขัด 2546</li>
+  <li><strong>SQL dump</strong> — โครงตาราง/ข้อมูล import; ไม่ชนะระเบียบหรือ UX</li>
+</ol>
+<p>เมื่อ amsscnt.com ขัดกับ 2546: <strong>ทำตาม 2546</strong> — บันทึกความต่างใน commit/PR note และแจ้งผู้ใช้เขตถ้าเปลี่ยนพฤติกรรมจาก PHP เดิม</p>
+
+<h4>สรุปช่องว่างโดยรวม (มิ.ย. 2569)</h4>
+<table>
+  <tr><th>ขอบเขต</th><th>ใกล้ 2546</th><th>ช่องว่างหลัก</th></tr>
+  <tr><td>ทะเบียน <code>bookregister</code> (รับ/ส่ง/คำสั่ง/เกียรติบัตร)</td><td>v1 ปิดโมดูล</td><td>ส่งต่อ → <code>book</code>; ตั้งค่าโรงเรียน (ปี/เลขที่); คำสั่ง/เกียรติบัตรฝั่งโรงเรียน — รอ phase ถัดไป</td></tr>
+  <tr><td>งานสารบรรณเต็มรูป <code>book</code></td><td><span class="badge badge-ok">v1 done</span> + Phase 2 implement มิ.ย. 2569</td><td>2.2–2.6 รอ UAT — ดู <a href="docs/BOOK-PHASE2.md">BOOK-PHASE2</a></td></tr>
+</table>
+
+<h4>สิ่งที่ทำแล้ว — ตรวจเทียบ 2546 (P030–P038)</h4>
+<p>สถานะ: <span class="badge badge-ok">ครบ</span> ตาม 2546 · <span class="badge badge-warn">บางส่วน</span> มีโครงแต่ยังไม่ครบ · <span class="badge badge-warn">ต้องเพิ่ม</span> ยังไม่มีใน UI/ logic</p>
+<table>
+  <tr><th>งาน</th><th>สิ่งที่มีแล้ว</th><th>เทียบ 2546</th><th>ต้องทำเพิ่ม (ถ้าอิง 2546)</th></tr>
+  <tr>
+    <td>P030 ตั้งค่าปี</td>
+    <td>เลขเริ่มรับ/ส่ง/คำสั่ง/เกียรติบัตรต่อปี</td>
+    <td><span class="badge badge-ok">ครบ</span></td>
+    <td>—</td>
+  </tr>
+  <tr>
+    <td>P031 สิทธิ์ทะเบียน</td>
+    <td>p1/p2/p3 ต่อคน</td>
+    <td><span class="badge badge-ok">ครบ</span> (ระดับระบบ)</td>
+    <td>สิทธิ์ดูหนังสือลับ (<code>can_view_secret</code>) — ยังไม่ implement ใน query/UI</td>
+  </tr>
+  <tr>
+    <td>P032–P034 ทะเบียนรับ</td>
+    <td>เลขทะเบียน, เลขที่หนังสือ, ลงวันที่, จาก/ถึง, เรื่อง, กลุ่มงาน, ผู้ปฏิบัติ, แนบ PDF, soft delete</td>
+    <td><span class="badge badge-warn">บางส่วน</span></td>
+    <td>
+      ① ชั้นความเร็ว 4 ระดับ — badge ใน list แต่ <code>urgencyLevel: 1</code> hardcode; ไม่มีคอลัมน์ใน DB<br>
+      ② ชั้นความลับ — มี <code>secret</code> ใน schema แต่บันทึกใหม่ <code>secret: false</code> เสมอ; ไม่มี 3 ระดับ<br>
+      ③ <code>record_type</code> / <code>book_link</code> — มีใน schema + import แต่ไม่มีใน UI (แยกหนังสือจากโมดูล <code>book</code>)<br>
+      ④ กรองหนังสือลับตามสิทธิ์ผู้ใช้<br>
+      ⑤ คอลัมน์/แบบทะเบียนรับตามระเบียบ (เวลารับ, ลายมือชื่อผู้รับ ฯลฯ) — ยังไม่มี<br>
+      ⑥ validate รูปแบบเลขที่หนังสือเข้า
+    </td>
+  </tr>
+  <tr>
+    <td>P035–P037 ทะเบียนส่ง</td>
+    <td>ฟิลด์หลัก + prefix เลขที่ (<code>bookregister_office_no</code>), หนังสือเวียน (ป/ว), ลับ/ไม่ลับ, แนบ PDF</td>
+    <td><span class="badge badge-warn">บางส่วน</span></td>
+    <td>
+      ① ชั้นความเร็ว — เหมือนรับ (hardcode ปกติ)<br>
+      ② ชั้นความลับ 3 ระดับ — แค่ boolean<br>
+      ③ ประเภทหนังสือ — มี ป/ว ใน UI; <code>office_type=3</code> (อ) ยังไม่เลือกในฟอร์ม; ไม่มีประเภทประทับตราตามระเบียบครบ<br>
+      ④ validate เลขที่ <code>ที่ …/…</code> + รหัสช่องทาง (เช่น ชล) — prefix เขตยืดหยุ่น ไม่บังคับรูปแบบระเบียบ<br>
+      ⑤ <code>forwarded_to_schools</code> — มีคอลัมน์ แต่ workflow ส่งต่อโรงเรียน/โมดูล <code>book</code> ยังไม่ครบ<br>
+      ⑥ ส่งต่อเข้า <code>book_main</code> — legacy บังคับ level=1, secret=0; ต้องส่งค่าจริงเมื่อทำ integration
+    </td>
+  </tr>
+  <tr>
+    <td>P038 ทะเบียนคำสั่ง</td>
+    <td>เลขทะเบียน, เลขที่คำสั่ง, สั่ง ณ วันที่, เรื่อง, หมายเหตุ, แนบไฟล์, แก้ไข/ลบ 50 วัน</td>
+    <td><span class="badge badge-ok">ครบ</span> (ขอบเขต legacy)</td>
+    <td>คำสั่งใน AMSS/legacy ไม่มีชั้นความเร็ว — ไม่บังคับเพิ่มใน v1 ถ้าเขตไม่ใช้; แบบพิมพ์ทะเบียนคำสั่งตามระเบียบ — ยังไม่มี</td>
+  </tr>
+  <tr>
+    <td>P039–P041</td>
+    <td>เกียรติบัตร, มุมมองโรงเรียน, export CSV</td>
+    <td><span class="badge badge-ok">ครบ</span> (v1)</td>
+    <td>—</td>
+  </tr>
+</table>
+
+<h4>Checklist — งานเพิ่มเพื่อให้สอดคล้อง 2546</h4>
+<p>ใช้ติ๊กเมื่อ implement + ทดสอบแล้ว — อัปเดตวันที่ในคอลัมน์สถานะ</p>
+
+<p><strong>Phase 1 — <code>bookregister</code> (ก่อนหรือคู่กับ P039–P041)</strong></p>
+<table>
+  <tr><th>#</th><th>รายการ</th><th>แท็บ/โมดูล</th><th>สถานะ</th></tr>
+  <tr><td>1.1</td><td>เพิ่มคอลัมน์ <code>urgency_level</code> (1–4) ใน <code>register_receives</code> / <code>register_sends</code> + migration + import</td><td>รับ, ส่ง</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569</td></tr>
+  <tr><td>1.2</td><td>ฟอร์ม + list: เลือกชั้นความเร็ว (ปกติ/ด่วน/ด่วนมาก/ด่วนที่สุด) — ใช้ <code>UrgencyLevelBadge</code> จากค่าจริง</td><td>รับ, ส่ง</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569</td></tr>
+  <tr><td>1.3</td><td>ชั้นความลับ 3 ระดับ — <code>secret_level</code> (0–3) + sync <code>secret</code> boolean + UI</td><td>รับ, ส่ง</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569</td></tr>
+  <tr><td>1.4</td><td>กรองรายการ/รายละเอียดหนังสือลับตาม <code>can_view_secret</code> + admin</td><td>รับ, ส่ง, สิทธิ์</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569</td></tr>
+  <tr><td>1.5</td><td>ทะเบียนรับ: เปิดใช้ <code>secret_level</code> / <code>record_type</code> ในฟอร์ม; แสดงแหล่ง <code>book_link</code> เมื่อมาจากโมดูล <code>book</code></td><td>รับ</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569</td></tr>
+  <tr><td>1.6</td><td>ทะเบียนส่ง: เลือกประเภท ป/ว/อ แทนแค่ checkbox เวียน</td><td>ส่ง</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569</td></tr>
+  <tr><td>1.7</td><td>validate รูปแบบเลขที่หนังสือออกตาม 2546 + คง prefix เขต (<code>ศธ 04146/</code>) เป็นค่าเริ่มต้น</td><td>ส่ง</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569</td></tr>
+  <tr><td>1.8</td><td>คอลัมน์รายการทะเบียนรับ/ส่งให้ตรงแบบทะเบียนในระเบียบ (หรือ export/พิมพ์แยก)</td><td>รับ, ส่ง</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569</td></tr>
+  <tr><td>1.9</td><td>แบบพิมพ์ / PDF ทะเบียนรับ–ส่ง–คำสั่ง ต่อปี (รายงานสารบรรณ)</td><td>bookregister</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569</td></tr>
+  <tr><td>1.10</td><td>P040 มุมมองโรงเรียน + P041 export — คอลัมน์ครบตาม 1.8</td><td>โรงเรียน, export</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569</td></tr>
+  <tr><td>1.11</td><td>P039 เกียรติบัตร — ฟิลด์ + แนบไฟล์ + ชั้นความเร็ว/ความลับ (เทียบหลักระเบียบ 2546)</td><td>เกียรติบัตร</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569</td></tr>
+</table>
+
+<p><strong>Phase 2 — โมดูล <code>book</code> (P060+)</strong></p>
+<table>
+  <tr><th>#</th><th>รายการ</th><th>อ้างอิง 2546</th><th>สถานะ</th></tr>
+  <tr><td>2.1</td><td>ลงรับ / ส่งต่อ / ตอบรับหนังสือ</td><td>ขั้นตอนรับ–ส่งภายในและภายนอก</td><td><span class="badge badge-ok">done</span> v1 P060–P062 มิ.ย. 2569</td></tr>
+  <tr><td>2.2</td><td>หนังสือเวียน — รายชื่อผู้รับ, การเวียน</td><td>หนังสือเวียนราชการ</td><td><span class="badge badge-ok">implemented — UAT</span></td></tr>
+  <tr><td>2.3</td><td>ส่งค่าความเร็ว/ความลับจริงเมื่อสร้างจากทะเบียนหรือส่งต่อ (ไม่ hardcode)</td><td>ควบคุมหนังสือลับ/ด่วน</td><td><span class="badge badge-ok">implemented — UAT</span></td></tr>
+  <tr><td>2.4</td><td>รูปแบบหน้าหนังสือ (คำลงท้าย, ลายเซ็น, ประทับตรา)</td><td>แบบหนังสือราชการ</td><td><span class="badge badge-ok">implemented — UAT</span></td></tr>
+  <tr><td>2.5</td><td>เชื่อมทะเบียนอัตโนมัติ (<code>book_link</code>, <code>record_type</code>)</td><td>ทะเบียนเข้า–ออก</td><td><span class="badge badge-ok">implemented — UAT</span></td></tr>
+  <tr><td>2.6</td><td>อายุเก็บ / ทำลายเอกสาร (นโยบายเขต)</td><td>การจัดเก็บ</td><td><span class="badge badge-ok">implemented — UAT</span></td></tr>
+</table>
+
+<p><strong>Phase 3 — ข้อมูลเขต (ถามผู้ใช้ก่อน implement 1.7–1.9)</strong></p>
+<ul>
+  <li>แบบทะเบียน/เลขที่ <code>ศธ 04146/</code> ของ สพป.ชัยนาท — ใช้คู่กับรูปแบบระเบียบหรือยกเว้นบางประเภท</li>
+  <li>ประเภทหนังสือที่เขตใช้จริง (ประทับตรา, อื่นๆ) — ลงใน validation 1.6–1.7</li>
+</ul>
+
+<h2 id="s-leave-2555">ระบบการลา (<code>leave</code>)</h2>
+
+<h3 id="s-leave-2555-1">อ้างอิงระเบียบสำนักนายกรัฐมนตรีว่าด้วยการลาของข้าราชการ พ.ศ. 2555</h3>
+<div class="callout">
+  <strong>Lock (มิ.ย. 2569):</strong> ออกแบบและตรวจสอบโมดูล <code>leave</code> ตาม
+  <em>ระเบียบสำนักนายกรัฐมนตรีว่าด้วยการลาของข้าราชการ พ.ศ. 2555</em>
+  — ไม่ใช่แค่เทียบ <a href="https://amsscnt.com">amsscnt.com</a> หรือคู่มือ AMSS++ อย่างเดียว
+</div>
+
+<h4>ลำดับความสำคัญเมื่อแหล่งขัดกัน (โมดูล leave)</h4>
+<ol>
+  <li><strong>ระเบียบ 2555</strong> — ประเภทลา, โควต้า, ขั้นตอนอนุมัติ, การนับวัน</li>
+  <li><strong>คู่มือ AMSS++ v3.1</strong> — ขอบเขตหน้าจอ / ฟีเจอร์ legacy</li>
+  <li><strong>amsscnt.com + legacy PHP</strong> — UX regression เมื่อไม่ขัด 2555</li>
+  <li><strong>SQL dump</strong> — โครงตาราง import; ไม่ชนะระเบียบ</li>
+</ol>
+
+<h4>Checklist — โมดูล leave เทียบ 2555</h4>
+<table>
+  <tr><th>#</th><th>รายการ</th><th>สถานะ</th></tr>
+  <tr><td>L1</td><td>ประเภทลาครบตาม 2555 (10 ประเภท)</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569</td></tr>
+  <tr><td>L2</td><td>โควต้าอัตโนมัติ + บล็อกเมื่อเกินสิทธิ์ (กิจ 45 วัน, พักผ่อนตามอายุราชการ, สะสม ≤30 วัน)</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569</td></tr>
+  <tr><td>L3</td><td>ลาครึ่งวัน (0.5 วัน)</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569</td></tr>
+  <tr><td>L4</td><td>Workflow อนุมัติหลายขั้น (เจ้าหน้าที่ → หัวหน้ากลุ่ม → ผู้บังคับบัญชา)</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569</td></tr>
+  <tr><td>L5</td><td>วันเริ่มราชการใน person (คำนวณลาพักผ่อน)</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569</td></tr>
+  <tr><td>L6</td><td>อัปโหลดไฟล์แนบ — เฉพาะลาป่วย: แสดงเมื่อมีวันลา · &lt;30 optional · ≥30 บังคับ (ข้อ 18)</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569</td></tr>
+  <tr><td>L9</td><td>จำกัดสิทธิ์ตามเพศ — <code>people.sex</code> + <code>eligibleSex</code> บนแคตตาล็อก (3 หญิง, 5/6/9 ชาย)</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569</td></tr>
+  <tr><td>L7</td><td>ตั้งค่าผู้ลงนามรายบุคคล (<code>leave_person_settings</code>) — UI จัดการ</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td>L8</td><td>รายงาน/แบบพิมพ์ใบลาตามระเบียบ</td><td><span class="badge badge-warn">partial</span> มิ.ย. 2569 — รายงาน lists/stats ครบ · แบบพิมพ์ <code>print_report*</code> ยัง pending</td></tr>
+</table>
+<p>ทดสอบ: <a href="docs/TESTING-MODULES.md#leave">docs/TESTING-MODULES.md#leave</a> · โมดูลยัง <strong>in progress</strong> จนกว่า UAT ผ่าน L7–L8 (ถ้าต้องการ) และผู้ใช้บอก <code>leave โอเค</code></p>
+
+<hr>
+
+<h2 id="s5">5. สถาปัตยกรรมระบบใหม่ (Next.js)</h2>
+<pre>
+Browser
+  └── Next.js App Router + shadcn/ui (ภาษาไทย, font Sarabun)
+        ├── Route Handlers / Server Actions
+        ├── Auth.js (session cookie, credentials)
+        ├── Drizzle ORM
+        ├── PostgreSQL 16
+        └── Local filesystem (PDF storage)
+</pre>
+
+<h3>Tech stack</h3>
+<table>
+  <tr><th>ชั้น</th><th>เทคโนโลยี</th></tr>
+  <tr><td>Framework</td><td>Next.js 16, App Router, TypeScript</td></tr>
+  <tr><td>Database</td><td>PostgreSQL 16 + Drizzle ORM</td></tr>
+  <tr><td>Auth</td><td>Auth.js (NextAuth v5) — credentials provider</td></tr>
+  <tr><td>UI</td><td>shadcn/ui + Tailwind CSS</td></tr>
+  <tr><td>Validation</td><td>Zod</td></tr>
+  <tr><td>Package manager</td><td>pnpm</td></tr>
+  <tr><td>Dev DB</td><td>Docker Compose (PostgreSQL)</td></tr>
+</table>
+
+<h3>กลยุทธ์ฐานข้อมูล</h3>
+<div class="callout">
+  <strong>Schema ใหม่ normalize (ยืนยันแล้ว — ไม่ mirror legacy 1:1)</strong>
+  — สร้าง Drizzle schema แล้ว import ข้อมูลจาก <code>smart_area_postgres.sql</code> ผ่าน <code>scripts/import-smart-area.ts</code>
+</div>
+<ul>
+  <li>Legacy มี ~200 ตาราง, naming ไม่สม่ำเสมอ, FK ไม่ครบ</li>
+  <li>Schema ใหม่รองรับ: org context, soft delete, bcrypt password, FK ชัดเจน</li>
+  <li>Import script: <code>scripts/import-smart-area.ts</code> — รองรับ flag <code>--scope=core|bookregister|full</code></li>
+  <li><strong>P000 (ยืนยันแล้ว — C):</strong> import ขั้นต่ำ login + bookregister ครบ — พร้อม P030 หลัง P011</li>
+  <li>MySQL → PostgreSQL: <code>scripts/mysql-to-postgres.ts</code> (หรือ pgloader) — production ชัยนาทเป็น MySQL (<code>amsscntc_cnt</code>)</li>
+  <li><strong>วิธี import dump (ยืนยันแล้ว — C):</strong> Hybrid — ครั้งแรก <code>psql</code> โหลดเข้า schema <code>legacy</code> ทั้งไฟล์; transform เฉพาะ scope; ครั้งถัดไป transform จาก legacy ที่มีอยู่ (ไม่ parse 109k ซ้ำ)</li>
+  <li>Demo data จาก สงขลา 2 — override ชื่อหน่วยงานเป็น สพป.ชัยนาท ใน config</li>
+  <li><strong>UAT / go-live:</strong> export MySQL dump จาก production → แปลง PostgreSQL → import</li>
+</ul>
+<h4>ตารางที่ import ใน P000 (<code>--scope=core,bookregister</code>)</h4>
+<table>
+  <tr><th>Legacy</th><th>ใช้สำหรับ</th></tr>
+  <tr><td><code>system_office_name</code>, <code>system_workgroup</code>, <code>system_school_group</code>, <code>system_school</code></td><td>org / multi-school</td></tr>
+  <tr><td><code>person_main</code>, <code>person_sch_main</code>, <code>person_sch_other</code></td><td>login + multi-school</td></tr>
+  <tr><td><code>system_user</code>, <code>system_module</code>, <code>system_menugroup</code>, <code>system_module_admin</code></td><td>auth + sidebar</td></tr>
+  <tr><td><code>bookregister_permission</code>, <code>bookregister_year</code></td><td>สิทธิ์ + ปีทะเบียน</td></tr>
+  <tr><td><code>bookregister_receive/send/command/certificate</code> (+ <code>*_sch</code> → <code>school_id</code>)</td><td>ทะเบียน 4 ชนิด</td></tr>
+</table>
+<p><em>โมดูลอื่น import ทีหลังด้วย <code>--scope=full</code> หรือต่อโมดูล</em></p>
+
+<h3>โครงสร้างโฟลเดอร์ (แผน)</h3>
+<pre>
+amsscnt-next.js/
+├── context.html
+├── manual_smss_203_0.pdf
+├── smart_area_postgres.sql
+├── docker-compose.yml
+├── drizzle/
+├── scripts/import-smart-area.ts   # legacy → normalize (--scope, --skip-legacy-load)
+├── scripts/load-legacy-dump.sh    # psql smart_area_postgres.sql → schema legacy
+├── scripts/mysql-to-postgres.ts   # UAT: MySQL dump ชัยนาท → PostgreSQL
+├── scripts/copy-sample-pdfs.ts    # dev: copy จาก Amssplus หรือ smart_kpp2 upload_files*
+├── storage/                       # dev PDF (gitignore) — production: /var/amsscnt/storage
+├── src/app/(auth)/login/
+├── src/app/(dashboard)/{module}/
+├── src/app/api/
+├── src/lib/db/ | auth/ | services/
+└── docs/
+</pre>
+
+<h3>Pattern ต่อโมดูล</h3>
+<ol>
+  <li>Drizzle schema + migration</li>
+  <li>Import mapping จาก legacy table</li>
+  <li>API Route Handlers (CRUD + search + export CSV)</li>
+  <li>UI: list / form / permission guard (p1/p2/p3) — ส่งมอบทดสอบทีละ <strong>โมดูล (slug)</strong></li>
+  <li>Responsive: mobile + tablet + desktop ทุกหน้าก่อนปิดงาน</li>
+  <li>เทียบฟังก์ชันกับ <a href="https://amsscnt.com">amsscnt.com</a> + คู่มือ PDF — รอผู้ใช้ตรวจสอบ</li>
+  <li>ทดสอบกับ demo data</li>
+</ol>
+
+<hr>
+
+<h2 id="s6">6. แผนพัฒนา (เฟส A → H)</h2>
+<table>
+  <tr><th>เฟส</th><th>เนื้อหา</th><th>โมดูล</th><th>สถานะ</th></tr>
+  <tr><td>0</td><td>Bootstrap + import core+bookregister (P000 scope C)</td><td>—</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td>A</td><td>Platform: login, home, จัดการระบบ</td><td>platform</td><td><span class="badge badge-ok">done</span> — P010–P019 (บุคลากรจาก Excel ชัยนาท)</td></tr>
+  <tr><td>B</td><td>บุคลากร</td><td>person</td><td><span class="badge badge-warn">in progress</span> — P050–P052 implement แล้ว รอ UAT</td></tr>
+  <tr><td>C</td><td>ทะเบียนหนังสือ (4 ชนิด + PDF) — priority สูง</td><td>bookregister</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569 — ดู <a href="docs/TESTING-MODULES.md#bookregister">คู่มือ</a></td></tr>
+  <tr><td>D</td><td>รับส่งหนังสือราชการ (+ Phase 2)</td><td>book</td><td><span class="badge badge-warn">in progress</span> — v1 done; Phase 2 implement มิ.ย. 2569 รอ UAT — <a href="docs/TESTING-MODULES.md#book">คู่มือ</a></td></tr>
+  <tr><td>E</td><td>งานธุรการ</td><td>leave, permission, car, mail, meeting</td><td><span class="badge badge-warn">in progress</span> — P070–P110 implement มิ.ย. 2569 รอ UAT</td></tr>
+  <tr><td>F</td><td>งานสนับสนุน</td><td>affair, cabinet, news</td><td><span class="badge badge-warn">in progress</span> — P120–P140 implement มิ.ย. 2569 รอ UAT</td></tr>
+  <tr><td>G</td><td>งานวิชาการ</td><td>achievement, student_main, spacial_student</td><td><span class="badge badge-warn">in progress</span> — P150–P170 implement มิ.ย. 2569 รอ UAT (P010.s deferred)</td></tr>
+  <tr><td>H</td><td>งบประมาณ (plan ก่อน budget)</td><td>plan, budget</td><td><span class="badge badge-warn">in progress</span> — P180–P190 MVP implement มิ.ย. 2569 รอ UAT</td></tr>
+  <tr><td>—</td><td>Deploy on-prem + backup</td><td>—</td><td><span class="badge badge-warn">runbook ready</span> — <a href="docs/DEPLOY-ONPREM.md">DEPLOY-ONPREM</a>; cutover รอ UAT ครบ</td></tr>
+</table>
+
+<hr>
+
+<h2 id="s7">7. Deploy บนเซิร์ฟเวอร์ภายใน สพป.ชัยนาท</h2>
+<p>Runbook: <a href="docs/DEPLOY-ONPREM.md"><code>docs/DEPLOY-ONPREM.md</code></a> (P999 — UAT checklist, migrate, Nginx, PM2, rollback, cutover)</p>
+<h3>Production (amsscnt.com)</h3>
+<table>
+  <tr><th>ชั้น</th><th>รายการ</th></tr>
+  <tr><td>เครื่อง</td><td><strong>เครื่อง PHP เดิม (ยืนยันแล้ว)</strong> — ติดตั้ง Next.js + PostgreSQL บน server ที่รัน amsscnt.com วันนี้</td></tr>
+  <tr><td>OS</td><td>Linux Ubuntu 22.04+</td></tr>
+  <tr><td>Runtime</td><td>Node.js 20 LTS + PM2</td></tr>
+  <tr><td>Database</td><td>PostgreSQL 16 (local)</td></tr>
+  <tr><td>Web server</td><td>Nginx reverse proxy → localhost:3000</td></tr>
+  <tr><td>Domain / URL</td><td><strong>amsscnt.com (ยืนยันแล้ว)</strong> — cutover สลับ upstream ครั้งเดียว user ไม่เปลี่ยน bookmark</td></tr>
+  <tr><td>SSL</td><td>ใบรับรองภายในเขต หรือ Let's Encrypt</td></tr>
+  <tr><td>ไฟล์ PDF</td><td><code>/var/amsscnt/storage</code> — backup rsync รายวัน; <strong>go-live:</strong> migrate ไฟล์ทั้งหมดจาก PHP server ก่อน cutover</td></tr>
+  <tr><td>DB backup</td><td>pg_dump cron รายวัน</td></tr>
+  <tr><td>Cutover</td><td><strong>Big bang (ยืนยันแล้ว):</strong> UAT ผ่านบน staging → deploy บน<strong>เครื่อง PHP เดิม</strong> → สลับ Nginx ไป Next.js ครั้งเดียว ปิด PHP</td></tr>
+  <tr><td>Rollback</td><td><strong>C (ยืนยันแล้ว):</strong> snapshot MySQL + PDF + Nginx ก่อน cutover; เก็บ PHP/MySQL ไว้ 1–2 สัปดาห์; สลับ Nginx กลับ PHP ได้ภายในนาที</td></tr>
+  <tr><td>Build</td><td>pnpm build → pm2 start — ไม่ deploy บน Vercel</td></tr>
+</table>
+
+<h3>UAT / Staging (ยืนยันแล้ว)</h3>
+<table>
+  <tr><th>ชั้น</th><th>รายการ</th></tr>
+  <tr><td>เครื่อง</td><td><strong>Server staging แยก</strong> — คนละเครื่องกับ production PHP ในเครือข่าย สพป.ชัยนาท</td></tr>
+  <tr><td>ข้อมูล</td><td>MySQL dump ชัยนาทจริง → แปลง PostgreSQL → import + migrate PDF ครบ</td></tr>
+  <tr><td>URL</td><td>IP ภายในเขต หรือ hostname staging (ไม่ใช่ amsscnt.com จนกว่า cutover)</td></tr>
+  <tr><td>วัตถุประสงค์</td><td>ทดสอบครบ 18 โมดูล + sign-off ก่อน deploy ขึ้น production</td></tr>
+</table>
+
+<h3>Dev (เครื่องพัฒนา)</h3>
+<ul>
+  <li>Docker Compose PostgreSQL + <code>smart_area_postgres.sql</code> (สงขลา 2) + override ชื่อเขต</li>
+  <li>ไม่ใช่ UAT — ใช้สำหรับ implement + ทดสอบทีละโมดูล เทียบ amsscnt.com</li>
+</ul>
+
+<hr>
+
+<h2 id="s8">8. ความเสี่ยงและข้อควรระวัง</h2>
+<table>
+  <tr><th>ความเสี่ยง</th><th>การจัดการ</th></tr>
+  <tr><td>Scope 18 โมดูลใหญ่</td><td>ทำทีละเฟส A→H และ<strong>ทีละโมดูล (slug)</strong> — ผู้ใช้ทดสอบเองตาม <code>TESTING-MODULES.md</code></td></tr>
+  <tr><td>PDF คู่มือ</td><td><code>manual_smss_203_0.pdf</code> อยู่ใน repo root แล้ว (copy จาก amsscnt-go)</td></tr>
+  <tr><td>Demo data เป็น สงขลา 2</td><td>Dev ใช้ dump สงขลา 2 + override ชื่อเขต — <strong>ก่อน UAT/go-live</strong> ใช้ dump ชัยนาทจริง (ยืนยันแล้ว)</td></tr>
+  <tr><td>Legacy MD5 password</td><td>Import แล้ว reset เป็น bcrypt</td></tr>
+  <tr><td>Production DB เป็น MySQL</td><td>UAT/go-live: export MySQL → แปลง PostgreSQL ก่อน import (ยืนยันแล้ว)</td></tr>
+  <tr><td>ไฟล์ PDF จากระบบเดิม</td><td><strong>Dev (B):</strong> copy ตัวอย่างจาก <code>../Amssplus/modules/bookregister/upload_files*</code> — <strong>UAT/go-live (A):</strong> migrate ครบจาก production server</td></tr>
+  <tr><td>Cutover ล้มเหลว</td><td><strong>Rollback C (ยืนยันแล้ว):</strong> snapshot ก่อน + PHP standby + Nginx rollback — ดู §7 + <span class="page-id">P999</span></td></tr>
+  <tr><td>โมดูล budget ซับซ้อน</td><td>MVP subset แล้วขยาย</td></tr>
+</table>
+
+<hr>
+
+<h2 id="s9">9. Responsive UI — ทุกหน้าต้องรองรับหลายอุปกรณ์</h2>
+<div class="callout">
+  <strong>กฎ:</strong> ทุกหน้าจอที่สร้าง (list, form, detail, modal, print) ต้องใช้งานได้ดีบน <strong>mobile, tablet, desktop</strong>
+  — ไม่ยกเว้นแม้แต่หน้ admin ภายใน
+</div>
+
+<h3>Breakpoints (Tailwind / mobile-first)</h3>
+<table>
+  <tr><th>ขนาด</th><th>ช่วงความกว้าง</th><th>พฤติกรรม UI ที่คาดหวัง</th></tr>
+  <tr><td>Mobile</td><td>&lt; 640px (<code>sm</code>)</td><td>เมนู top nav เป็น sheet/hamburger, ตาราง scroll แนวนอนหรือ card, ฟอร์มเต็มความกว้าง, ปุ่ม touch ≥ 44px</td></tr>
+  <tr><td>Tablet</td><td>640–1024px (<code>sm</code>–<code>lg</code>)</td><td>เมนู hamburger sheet, ตารางแสดงคอลัมน์หลัก, ฟอร์ม 1–2 คอลัมน์</td></tr>
+  <tr><td>Desktop</td><td>&gt; 1024px (<code>lg</code>+)</td><td>top nav แถบที่ 2 (dropdown ตามกลุ่ม), content เต็มความกว้าง, ตารางครบคอลัมน์</td></tr>
+</table>
+
+<h3>Checklist responsive ต่อหน้า</h3>
+<ul>
+  <li>ไม่มี horizontal overflow ที่ไม่จำเป็น (ยกเว้นตารางที่ตั้งใจ scroll)</li>
+  <li>ข้อความและ label อ่านได้ ไม่ถูกตัดโดยไม่มีทางเลือก</li>
+  <li>ปุ่ม/action หลักเข้าถึงได้บนมือถือ (ไม่ซ่อนลึกเกินไป)</li>
+  <li>Modal / dropdown ไม่ล้นจอ mobile</li>
+  <li>ทดสอบอย่างน้อย 3 viewport: ~375px (มือถือ), ~768px (แท็บเล็ต), ~1280px (เดสก์ท็อป)</li>
+  <li>Theme 2 โหมด (ราชการ · มืด) ต้องใช้ได้ทุก breakpoint — ดู §14</li>
+</ul>
+
+<h3>คอมponent ที่ต้องออกแบบ responsive ตั้งแต่ต้น</h3>
+<ul>
+  <li>App shell: header, top nav (dropdown), breadcrumb</li>
+  <li>Data table + filter + pagination</li>
+  <li>ฟอร์ม CRUD (input, date, select, file upload PDF)</li>
+  <li>หน้า login</li>
+  <li>หน้า print/export (ถ้ามี)</li>
+</ul>
+
+<h3 id="s9-pagination">Pagination — รายการแบ่งหน้า</h3>
+<div class="callout">
+  <strong>กฎ (ทุก list ที่มี <code>?page=</code>):</strong> แถบแบ่งหน้าต้องมีปุ่มไป <strong>หน้าแรก</strong> และ <strong>หน้าสุดท้าย</strong> เสมอ
+  — ไม่ใช่แค่ «ก่อนหน้า / ถัดไป» อย่างเดียว
+</div>
+<table>
+  <tr><th>ปุ่ม</th><th>พฤติกรรม</th></tr>
+  <tr><td><strong>หน้าแรก</strong></td><td>ไป <code>page=1</code> (หรือลบ query <code>page</code>) — ปิด/disabled เมื่ออยู่หน้า 1 แล้ว</td></tr>
+  <tr><td>ก่อนหน้า</td><td><code>page - 1</code></td></tr>
+  <tr><td>เลขหน้า</td><td>แนะนำแบบมีจุดไข่ปลา (เช่น <code>1 … 4 5 [6] 7 8 … 199</code>) — ต้องมีลิงก์ไปหน้า 1 และหน้าสุดท้ายในแถบเลข</td></tr>
+  <tr><td>ถัดไป</td><td><code>page + 1</code></td></tr>
+  <tr><td><strong>หน้าสุดท้าย</strong></td><td>ไป <code>page={totalPages}</code> — ปิด/disabled เมื่ออยู่หน้าสุดท้ายแล้ว</td></tr>
+</table>
+<ul>
+  <li>คง query อื่น (ค้นหา, กรอง) ตอนเปลี่ยนหน้า — ใช้ helper สร้าง URL เช่น <code>build*ListUrl</code></li>
+  <li>Component มาตรฐาน: <code>src/components/core/list-pagination.tsx</code> — bookregister ใช้ re-export ที่ <code>receive-pagination.tsx</code></li>
+  <li><code>aria-label="แบ่งหน้า"</code> · หน้าปัจจุบัน <code>aria-current="page"</code></li>
+  <li>Mobile: ปุ่ม touch ≥ 44px (<code>min-h-11</code>) · แถบ wrap ได้</li>
+</ul>
+
+<hr>
+
+<h2 id="s10">10. กระบวนการพัฒนา — ทดสอบทีละโมดูล + เทียบ amsscnt.com</h2>
+<div class="callout callout-danger">
+  <strong>สำคัญ:</strong> หน่วย<strong>ส่งมอบและทดสอบ = 1 โมดูล (slug)</strong> เช่น <code>bookregister</code> ทั้งก้อน
+  ผู้ใช้เดินทดสอบเองตาม <a href="docs/TESTING-MODULES.md"><code>docs/TESTING-MODULES.md</code></a> แล้วบอก <strong>«{slug} โอเค»</strong> หรือรายงานบั๊กเป็นก้อน — <strong>ไม่ต้อง approve ทีละ P032/P033/P034</strong>
+</div>
+<div class="callout">
+  <strong>Baseline เทียบฟังก์ชัน (ยืนยันแล้ว):</strong>
+  <a href="https://amsscnt.com">amsscnt.com</a> = AMSS++ <strong>PHP legacy</strong> ที่ สพป.ชัยนาท ใช้งาน production จริง (source of truth ด้านฟิลด์ / ปุ่ม / flow / สิทธิ์).
+  UI ใหม่ modern ได้ แต่ฟังก์ชันต้องเทียบได้ — ดูกฎขัดแย้งใน §12
+</div>
+
+<h3>แหล่งอ้างอิงเทียบฟังก์ชัน</h3>
+<table>
+  <tr><th>แหล่ง</th><th>ใช้เทียบอะไร</th></tr>
+  <tr><td><a href="https://amsscnt.com">amsscnt.com</a></td><td>ระบบ production / legacy ปัจจุบัน สพป.ชัยนาท — ฟิลด์, ปุ่ม, flow, สิทธิ์, ข้อความ, การค้นหา, export</td></tr>
+  <tr><td><code>manual_smss_203_0.pdf</code></td><td>สเปกตามคู่มือ AMSS++ v3.1 — กรณีที่เว็บจริงกับคู่มือต่างกัน ให้ถามผู้ใช้ก่อน</td></tr>
+  <tr><td><code>smart_area_postgres.sql</code></td><td>ชื่อฟิลด์, ข้อมูล demo, กฎ unique/permission</td></tr>
+  <tr><td><a href="docs/TESTING-MODULES.md">docs/TESTING-MODULES.md</a></td><td>รายการ URL ต่อโมดูล — คู่มือให้ผู้ใช้ทดสอบเอง</td></tr>
+</table>
+
+<h3>ลำดับงานต่อ 1 โมดูล</h3>
+<ol>
+  <li><strong>ระบุโมดูล</strong> — slug (เช่น <code>bookregister</code>) + เทียบเมนูใดใน amsscnt.com · รายการเมนูย่อย legacy ดู <a href="#s2-2">§2.2</a></li>
+  <li><strong>Implement</strong> — ฟีเจอร์ภายในโมดูลต่อเนื่อง (อ้าง <span class="page-id">P###</span> ใน <a href="#s10-1">§10.1</a> เป็นแผน dev ภายใน ไม่ต้อง approve แยกทุก P)</li>
+  <li><strong>ส่งมอบให้ทดสอบ</strong> — ลิงก์คู่มือทดสอบ + สรุปว่าเมนูย่อยไหนใช้ได้ / เร็วๆ นี้ (สอดคล้องป้ายบน <code>/home</code>)</li>
+  <li><strong>ผู้ใช้ทดสอบเอง</strong> — เดิน URL ใน <code>TESTING-MODULES.md</code> เทียบ amsscnt.com</li>
+  <li><strong>แก้บั๊ก</strong> — ตามรายงาน (ระบุ slug + URL ไม่ต้องระบุ P###)</li>
+  <li><strong>Mark done</strong> — เมื่อผู้ใช้บอก <code>{slug} โอเค</code> → อัปเดตตารางด้านล่าง แล้วไปโมดูลถัดไป</li>
+</ol>
+
+<h3>สถานะโมดูล</h3>
+<table>
+  <tr><th>ค่า</th><th>ความหมาย</th></tr>
+  <tr><td><code>not started</code></td><td>ยังไม่มี route ใช้งานจริง (placeholder)</td></tr>
+  <tr><td><code>in progress</code></td><td>มีบางส่วนใช้ได้ — กำลังพัฒนาต่อในโมดูลเดียวกัน</td></tr>
+  <tr><td><code>ready for you</code></td><td>พร้อมให้คุณทดสอบทั้งโมดูล (แจ้งในแชทได้)</td></tr>
+  <tr><td><code>done</code></td><td>คุณ approve แล้ว (<code>{slug} โอเค</code>)</td></tr>
+</table>
+
+<h3>Checklist ตรวจความถูกต้อง (ต่อโมดูล)</h3>
+<table>
+  <tr><th>หัวข้อ</th><th>ต้องตรงกับของเดิม</th></tr>
+  <tr><td>ฟิลด์ในฟอร์ม / คอลัมน์ในตาราง</td><td>ครบและความหมายตรง (ชื่อไทย, บังคับ/ไม่บังคับ)</td></tr>
+  <tr><td>การค้นหา / filter / sort</td><td>เงื่อนไขเดียวกหรือดีกว่า</td></tr>
+  <tr><td>สิทธิ์</td><td>p1 ดู, p2 แก้, p3 ลบ, หนังสือลับ, school vs district</td></tr>
+  <tr><td>เลขทะเบียน / auto-number</td><td>กฎ year + register_number ตามเดิม</td></tr>
+  <tr><td>PDF attach / download</td><td>authorize เหมือนเดิม</td></tr>
+  <tr><td>Export CSV / print</td><td>มีถ้าระบบเดิมมี</td></tr>
+  <tr><td>Responsive</td><td>ใช้งานได้ mobile / tablet / desktop</td></tr>
+</table>
+
+<h3>สิ่งที่ Cursor ต้องทำ / ห้ามทำ</h3>
+<ul>
+  <li><strong>ทำ:</strong> ทำงานต่อในโมดูลที่กำลัง focus — อ้าง <span class="page-id">P###</span> ใน §10.1 เป็นงานย่อยภายใน</li>
+  <li><strong>ทำ:</strong> ส่งมอบพร้อมลิงก์ <code>docs/TESTING-MODULES.md#{slug}</code> + สรุปเมนูย่อยที่ใช้ได้/ยังไม่พร้อม</li>
+  <li><strong>ทำ:</strong> รอ <code>{slug} โอเค</code> ก่อน mark โมดูล <code>done</code> ในตารางนี้</li>
+  <li><strong>ห้าม:</strong> บังคับผู้ใช้ approve ทีละ P### หรือส่ง checklist ย่อยทุกครั้งที่จบ P เดียว</li>
+  <li><strong>ห้าม:</strong> ข้ามการเทียบ amsscnt.com — ฟังก์ชันต้องเทียบได้</li>
+</ul>
+
+<h3>ตารางโมดูล — หน่วยทดสอบหลัก</h3>
+<p>อัปเดตคอลัมน์ <strong>สถานะโมดูล</strong> เป็น <code>done</code> เมื่อผู้ใช้บอก <code>{slug} โอเค</code> เท่านั้น</p>
+<table>
+  <tr><th>รหัส</th><th>slug</th><th>ชื่อโมดูล</th><th>เมนู amsscnt.com (<code>module_desc</code>)</th><th>สถานะโมดูล</th><th>คู่มือทดสอบ</th></tr>
+  <tr><td>M-platform</td><td><em>—</em></td><td>Login + หน้าแรก + จัดการระบบ</td><td>login / หลัง login / จัดการระบบ</td><td><span class="badge badge-ok">done</span></td><td><a href="docs/TESTING-MODULES.md#platform">คู่มือ</a></td></tr>
+  <tr><td>M-person</td><td>person</td><td>ระบบบริหารงานบุคลากร</td><td>ระบบบริหารงานบุคลากร</td><td><span class="badge badge-warn">in progress</span> — P050–P052 implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#person">ทดสอบ</a></td></tr>
+  <tr><td>M-plan</td><td>plan</td><td>การวางแผน</td><td>การวางแผน</td><td><span class="badge badge-warn">in progress</span> — P180 implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#plan">ทดสอบ</a></td></tr>
+  <tr><td>M-budget</td><td>budget</td><td>การเงินและบัญชี</td><td>การเงินและบัญชี</td><td><span class="badge badge-warn">in progress</span> — P190 MVP implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#budget">ทดสอบ</a></td></tr>
+  <tr><td>M-mail</td><td>mail</td><td>ไปรษณีย์</td><td><strong>ไปรษณีย์</strong> (PDF/dump: ระบบส่งหนังสือเวียน)</td><td><span class="badge badge-ok">done</span></td><td><a href="docs/TESTING-MODULES.md#mail">คู่มือ</a></td></tr>
+  <tr><td>M-meeting</td><td>meeting</td><td>ระบบจองห้องประชุม</td><td>ระบบจองห้องประชุม</td><td><span class="badge badge-warn">in progress</span> — P110 implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#meeting">ทดสอบ</a></td></tr>
+  <tr><td>M-affair</td><td>affair</td><td>ภารกิจผู้อำนวยการ</td><td>ภารกิจผู้อำนวยการ</td><td><span class="badge badge-warn">in progress</span> — P120 implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#affair">ทดสอบ</a></td></tr>
+  <tr><td>M-leave</td><td>leave</td><td>ระบบการลา</td><td>ระบบการลา</td><td><span class="badge badge-warn">in progress</span> — ยึด 2555 L1–L6 แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#leave">ทดสอบ</a></td></tr>
+  <tr><td>M-permission</td><td>permission</td><td>ขออนุมัติไปราชการ</td><td>ขออนุมัติไปราชการ</td><td><span class="badge badge-warn">in progress</span> — P080 implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#permission">ทดสอบ</a></td></tr>
+  <tr><td>M-car</td><td>car</td><td>ยานพาหนะ</td><td>ยานพาหนะ</td><td><span class="badge badge-warn">in progress</span> — P090 implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#car">ทดสอบ</a></td></tr>
+  <tr><td>M-cabinet</td><td>cabinet</td><td>ตู้เอกสาร / วาระประชุม</td><td>ระบบวาระประชุมแผ่นเดียว QR-CODE</td><td><span class="badge badge-warn">in progress</span> — P130 implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#cabinet">ทดสอบ</a></td></tr>
+  <tr><td>M-news</td><td>news</td><td>ข่าว</td><td>ข่าว</td><td><span class="badge badge-warn">in progress</span> — P140 implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#news">ทดสอบ</a></td></tr>
+  <tr><td>M-achievement</td><td>achievement</td><td>ผลสัมฤทธิ์ทางการเรียน</td><td>ผลสัมฤทธิ์ทางการเรียน</td><td><span class="badge badge-warn">in progress</span> — P150 implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#achievement">ทดสอบ</a></td></tr>
+  <tr><td>M-student</td><td>student_main</td><td>ข้อมูลนักเรียน</td><td>ข้อมูลนักเรียน</td><td><span class="badge badge-warn">in progress</span> — P160 MVP implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#student_main">ทดสอบ</a></td></tr>
+  <tr><td>M-book</td><td>book</td><td>รับส่งหนังสือราชการ</td><td>รับส่งหนังสือราชการ</td><td><span class="badge badge-warn">in progress</span> — v1 done; Phase 2 implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#book">คู่มือ</a></td></tr>
+  <tr><td>M-bookregister</td><td>bookregister</td><td>ทะเบียนหนังสือราชการ</td><td>ทะเบียนหนังสือราชการ</td><td><span class="badge badge-ok">done</span></td><td><a href="docs/TESTING-MODULES.md#bookregister">คู่มือ</a></td></tr>
+  <tr><td>M-spacial</td><td>spacial_student</td><td>นักเรียนพิเศษ</td><td>นักเรียนพิเศษ</td><td><span class="badge badge-warn">in progress</span> — P170 implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#spacial_student">ทดสอบ</a></td></tr>
+</table>
+<p>เมนูอื่นบน amsscnt.com ที่<strong>ยังไม่มีใน Next.js v1</strong> — ดูตารางครบที่ <a href="#s2-1">§2.1</a> (เช่น <code>idocument</code> บันทึกข้อความ, <code>bookobec</code> สพฐ., <code>delegate</code>, <code>asset</code>, <code>supervision</code>)</p>
+
+<h3 id="s10-1">§10.1 Appendix — รายละเอียด implement (<span class="page-id">P###</span>) สำหรับ dev</h3>
+<p><em>ไม่ต้อง approve ทีละแถว — ใช้เป็นแผนงานย่อยภายในโมดูลเท่านั้น ประวัติสถานะคงไว้</em></p>
+<table>
+  <tr><th>ลำดับ</th><th>โมดูล</th><th>หน้า / Route แนว</th><th>PDF หน้า</th><th>เทียบ amsscnt.com</th><th>สถานะ</th></tr>
+  <tr><td class="page-id">P000</td><td>—</td><td>Bootstrap + import core+bookregister + copy-sample-pdfs</td><td>—</td><td>—</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P010</td><td>core</td><td>Login <code>/login</code> — บุคลากร: user/pass + เลขบัตรครั้งแรก + multi-school</td><td>4–8</td><td>หน้า login</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P010.s</td><td>core</td><td>Login นักเรียน — <em>เลื่อนไปกับ P160 student_main</em></td><td>—</td><td>login นักเรียน</td><td><span class="badge badge-warn">deferred</span></td></tr>
+  <tr><td class="page-id">P011</td><td>core</td><td>App shell + <strong>หน้าเมนูโมดูล</strong> (welcome สั้น ๆ) — top nav dropdown 5 กลุ่ม</td><td>9–17</td><td>หลัง login</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P012</td><td>core</td><td>ตั้งค่าหน่วยงานเขต (ชื่อ สพป.ชัยนาท)</td><td>9–17</td><td>จัดการระบบ</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P013</td><td>core</td><td>CRUD สถานศึกษา (schools)</td><td>9–17</td><td>จัดการระบบ → โรงเรียน</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P014</td><td>core</td><td>CRUD กลุ่มสถานศึกษา</td><td>9–17</td><td>จัดการระบบ</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P015</td><td>core</td><td>CRUD กลุ่มงาน (workgroups)</td><td>9–17</td><td>จัดการระบบ</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P016</td><td>core</td><td>เปิด/ปิดโมดูล (app_modules)</td><td>9–17</td><td>จัดการระบบ → โมดูล</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P017</td><td>core</td><td>ผู้ดูแลโมดูล (module_admins)</td><td>9–17</td><td>จัดการระบบ</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P018</td><td>core</td><td>CRUD ผู้ใช้งาน (users)</td><td>9–17</td><td>จัดการระบบ → ผู้ใช้</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P019</td><td>core</td><td>สิทธิ์โมดูลต่อคน (p1/p2/p3)</td><td>9–17</td><td>จัดการระบบ → สิทธิ์</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P030</td><td>bookregister</td><td>ตั้งค่าปีทะเบียน (register_years)</td><td>123–128</td><td>ทะเบียน → ตั้งค่าปี</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P031</td><td>bookregister</td><td>สิทธิ์ทะเบียน (register_permissions)</td><td>123–128</td><td>ทะเบียน → สิทธิ์</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P032</td><td>bookregister</td><td>ทะเบียนรับ — รายการ + ค้นหา</td><td>123–128</td><td>ทะเบียนรับ</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P033</td><td>bookregister</td><td>ทะเบียนรับ — เพิ่ม/แก้ไข/ลบ</td><td>123–128</td><td>บันทึกรับ</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P034</td><td>bookregister</td><td>ทะเบียนรับ — แนบ/ดาวน์โหลด PDF</td><td>123–128</td><td>ไฟล์แนบรับ</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P035</td><td>bookregister</td><td>ทะเบียนส่ง — รายการ + ค้นหา</td><td>123–128</td><td>ทะเบียนส่ง</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P036</td><td>bookregister</td><td>ทะเบียนส่ง — เพิ่ม/แก้ไข + เลขที่สำนักงาน</td><td>123–128</td><td>บันทึกส่ง</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P037</td><td>bookregister</td><td>ทะเบียนส่ง — แนบ/ดาวน์โหลด PDF</td><td>123–128</td><td>ไฟล์แนบส่ง</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P038</td><td>bookregister</td><td>ทะเบียนคำสั่ง — รายการ + ฟอร์ม</td><td>123–128</td><td>ทะเบียนคำสั่ง</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P039</td><td>bookregister</td><td>ทะเบียนเกียรติบัตร — รายการ + ฟอร์ม</td><td>123–128</td><td>ทะเบียนเกียรติบัตร</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P040</td><td>bookregister</td><td>ทะเบียนรับ/ส่ง — มุมมองโรงเรียน (<code>school_id</code>)</td><td>123–128</td><td>login โรงเรียน → ทะเบียน</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P041</td><td>bookregister</td><td>Export CSV ทะเบียน (รับ/ส่ง ตามปี)</td><td>123–128</td><td>ส่งออก</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P050</td><td>person</td><td>บุคลากร — รายการ + ค้นหา</td><td>18–20</td><td>บุคลากร</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P051</td><td>person</td><td>บุคลากร — เพิ่ม/แก้ไข + ตำแหน่ง</td><td>18–20</td><td>ฟอร์มบุคลากร</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P052</td><td>person</td><td>สิทธิ์บุคลากร + Export CSV</td><td>18–20</td><td>สิทธิ์ / ส่งออก</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P060</td><td>book</td><td>รับส่งหนังสือ — รายการ (เขต↔โรงเรียน)</td><td>113–122</td><td>รับส่งหนังสือ</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P061</td><td>book</td><td>รับส่งหนังสือ — สร้าง/ตอบรับ + แนบ PDF</td><td>113–122</td><td>บันทึกส่ง/รับ</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P062</td><td>book</td><td>กลุ่มหนังสือ (book_groups)</td><td>113–122</td><td>กลุ่มงานหนังสือ</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td class="page-id">P070</td><td>leave</td><td>การลา — รายการ + ฟอร์ม</td><td>76–85</td><td>ระบบการลา</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569 — UAT</td></tr>
+  <tr><td class="page-id">P071</td><td>leave</td><td>ตั้งค่าปีลา + สิทธิ์ + โควต้า (la_year, person_set)</td><td>76–85</td><td>ตั้งค่าลา</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569 — UAT</td></tr>
+  <tr><td class="page-id">P080</td><td>permission</td><td>ขออนุมัติไปราชการ — รายการ + ฟอร์ม</td><td>86–87</td><td>ไปราชการ</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569 — UAT</td></tr>
+  <tr><td class="page-id">P090</td><td>car</td><td>ยานพาหนะ — รถ/คนขับ/คำขอใช้</td><td>88–96</td><td>ยานพาหนะ</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569 — UAT</td></tr>
+  <tr><td class="page-id">P100</td><td>mail</td><td>ไปรษณีย์ — รายการ + ส่ง + แนบ</td><td>63–65</td><td>ไปรษณีย์ (amsscnt.com)</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569 — UAT</td></tr>
+  <tr><td class="page-id">P110</td><td>meeting</td><td>จองห้องประชุม — ห้อง + ปฏิทินจอง</td><td>66–70</td><td>จองห้องประชุม</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569 — UAT</td></tr>
+  <tr><td class="page-id">P120</td><td>affair</td><td>ภารกิจผู้อำนวยการ — รายการ + ฟอร์ม</td><td>71–75</td><td>ภารกิจ ผอ.</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569 — UAT</td></tr>
+  <tr><td class="page-id">P130</td><td>cabinet</td><td>ตู้เอกสาร / QR วาระ — รายการ + อัปโหลด</td><td>97–102</td><td>ตู้เอกสาร</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569 — UAT</td></tr>
+  <tr><td class="page-id">P140</td><td>news</td><td>ข่าว — หมวด + รายการ + ฟอร์ม</td><td>103–106</td><td>ข่าว</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569 — UAT</td></tr>
+  <tr><td class="page-id">P150</td><td>achievement</td><td>ผลสัมฤทธิ์ — รายการ + บันทึกคะแนน</td><td>107–109</td><td>ผลการเรียน</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569 — UAT</td></tr>
+  <tr><td class="page-id">P160</td><td>student_main</td><td>ข้อมูลนักเรียน — รายการ + ฟอร์ม</td><td>110–112</td><td>นักเรียน</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569 — UAT (login นักเรียน deferred)</td></tr>
+  <tr><td class="page-id">P170</td><td>spacial_student</td><td>นักเรียนพิเศษ — รายการ + ฟอร์ม</td><td>129–135</td><td>นักเรียนพิเศษ</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569 — UAT</td></tr>
+  <tr><td class="page-id">P180</td><td>plan</td><td>วางแผน — โครงการ + กิจกรรม</td><td>21–25</td><td>การวางแผน</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569 — UAT</td></tr>
+  <tr><td class="page-id">P190</td><td>budget</td><td>การเงิน — MVP: รับ/จ่าย/แผนงบ (subset)</td><td>26–62</td><td>การเงิน (เริ่ม subset)</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569 — UAT</td></tr>
+  <tr><td class="page-id">P999</td><td>—</td><td>Deploy on-prem + backup + rollback runbook (snapshot, Nginx rollback PHP)</td><td>—</td><td>—</td><td><span class="badge badge-warn">runbook ready</span> — <a href="docs/DEPLOY-ONPREM.md">DEPLOY-ONPREM</a>; cutover รอ UAT</td></tr>
+</table>
+<p><em>หน้าย่อยเพิ่ม (print, report, cancel) ให้แทรกเป็น P0xx.a ระหว่างหน้าหลัก — อย่าข้ามลำดับหลัก</em></p>
+
+<hr>
+
+<h2 id="s11">11. ข้อกำหนดสำหรับ Cursor AI</h2>
+<div class="callout"><strong>เมื่อ implement โปรเจกต์นี้ ให้ปฏิบัติตาม:</strong></div>
+<ul>
+  <li>อ่าน <code>manual_smss_203_0.pdf</code> เป็นสเปกหลักของฟีเจอร์แต่ละโมดูล</li>
+  <li>อ้างอิง schema/ข้อมูลจาก <code>smart_area_postgres.sql</code></li>
+  <li>UI เป็นภาษาไทยทั้งหมด, font Sarabun</li>
+  <li>ห้าม copy โค้ดจาก <code>amsscnt-go</code> (Laravel) — reference domain/UX เท่านั้น</li>
+  <li>Minimize scope — แก้เฉพาะสิ่งที่เกี่ยวข้องกับ task</li>
+  <li>Production = on-prem — file storage และ session เหมาะ self-hosted</li>
+  <li>สิทธิ์ p1/p2/p3 และ org context enforce ทั้ง API และ UI</li>
+  <li><strong>ทุกหน้า responsive</strong> (mobile / tablet / desktop) — ดู §9</li>
+  <li><strong>Pagination</strong> ต้องมีปุ่มหน้าแรก + หน้าสุดท้าย — ดู <a href="#s9-pagination">§9 Pagination</a></li>
+  <li><strong>ทดสอบทีละโมดูล (slug)</strong> — ผู้ใช้เดินตาม <a href="docs/TESTING-MODULES.md">docs/TESTING-MODULES.md</a> แล้วบอก <code>{slug} โอเค</code> — ดู §10</li>
+  <li>อัปเดตตารางโมดูล §10 เมื่อผู้ใช้ approve โมดูล; อัปเดต <span class="page-id">P###</span> ใน §10.1 เป็นแผน dev ภายใน</li>
+  <li>เริ่มงานด้วยการระบุ <strong>โมดูล (slug)</strong> ที่กำลังทำ — อ้าง <span class="page-id">P###</span> ได้เป็นงานย่อย ไม่ต้อง approve แยกทุก P</li>
+</ul>
+
+<h3>เอกสารอ้างอิงเพิ่ม (นอก repo)</h3>
+<ul>
+  <li><code>../Amssplus/smss_index.php</code> — PHP source production (อ่าน logic เมื่อ UI ไม่ชัด)</li>
+  <li><code>../amsscnt-go/docs/amss-module-map.md</code></li>
+  <li><code>../amsscnt-go/docs/domain.md</code></li>
+  <li><code>../amsscnt-go/docs/import-smart-area.md</code></li>
+  <li><code>docs/DEPLOY-ONPREM.md</code> — runbook P999 (repo นี้)</li>
+  <li><code>../amsscnt-go/docs/deploy-onprem.md</code></li>
+</ul>
+
+<h3>Definition of Done</h3>
+<ul>
+  <li>ครบทุกโมดูลในตาราง §10 สถานะ <code>done</code> (+ deploy <span class="page-id">P999</span>)</li>
+  <li>ทุกโมดูล responsive + ผู้ใช้ทดสอบเทียบ amsscnt.com แล้วบอก <code>{slug} โอเค</code></li>
+  <li>Import demo จาก smart_area_postgres.sql ใช้งานได้</li>
+  <li>PDF upload/download ผ่าน API authorize</li>
+  <li>Deploy guide + backup script on-prem</li>
+</ul>
+
+<hr>
+
+<h2 id="s12">12. การตัดสินใจที่ lock แล้ว (ไม่ต้องถามซ้ำ)</h2>
+<table>
+  <tr><th>หัวข้อ</th><th>คำตอบที่ lock</th></tr>
+  <tr><td>Import dump dev</td><td><strong>C (ยืนยันแล้ว):</strong> Hybrid — โหลด legacy schema ครั้งแรก (<code>psql</code>) → transform ตาม scope; re-import จาก legacy ที่มี</td></tr>
+  <tr><td>P000 scope</td><td><strong>C (ยืนยันแล้ว):</strong> bootstrap + import ขั้นต่ำ login + bookregister ครบ — พร้อม P030 หลัง P011</td></tr>
+  <tr><td>Login P010 scope</td><td><strong>B (ยืนยันแล้ว):</strong> บุคลากร — username/password + login เลขบัตรครั้งแรก + multi-school; นักเรียน → P160</td></tr>
+  <tr><td>สถานะโปรเจกต์</td><td><strong>implement ครบ 18 โมดูล</strong> (มิ.ย. 2569) — <code>platform</code> + <code>bookregister</code> done; ที่เหลือ <code>in progress</code> รอ UAT (<code>{slug} โอเค</code>) — ดู <a href="docs/TESTING-MODULES.md">คู่มือทดสอบ</a></td></tr>
+  <tr><td>Approve / ทดสอบ</td><td><strong>ทีละโมดูล (slug)</strong> — ผู้ใช้เดิน <code>docs/TESTING-MODULES.md</code> เอง บอก <code>{slug} โอเค</code> หรือรายงานบั๊ก — ไม่บังคับ approve ทีละ <span class="page-id">P###</span></td></tr>
+  <tr><td>Rollback cutover</td><td><strong>C (ยืนยันแล้ว):</strong> snapshot MySQL + PDF + Nginx ก่อน cutover; PHP/MySQL standby 1–2 สัปดาห์; Nginx rollback ได้ทันที</td></tr>
+  <tr><td>Production server</td><td><strong>A (ยืนยันแล้ว):</strong> เครื่อง PHP/amsscnt.com เดิม — ติดตั้ง Next.js + PostgreSQL วัน cutover</td></tr>
+  <tr><td>UAT environment</td><td><strong>C (ยืนยันแล้ว):</strong> server staging แยกในเครือข่ายเขต — คนละเครื่องกับ production PHP</td></tr>
+  <tr><td>Domain / URL production</td><td><strong>A (ยืนยันแล้ว):</strong> <code>amsscnt.com</code> URL เดิม — Nginx สลับไป Next.js วัน cutover</td></tr>
+  <tr><td>Dump ชัยนาท UAT/go-live</td><td><strong>A (ยืนยันแล้ว):</strong> MySQL dump จาก production → แปลง PostgreSQL → <code>import-smart-area.ts</code></td></tr>
+  <tr><td>Schema ฐานข้อมูล</td><td><strong>A (ยืนยันแล้ว):</strong> Drizzle schema ใหม่ normalize (FK, <code>school_id</code>, bcrypt, soft delete) + import script จาก legacy</td></tr>
+  <tr><td>Go-live / cutover</td><td><strong>A (ยืนยันแล้ว):</strong> Big bang — พัฒนาครบ 18 โมดูล → UAT ด้วย dump ชัยนาท → สลับ URL ครั้งเดียว ปิด PHP</td></tr>
+  <tr><td>หน้าแรกหลัง login (P011)</td><td><strong>C (ยืนยันแล้ว):</strong> v1 = เมนูโมดูล + welcome สั้น ๆ; dashboard สรุปขยายภายหลัง</td></tr>
+  <tr><td>PDF dev (bookregister)</td><td><strong>B (ยืนยันแล้ว):</strong> copy ตัวอย่างจาก <code>../Amssplus/modules/bookregister/upload_files1|2|4/</code> → <code>storage/</code></td></tr>
+  <tr><td>ไฟล์ PDF / แนบ legacy</td><td><strong>A (UAT/go-live):</strong> migrate ครบจาก production PHP → <code>/var/amsscnt/storage</code></td></tr>
+  <tr><td>ข้อมูล dev / UAT</td><td><strong>C (ยืนยันแล้ว):</strong> dev ใช้ <code>smart_area_postgres.sql</code> (สงขลา 2) + override ชื่อ สพป.ชัยนาท — ก่อน UAT/go-live import dump ชัยนาทจริง</td></tr>
+  <tr><td>PHP source อ้างอิง</td><td><code>../Amssplus</code> = source ที่รันบน amsscnt.com <span class="badge badge-ok">ยืนยันแล้ว</span> — อ่าน validation/query/flow ได้ ห้าม copy ไป Next.js</td></tr>
+  <tr><td>มาตรฐานงานสารบรรณ</td><td><strong>ระเบียบ ฉบับปรับปรุง พ.ศ. 2546</strong> <span class="badge badge-ok">lock มิ.ย. 2569</span> — checklist §4.1</td></tr>
+  <tr><td>มาตรฐานการลา</td><td><strong>ระเบียบ สำนักนายกฯ ว่าด้วยการลาของข้าราชการ พ.ศ. 2555</strong> <span class="badge badge-ok">lock มิ.ย. 2569</span> — checklist <a href="#s-leave-2555-1">§leave/2555</a></td></tr>
+  <tr><td>ลำดับอ้างอิงเมื่อขัดกัน (สารบรรณ)</td><td><strong>2546</strong> → คู่มือ AMSS++ v3.1 → amsscnt.com/PHP → SQL dump</td></tr>
+  <tr><td>ลำดับอ้างอิงเมื่อขัดกัน (การลา)</td><td><strong>2555</strong> → คู่มือ AMSS++ v3.1 → amsscnt.com/PHP → SQL dump</td></tr>
+  <tr><td>Baseline เทียบฟังก์ชัน</td><td><a href="https://amsscnt.com">amsscnt.com</a> = <strong>AMSS++ PHP legacy</strong> — regression / UX เมื่อไม่ขัด 2546 <span class="badge badge-ok">ยืนยันแล้ว</span></td></tr>
+  <tr><td>เมื่อ amsscnt.com ขัดกับ 2546</td><td><strong>2546 ชนะ</strong> — บันทึกความต่างใน commit/PR note; แจ้งผู้ใช้ถ้าเปลี่ยนจาก PHP เดิม</td></tr>
+  <tr><td>เมื่อคู่มือ AMSS++ ขัดกับ 2546</td><td><strong>2546 ชนะ</strong> — คู่มือกำหนดขอบเขตโมดูล ไม่แทนข้อความระเบียบ</td></tr>
+  <tr><td>เมื่อ amsscnt.com ขัดกับ SQL dump</td><td>Schema/field ใช้ <code>smart_area_postgres.sql</code>; UX/flow ใช้ 2546 ก่อน แล้วเทียบ amsscnt.com</td></tr>
+  <tr><td>Repo / stack</td><td>Next.js ใหม่ทั้งหมด — ห้าม merge โค้ด Laravel/Nuxt/PHP</td></tr>
+  <tr><td>Production hosting</td><td>On-prem เท่านั้น (ไม่ใช้ Vercel production)</td></tr>
+  <tr><td>ขอบเขต v1</td><td>18 โมดูลตามคู่มือ PDF v3.1 — เมนูอื่นใน <code>system_module</code> ดู <a href="#s2-1">§2.1</a> · นอก v1 ดู §15</td></tr>
+  <tr><td>ลำดับ implement</td><td>โฟกัสทีละโมดูล (§10) — แผนงานย่อย <span class="page-id">P###</span> ใน §10.1</td></tr>
+  <tr><td>รหัสผ่าน v1</td><td><strong>A (ยืนยันแล้ว):</strong> admin reset + user เปลี่ยนเอง — ไม่มี forgot password/email (เทียบ legacy)</td></tr>
+  <tr><td>Approve ทีละหน้า (เดิม)</td><td>เลิกใช้ — แทนด้วย <strong>ทดสอบทีละโมดูล</strong> (§10)</td></tr>
+  <tr><td>ส่งมอบงาน</td><td>ต่อโมดูล → ลิงก์ <code>TESTING-MODULES.md</code> → รอ <code>{slug} โอเค</code> หรือรายการบั๊ก</td></tr>
+  <tr><td>Theme / โหมดสี</td><td><strong>2 โหมด lock:</strong> ราชการ (<code>light</code>) · มืด — default ราชการ; ดู §14</td></tr>
+  <tr><td>UI vs legacy</td><td>Modern (shadcn) ได้ — ฟังก์ชัน/ฟิลด์/สิทธิ์ต้องเทียบได้</td></tr>
+  <tr><td>Multi-tenant</td><td>Single district: สพป.ชัยนาท เท่านั้นใน v1</td></tr>
+  <tr><td>ทะเบียนโรงเรียน</td><td>ตารางเดียว + <code>school_id</code> ไม่แยก <code>_sch</code></td></tr>
+  <tr><td>งบประมาณ v1</td><td>MVP subset (รับ/จ่าย/แผนหลัก) — workflow เต็มขยายหลัง v1</td></tr>
+  <tr><td>module ที่ <code>module_active=0</code></td><td>ยัง implement ตาม PDF (เช่น cabinet) แต่ deploy ปิดได้ผ่าน app_modules</td></tr>
+</table>
+
+<h3><code>where_work</code> ใน <code>system_module</code> (legacy)</h3>
+<table>
+  <tr><th>ค่า</th><th>ความหมาย</th></tr>
+  <tr><td>0</td><td>ใช้ได้ทั้งเขตและโรงเรียน</td></tr>
+  <tr><td>1</td><td>เน้นระดับเขต (office)</td></tr>
+  <tr><td>3</td><td>เน้นระดับโรงเรียน / พิเศษ (เช่น bets)</td></tr>
+</table>
+
+<hr>
+
+<h2 id="s13">13. Auth, Dev environment &amp; Locale</h2>
+<h3>Authentication (lock)</h3>
+<ul>
+  <li>Auth.js credentials — อ้างอิง <code>../Amssplus/include/login_chk.php</code></li>
+  <li><strong>P010 scope (ยืนยันแล้ว — B):</strong> บุคลากรเท่านั้น v1</li>
+</ul>
+<h4>Flow login บุคลากร (P010)</h4>
+<ol>
+  <li><strong>username + password</strong> — จาก <code>system_user</code> + bcrypt; หลัง import รหัสชั่วคราว <code>Imported123</code> (env: <code>AMSS_IMPORT_PASSWORD</code>)</li>
+  <li><strong>เลขบัตร 13 หลักครั้งแรก</strong> — ยังไม่มี userpass: ตรวจ <code>person_main</code> (เขต, <code>login_status=5</code>) หรือ <code>person_sch_main</code> (โรงเรียน, <code>login_status=15</code>) แล้วให้ตั้งรหัส / ดำเนินการตาม legacy</li>
+  <li><strong>multi-school</strong> — ถ้า <code>person_sch_other.other=1</code> แสดงหน้าเลือกโรงเรียนก่อนเข้าระบบ (เก็บ <code>user_school</code> ใน session)</li>
+  <li><strong>admin</strong> — <code>username=admin</code> → <code>login_status=99</code>, <code>smss_admin=1</code></li>
+</ol>
+<ul>
+  <li><strong>ยังไม่ทำ v1:</strong> login นักเรียน (<code>student_main_main</code>, <code>login_status=16</code>) — รอ <span class="page-id">P160</span></li>
+  <li>Session: HTTP-only cookie, <code>SESSION_SECURE_COOKIE=true</code> ใน production; เก็บ org context: <code>office_code=1701</code>, <code>user_school</code>, <code>login_workgroup</code></li>
+  <li>บังคับเปลี่ยนรหัสครั้งแรกหลัง import: <strong>ไม่</strong> (v1)</li>
+  <li><strong>รหัสผ่าน v1:</strong> admin reset + user เปลี่ยนเอง — ไม่มี forgot password / email</li>
+  <li>ลืมรหัส: admin ลบ user แล้ว login ด้วยเลขบัตรใหม่</li>
+  <li>อ้างอิง PHP: <code>reset_pwd.php</code>, <code>reset_pwd_sch.php</code>, <code>user_change_pwd.php</code></li>
+  <li><code>smss_admin=1</code> → super admin ทุกโมดูล + ดูหนังสือลับ</li>
+</ul>
+
+<h3>Dev / Demo (lock)</h3>
+<pre>
+docker compose up -d postgres
+pnpm db:migrate
+pnpm db:load-legacy          # ครั้งแรกเท่านั้น — psql → schema legacy
+pnpm db:import-smart-area --scope=core,bookregister
+pnpm dev
+</pre>
+<ul>
+  <li><code>db:load-legacy</code> — โหลด <code>smart_area_postgres.sql</code> เข้า schema <code>legacy</code> (ช้า ~5–15 นาที ครั้งเดียว)</li>
+  <li><code>db:import-smart-area</code> — แปลง legacy → normalize; ใส่ <code>--skip-legacy-load</code> ถ้า legacy มีอยู่แล้ว</li>
+  <li><code>storage:copy-samples</code> (<code>scripts/copy-sample-pdfs.ts</code>) — copy จาก <code>upload_files1|2|3|4</code> ใน <code>AMSSPLUS_PATH</code> และ/หรือ <code>SMART_KPP2_PATH</code> (default <code>../Amssplus</code>, <code>../smart_kpp2</code>) → <code>storage/bookregister/{receive,send,command,certificate}/</code> เฉพาะชื่อที่ตรง <code>file_name</code> ใน DB</li>
+  <li>Demo DB: import จาก <code>smart_area_postgres.sql</code> (ข้อมูล สงขลา 2) + override ชื่อเขต</li>
+  <li>เทียบ UI/flow กับ amsscnt.com ด้วยบัญชี production จริง (ข้อมูลใน DB dev อาจไม่ตรง 100%)</li>
+  <li>ก่อน UAT sign-off: deploy บน <strong>server staging แยก</strong> + import MySQL ชัยนาท → PostgreSQL + migrate PDF</li>
+  <li>ทดสอบ login: username <code>admin</code> หรือเลขบัตรจาก dump + รหัส <code>Imported123</code></li>
+  <li>ทดสอบสิทธิ์ bookregister: ดู <code>bookregister_permission</code> ใน dump</li>
+</ul>
+
+<h3>Locale &amp; วันที่ (lock)</h3>
+<ul>
+  <li>ภาษา UI: ไทยทั้งหมด</li>
+  <li>Font: Sarabun (self-host ใน production on-prem — ไม่พึ่ง CDN ถ้าเครือข่ายเขต offline)</li>
+  <li>ปีทะเบียน / ปีงบ: <strong>พ.ศ.</strong> ใน UI; เก็บ DB เป็น integer พ.ศ. ตาม legacy</li>
+  <li>Date picker: แสดง พ.ศ. — เก็บ ISO date ใน DB (<code>signdate</code>, <code>register_date</code>)</li>
+  <li>Timezone: <code>Asia/Bangkok</code></li>
+</ul>
+
+<hr>
+
+<h2 id="s14">14. UI / Branding</h2>
+<table>
+  <tr><th>หัวข้อ</th><th>ค่า lock</th></tr>
+  <tr><td>Design system</td><td>shadcn/ui + Tailwind, mobile-first (§9)</td></tr>
+  <tr><td>Theme</td><td><strong>2 โหมด</strong> — ผู้ใช้สลับได้ + จำใน localStorage (หรือ user preference ใน DB ภายหลัง)</td></tr>
+  <tr><td>หน้าแรกหลัง login</td><td><strong>C (ยืนยันแล้ว):</strong> เมนูโมดูล (grid/card) + welcome — ไม่ทำ dashboard สรุปใน v1</td></tr>
+  <tr><td>Sidebar</td><td>5 กลุ่มตาม <code>system_menugroup</code> — แสดงเฉพาะโมดูลที่ user มีสิทธิ์ + module_active</td></tr>
+  <tr><td>Logo</td><td>โลโก้ สพป.ชัยนาท + ชื่อหน่วยงานใน header — ใส่ไฟล์ใน <code>public/branding/</code> เมื่อมี asset</td></tr>
+  <tr><td>ตารางข้อมูล</td><td>Desktop: table เต็ม — Mobile: horizontal scroll หรือ card (เลือกตามความเหมาะสมต่อหน้า)</td></tr>
+  <tr><td>Print</td><td>หน้าที่ legacy มี print → ต้องมี @media print หรือ route print แยก (ใช้โทน light)</td></tr>
+</table>
+
+<h3>โหมดสี (Theme) — lock สำหรับแอป Next.js</h3>
+<p>โทนสีบ่งบอก<strong>หน่วยงานราชการ</strong> — น้ำเงินเข้มเป็นหลัก (ความน่าเชื่อถือ / เอกสารราชการ) ไม่ใช้สีฉูดฉาด</p>
+<table>
+  <tr><th>โหมด</th><th>ค่า <code>data-theme</code></th><th>ใช้เมื่อ</th><th>สีหลัก</th></tr>
+  <tr>
+    <td><strong>ราชการ</strong> (default)</td>
+    <td><code>light</code></td>
+    <td>งานประจำวัน, ฟอร์ม, ตาราง</td>
+    <td>Primary <code>#1e3a8a</code> · พื้น <code>#ffffff</code> · เส้นทอง accent <code>#996515</code> (header/เน้นจุด)</td>
+  </tr>
+  <tr>
+    <td><strong>มืด</strong></td>
+    <td><code>dark</code></td>
+    <td>ทำงานกลางคืน / ลดเมื่อยตา</td>
+    <td>Primary <code>#93c5fd</code> · พื้น <code>#0f172a</code> · accent ทอง <code>#fbbf24</code></td>
+  </tr>
+</table>
+
+<h3>CSS variables (implement ใน Tailwind / shadcn)</h3>
+<pre>
+/* light — ราชการ */
+--background: #ffffff;
+--foreground: #1e293b;
+--primary: #1e3a8a;
+--primary-foreground: #ffffff;
+--muted: #f1f5f9;
+--accent-gold: #996515;   /* เส้นใต้หัวข้อ / badge ราชการ */
+
+/* dark */
+--background: #0f172a;
+--foreground: #e2e8f0;
+--primary: #3b82f6;
+</pre>
+<ul>
+  <li>ใช้ <code>next-themes</code> หรือ attribute <code>data-theme</code> บน <code>&lt;html&gt;</code> — เหมือนไฟล์ context.html นี้</li>
+  <li>Switcher ใน header: track แนวนอนขนาดปกติ — emoji ☀️/🌙 สลับ light/dark</li>
+  <li>Default: <code>light</code> (ราชการ) — ไม่ auto ตาม OS (หน่วยงานรัฐเน้นความสม่ำเสมอ)</li>
+  <li>Font: Sarabun ทุกโหมด</li>
+  <li>ปุ่ม primary / link ใช้ <code>--primary</code> · สถานะ success/warn คง shadcn semantic colors</li>
+</ul>
+<p><em>ทดลองโหมดได้จากปุ่มมุมขวาบนของหน้า context.html นี้</em></p>
+
+<hr>
+
+<h2 id="s15">15. นอก scope v1 (Phase 2+ — อย่า implement จนกว่าจะสั่ง)</h2>
+<p>มีใน DB / amsscnt.com — รายละเอียดชื่อเมนูและสถานะ active ดู <a href="#s2-1">§2.1</a> · เมนูย่อยแบบ hierarchy ดู <a href="#s2-2">§2.2</a></p>
+<p><strong>มักใช้บ่อยในเขต (ยังไม่ migrate):</strong></p>
+<ul>
+  <li><code>idocument</code> — ระบบบันทึกข้อความ</li>
+  <li><code>bookobec</code> — รับส่งหนังสือราชการสพฐ.</li>
+  <li><code>delegate</code> — การรักษาราชการแทน</li>
+  <li><code>asset</code> — ระบบบริหารพัสดุ</li>
+  <li><code>supervision</code> — นิเทศ ติดตาม และประเมินผล</li>
+  <li><code>alert</code> — แจ้งเตือน (LINE)</li>
+</ul>
+<p><strong>อื่นๆ ใน DB:</strong></p>
+<p>
+  <code>opportunity</code>, <code>bookpv</code>, <code>homework</code>,
+  <code>line_*</code>, <code>award</code>, <code>work</code>, <code>warroom</code>,
+  <code>bets</code>, <code>security_duty</code>, <code>time</code>
+</p>
+<p>โมดูล <code>alert</code> ใน menugroup 5 — v1 ทำได้แค่ placeholder ใน sidebar ถ้าต้องการ; ฟีเจอร์ LINE notify อยู่ Phase 2+</p>
+<p><strong>Dashboard สรุป</strong> (ข่าว/สถิติ/กราฟหน้าแรก) — นอก v1; P011 ใช้เมนูโมดูลแทน (§14)</p>
+
+<hr>
+<p class="meta">Living document — อัปเดตสถานะ <span class="page-id">P###</span> เมื่อ approve | Mirror: docs/project-context.md</p>
+
+</body>
+</html>
