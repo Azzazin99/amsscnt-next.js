@@ -1,4 +1,4 @@
-import { and, asc, count, eq, like, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, eq, inArray, like, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   people,
@@ -17,6 +17,7 @@ export type PersonListRow = {
   personId: string;
   displayName: string;
   organizationType: "district" | "school";
+  schoolId: number | null;
   schoolName: string | null;
   workgroupName: string | null;
   positionCode: number | null;
@@ -25,6 +26,7 @@ export type PersonListRow = {
   birthDate: string | null;
   personOrder: number | null;
   pictureUrl: string | null;
+  extraSchools?: { id: number; name: string; schoolCode: string }[];
 };
 
 function scopeCondition(scope: PersonScope): SQL | undefined {
@@ -41,6 +43,7 @@ function buildWhere(
   org: "all" | "district" | "school",
   schoolId: number | null,
   workgroupId: number | null,
+  filter?: "multi-school" | "acting-director" | null,
 ) {
   const conditions: (SQL | undefined)[] = [scopeCondition(scope)];
 
@@ -58,6 +61,10 @@ function buildWhere(
   if (status === "active") conditions.push(eq(people.status, 0));
   if (status === "inactive") conditions.push(eq(people.status, 1));
   if (status === "pending") conditions.push(eq(people.status, 9));
+
+  if (filter === "multi-school") {
+    conditions.push(eq(people.multiSchool, true));
+  }
 
   if (scope.kind === "district") {
     if (org === "district") conditions.push(eq(people.organizationType, "district"));
@@ -77,11 +84,12 @@ export async function countPeople(
   org: "all" | "district" | "school",
   schoolId: number | null,
   workgroupId: number | null,
+  filter?: "multi-school" | "acting-director" | null,
 ): Promise<number> {
   const [row] = await db
     .select({ total: count() })
     .from(people)
-    .where(buildWhere(scope, q, status, org, schoolId, workgroupId));
+    .where(buildWhere(scope, q, status, org, schoolId, workgroupId, filter));
   return Number(row?.total ?? 0);
 }
 
@@ -92,6 +100,7 @@ export async function listPeoplePage(input: {
   org: "all" | "district" | "school";
   schoolId: number | null;
   workgroupId: number | null;
+  filter?: "multi-school" | "acting-director" | null;
   page: number;
 }): Promise<PersonListRow[]> {
   const offset = (input.page - 1) * PERSON_PAGE_SIZE;
@@ -104,6 +113,7 @@ export async function listPeoplePage(input: {
       firstName: people.firstName,
       lastName: people.lastName,
       organizationType: people.organizationType,
+      schoolId: people.schoolId,
       schoolName: schools.name,
       workgroupName: workgroups.name,
       positionCode: people.positionCode,
@@ -123,6 +133,7 @@ export async function listPeoplePage(input: {
         input.org,
         input.schoolId,
         input.workgroupId,
+        input.filter,
       ),
     )
     .orderBy(
@@ -139,7 +150,7 @@ export async function listPeoplePage(input: {
     .limit(PERSON_PAGE_SIZE)
     .offset(offset);
 
-  return rows.map((row) => ({
+  const resultRows: PersonListRow[] = rows.map((row) => ({
     id: row.id,
     personId: row.personId,
     displayName: formatPersonName({
@@ -148,6 +159,7 @@ export async function listPeoplePage(input: {
       lastName: row.lastName,
     }),
     organizationType: row.organizationType,
+    schoolId: row.schoolId,
     schoolName: row.schoolName,
     workgroupName: row.workgroupName,
     positionCode: row.positionCode,
@@ -157,6 +169,33 @@ export async function listPeoplePage(input: {
     personOrder: row.personOrder,
     pictureUrl: row.pictureUrl,
   }));
+
+  if (input.filter === "multi-school" && resultRows.length > 0) {
+    const personIds = resultRows.map((r) => r.personId);
+    const extraRows = await db
+      .select({
+        personId: personSchoolAssignments.personId,
+        schoolId: schools.id,
+        name: schools.name,
+        schoolCode: schools.schoolCode,
+      })
+      .from(personSchoolAssignments)
+      .innerJoin(schools, eq(personSchoolAssignments.schoolId, schools.id))
+      .where(inArray(personSchoolAssignments.personId, personIds));
+
+    const extraMap = new Map<string, { id: number; name: string; schoolCode: string }[]>();
+    for (const er of extraRows) {
+      const list = extraMap.get(er.personId) ?? [];
+      list.push({ id: er.schoolId, name: er.name, schoolCode: er.schoolCode });
+      extraMap.set(er.personId, list);
+    }
+
+    for (const row of resultRows) {
+      row.extraSchools = extraMap.get(row.personId) ?? [];
+    }
+  }
+
+  return resultRows;
 }
 
 export async function listAllDistrictPeople() {
@@ -233,6 +272,7 @@ export function parsePersonListParams(params: {
   org?: string;
   schoolId?: string;
   workgroupId?: string;
+  filter?: string;
 }) {
   const q = params.q?.trim() ?? "";
   const statusRaw = params.status?.trim();
@@ -243,6 +283,9 @@ export function parsePersonListParams(params: {
     orgRaw === "district" || orgRaw === "school" ? orgRaw : "all";
   const schoolId = params.schoolId ? Number(params.schoolId) : null;
   const workgroupId = params.workgroupId ? Number(params.workgroupId) : null;
+  const filterRaw = params.filter?.trim();
+  const filter =
+    filterRaw === "multi-school" || filterRaw === "acting-director" ? filterRaw : null;
   let page = params.page ? Number(params.page) : 1;
   if (!Number.isFinite(page) || page < 1) page = 1;
   return {
@@ -252,6 +295,7 @@ export function parsePersonListParams(params: {
     schoolId: Number.isFinite(schoolId) && schoolId! > 0 ? schoolId : null,
     workgroupId:
       Number.isFinite(workgroupId) && workgroupId! > 0 ? workgroupId : null,
+    filter,
     page,
   } as const;
 }
@@ -267,6 +311,7 @@ export async function resolvePersonListPage(
     parsed.org,
     parsed.schoolId,
     parsed.workgroupId,
+    parsed.filter,
   );
   const totalPages = Math.max(1, Math.ceil(total / PERSON_PAGE_SIZE));
   return parsed.page > totalPages ? totalPages : parsed.page;
@@ -306,6 +351,7 @@ export async function listPeopleForExport(input: {
       firstName: people.firstName,
       lastName: people.lastName,
       organizationType: people.organizationType,
+      schoolId: people.schoolId,
       schoolName: schools.name,
       workgroupName: workgroups.name,
       positionCode: people.positionCode,
@@ -338,6 +384,7 @@ export async function listPeopleForExport(input: {
       lastName: row.lastName,
     }),
     organizationType: row.organizationType,
+    schoolId: row.schoolId,
     schoolName: row.schoolName,
     workgroupName: row.workgroupName,
     positionCode: row.positionCode,

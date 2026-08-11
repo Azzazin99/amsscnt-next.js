@@ -6,6 +6,7 @@ import { PersonDeactivateButton } from "@/components/person/person-deactivate-bu
 import { PersonDistrictStaffTable } from "@/components/person/person-district-staff-table";
 import { PersonSchoolStaffTable } from "@/components/person/person-school-staff-table";
 import { PersonPendingApprovalTable } from "@/components/person/person-pending-approval-table";
+import { PersonMultiSchoolStaffTable } from "@/components/person/person-multi-school-staff-table";
 import { PersonListFilters } from "@/components/person/person-list-filters";
 import { buttonVariants } from "@/components/ui/button";
 import { buildPersonListUrl } from "@/lib/person/list-url";
@@ -65,7 +66,7 @@ export default async function PersonStaffPage({ searchParams }: Props) {
 
   return (
     <section className="space-y-4">
-      {parsed.status === "pending" ? null : isDistrictView ? (
+      {parsed.filter === "multi-school" || parsed.status === "pending" ? null : isDistrictView ? (
         <div className="space-y-2 text-center">
           <h2 className="text-base font-bold text-teal-800 dark:text-teal-300 md:text-lg">
             ข้อมูลครูและบุคลากรในสำนักงานเขตพื้นที่การศึกษา (ปัจจุบัน)
@@ -154,7 +155,14 @@ export default async function PersonStaffPage({ searchParams }: Props) {
         hrefForPage={(p) => buildPersonListUrl({ ...parsed, page: p })}
       />
 
-      {parsed.status === "pending" ? (
+      {parsed.filter === "multi-school" ? (
+        <PersonMultiSchoolStaffTable
+          rows={rows}
+          canWrite={canWrite}
+          canDelete={canDelete}
+          pageOffset={pageOffset}
+        />
+      ) : parsed.status === "pending" ? (
         <PersonPendingApprovalTable
           rows={rows}
           canWrite={canWrite}
