@@ -5,7 +5,7 @@ import { insertAndGetId } from "../db/helpers";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { people, personSchoolAssignments } from "@/lib/db/schema";
+import { people, personDelegate, personSchoolAssignments } from "@/lib/db/schema";
 import {
   getPersonById,
   getPersonByPersonId,
@@ -286,4 +286,17 @@ export async function deletePersonPermanent(id: number) {
   revalidatePath(STAFF_PATH);
   return { ok: true as const };
 }
+
+export async function deleteActingDirector(id: number) {
+  const { user, perms } = await requirePersonWriteAccess();
+  if (!canDeletePerson(user, perms)) {
+    return { ok: false as const, message: "ไม่มีสิทธิ์ลบรายการนี้" };
+  }
+
+  await db.delete(personDelegate).where(eq(personDelegate.id, id));
+
+  revalidatePath(STAFF_PATH);
+  return { ok: true as const };
+}
+
 

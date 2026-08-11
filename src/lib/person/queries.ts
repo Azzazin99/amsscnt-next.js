@@ -2,6 +2,7 @@ import { and, asc, count, eq, inArray, like, or, sql, type SQL } from "drizzle-o
 import { db } from "@/lib/db";
 import {
   people,
+  personDelegate,
   personSchoolAssignments,
   schools,
   workgroups,
@@ -395,3 +396,69 @@ export async function listPeopleForExport(input: {
     pictureUrl: row.pictureUrl,
   }));
 }
+
+export type ActingDirectorRow = {
+  id: number;
+  schoolCode: string;
+  schoolName: string;
+  personId: string;
+  displayName: string;
+  positionCode: number | null;
+  positionLabel: string;
+  start: string;
+  finish: string;
+  remark: string;
+};
+
+export async function countActingDirectors(): Promise<number> {
+  const [row] = await db
+    .select({ total: count() })
+    .from(personDelegate);
+  return Number(row?.total ?? 0);
+}
+
+export async function listActingDirectorsPage(input: {
+  page: number;
+}): Promise<ActingDirectorRow[]> {
+  const offset = (input.page - 1) * PERSON_PAGE_SIZE;
+
+  const rows = await db
+    .select({
+      id: personDelegate.id,
+      schoolCode: personDelegate.schoolCode,
+      schoolName: schools.name,
+      personId: personDelegate.personId,
+      prefix: people.prefix,
+      firstName: people.firstName,
+      lastName: people.lastName,
+      positionCode: people.positionCode,
+      organizationType: people.organizationType,
+      start: personDelegate.start,
+      finish: personDelegate.finish,
+      remark: personDelegate.remark,
+    })
+    .from(personDelegate)
+    .leftJoin(schools, eq(personDelegate.schoolCode, schools.schoolCode))
+    .leftJoin(people, eq(personDelegate.personId, people.personId))
+    .orderBy(asc(personDelegate.start))
+    .limit(PERSON_PAGE_SIZE)
+    .offset(offset);
+
+  return rows.map((r) => ({
+    id: r.id,
+    schoolCode: r.schoolCode,
+    schoolName: r.schoolName ?? r.schoolCode,
+    personId: r.personId,
+    displayName: formatPersonName({
+      prefix: r.prefix,
+      firstName: r.firstName,
+      lastName: r.lastName,
+    }),
+    positionCode: r.positionCode,
+    positionLabel: positionLabel(r.positionCode, r.organizationType ?? "school"),
+    start: r.start,
+    finish: r.finish,
+    remark: r.remark ?? "",
+  }));
+}
+

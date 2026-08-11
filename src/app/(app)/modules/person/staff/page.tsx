@@ -7,6 +7,7 @@ import { PersonDistrictStaffTable } from "@/components/person/person-district-st
 import { PersonSchoolStaffTable } from "@/components/person/person-school-staff-table";
 import { PersonPendingApprovalTable } from "@/components/person/person-pending-approval-table";
 import { PersonMultiSchoolStaffTable } from "@/components/person/person-multi-school-staff-table";
+import { PersonActingDirectorTable } from "@/components/person/person-acting-director-table";
 import { PersonListFilters } from "@/components/person/person-list-filters";
 import { buttonVariants } from "@/components/ui/button";
 import { buildPersonListUrl } from "@/lib/person/list-url";
@@ -16,7 +17,9 @@ import {
 } from "@/lib/person/permissions";
 import {
   PERSON_PAGE_SIZE,
+  countActingDirectors,
   countPeople,
+  listActingDirectorsPage,
   listPeoplePage,
   listSchoolsForPersonFilter,
   listWorkgroupsForPersonFilter,
@@ -43,17 +46,22 @@ export default async function PersonStaffPage({ searchParams }: Props) {
   const parsed = parsePersonListParams(params);
   const page = await resolvePersonListPage(scope, parsed);
 
-  const [rows, total, schools, workgroups] = await Promise.all([
-    listPeoplePage({ ...parsed, page, scope }),
-    countPeople(
-      scope,
-      parsed.q,
-      parsed.status,
-      parsed.org,
-      parsed.schoolId,
-      parsed.workgroupId,
-      parsed.filter,
-    ),
+  const isActingView = parsed.filter === "acting-director";
+
+  const [rows, actingRows, total, schools, workgroups] = await Promise.all([
+    isActingView ? Promise.resolve([]) : listPeoplePage({ ...parsed, page, scope }),
+    isActingView ? listActingDirectorsPage({ page }) : Promise.resolve([]),
+    isActingView
+      ? countActingDirectors()
+      : countPeople(
+          scope,
+          parsed.q,
+          parsed.status,
+          parsed.org,
+          parsed.schoolId,
+          parsed.workgroupId,
+          parsed.filter,
+        ),
     scope.kind === "district" ? listSchoolsForPersonFilter() : Promise.resolve([]),
     scope.kind === "district" ? listWorkgroupsForPersonFilter() : Promise.resolve([]),
   ]);
@@ -67,7 +75,7 @@ export default async function PersonStaffPage({ searchParams }: Props) {
 
   return (
     <section className="space-y-4">
-      {parsed.filter === "multi-school" || parsed.status === "pending" ? null : isDistrictView ? (
+      {isActingView || parsed.filter === "multi-school" || parsed.status === "pending" ? null : isDistrictView ? (
         <div className="space-y-2 text-center">
           <h2 className="text-base font-bold text-teal-800 dark:text-teal-300 md:text-lg">
             ข้อมูลครูและบุคลากรในสำนักงานเขตพื้นที่การศึกษา (ปัจจุบัน)
@@ -139,16 +147,18 @@ export default async function PersonStaffPage({ searchParams }: Props) {
         </div>
       )}
 
-      <PersonListFilters
-        q={parsed.q}
-        status={parsed.status}
-        org={parsed.org}
-        schoolId={parsed.schoolId}
-        workgroupId={parsed.workgroupId}
-        showDistrictFilters={scope.kind === "district"}
-        schools={schools}
-        workgroups={workgroups}
-      />
+      {isActingView ? null : (
+        <PersonListFilters
+          q={parsed.q}
+          status={parsed.status}
+          org={parsed.org}
+          schoolId={parsed.schoolId}
+          workgroupId={parsed.workgroupId}
+          showDistrictFilters={scope.kind === "district"}
+          schools={schools}
+          workgroups={workgroups}
+        />
+      )}
 
       <ListPagination
         page={page}
@@ -156,7 +166,14 @@ export default async function PersonStaffPage({ searchParams }: Props) {
         hrefForPage={(p) => buildPersonListUrl({ ...parsed, page: p })}
       />
 
-      {parsed.filter === "multi-school" ? (
+      {isActingView ? (
+        <PersonActingDirectorTable
+          rows={actingRows}
+          canWrite={canWrite}
+          canDelete={canDelete}
+          pageOffset={pageOffset}
+        />
+      ) : parsed.filter === "multi-school" ? (
         <PersonMultiSchoolStaffTable
           rows={rows}
           canWrite={canWrite}
