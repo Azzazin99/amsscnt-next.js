@@ -4,7 +4,7 @@ import {
   count,
   desc,
   eq,
-  ilike,
+  like,
   notInArray,
   or,
   type SQL,
@@ -73,8 +73,8 @@ function buildWhere(
   if (q.length >= 2) {
     conditions.push(
       or(
-        ilike(achievementScores.schoolCode, `%${q}%`),
-        ilike(schools.name, `%${q}%`),
+        like(achievementScores.schoolCode, `%${q}%`),
+        like(schools.name, `%${q}%`),
       ),
     );
   }

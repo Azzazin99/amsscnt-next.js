@@ -43,12 +43,12 @@ const FILE_NAME_QUERIES: { table: string; column: string }[] = [
 ];
 
 async function tableExists(table: string): Promise<boolean> {
-  const rows = await queryClient<{ ok: boolean }[]>`
+  const rows = ((await db.execute(sql`
     SELECT EXISTS (
       SELECT 1 FROM information_schema.tables
       WHERE table_schema = 'public' AND table_name = ${table}
     ) AS ok
-  `;
+  `))[0] as Record<string, unknown>[]);
   return rows[0]?.ok ?? false;
 }
 
@@ -57,9 +57,9 @@ async function collectFileNames(): Promise<Set<string>> {
   for (const { table, column } of FILE_NAME_QUERIES) {
     if (!(await tableExists(table))) continue;
 
-    const rows = (await queryClient.unsafe(
-      `SELECT DISTINCT "${column}" AS file_name FROM "${table}" WHERE "${column}" IS NOT NULL AND "${column}" <> '' LIMIT 5000`,
-    )) as { file_name: string }[];
+    const rows = (((await db.execute(sql.raw(
+      `SELECT DISTINCT "${column}" AS file_name FROM `${table}` WHERE "${column}" IS NOT NULL AND "${column}" <> '' LIMIT 5000`,
+    )))[0] as Record<string, unknown>[])) as { file_name: string }[];
     for (const row of rows) {
       if (row.file_name) fileNames.add(row.file_name);
     }
@@ -151,7 +151,7 @@ async function main() {
       "No files copied — legacy upload_files* folders may be empty locally; use production/rsync backup.",
     );
   }
-  await queryClient.end();
+  // queryClient.end() not needed for mysql pool
 }
 
 main().catch((err) => {

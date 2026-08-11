@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AppBreadcrumb } from "@/components/app-shell/app-breadcrumb";
 import { AlertNav } from "@/components/alert/alert-nav";
+import { getModuleSettingsNavMode } from "@/lib/core/permissions";
 import { canViewAlert } from "@/lib/alert/permissions";
 
 export default async function AlertLayout({
@@ -32,7 +33,7 @@ export default async function AlertLayout({
         </p>
       </div>
 
-      <AlertNav />
+      <AlertNav settingsNavMode={getModuleSettingsNavMode(session.user, "alert")} />
 
       {children}
     </div>

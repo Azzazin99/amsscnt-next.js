@@ -1,5 +1,7 @@
 "use server";
 
+import { insertAndGetId } from "../db/helpers";
+
 import { and, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -84,9 +86,7 @@ export async function createStudent(formData: FormData) {
   const refId = buildStudentRefId(data.schoolCode, data.studentId);
 
   try {
-    const [inserted] = await db
-      .insert(students)
-      .values({
+    const insertedId = await insertAndGetId(students, {
         edYear: data.edYear,
         refId,
         schoolCode: data.schoolCode,
@@ -103,8 +103,8 @@ export async function createStudent(formData: FormData) {
         status: 0,
         recDate: todayBangkokDate(),
         officerPersonId: user.personId,
-      })
-      .returning({ id: students.id });
+      });
+  const inserted = { id: insertedId };
 
     revalidatePath(STUDENTS_PATH);
     redirect(`${STUDENTS_PATH}/${inserted.id}/edit`);

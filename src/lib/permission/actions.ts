@@ -1,5 +1,7 @@
 "use server";
 
+import { insertAndGetId } from "../db/helpers";
+
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -34,6 +36,7 @@ import {
 import { db } from "@/lib/db";
 import {
   permissionPermissions,
+  permissionPersonSettings,
   permissionRequests,
   permissionYears,
   users,
@@ -106,9 +109,7 @@ export async function createPermissionRequest(formData: FormData) {
     schoolId = await getPersonSchoolId(user.personId);
   }
 
-  const [inserted] = await db
-    .insert(permissionRequests)
-    .values({
+  const insertedId = await insertAndGetId(permissionRequests, {
       personId: user.personId,
       refId: generatePermissionRefId(),
       schoolId,
@@ -118,8 +119,8 @@ export async function createPermissionRequest(formData: FormData) {
       travelFinish: data.travelFinish,
       vehicle: data.vehicle,
       document: data.document,
-    })
-    .returning({ id: permissionRequests.id });
+    });
+  const inserted = { id: insertedId };
 
   revalidatePath(REQUESTS_PATH);
   redirect(`${REQUESTS_PATH}/${inserted.id}`);
@@ -356,4 +357,34 @@ export async function deletePermissionModulePermission(id: number) {
   await db.delete(permissionPermissions).where(eq(permissionPermissions.id, id));
   revalidatePath(PERMS_PATH);
   redirect(PERMS_PATH);
+}
+
+export async function updatePermissionGrantPerson(
+  personId: string,
+  formData: FormData,
+) {
+  const { user, perms } = await requirePermissionScope();
+  if (!canManagePermissionSettings(user, perms)) {
+    return { ok: false as const, message: "ไม่มีสิทธิ์ตั้งค่า" };
+  }
+
+  const groupPersonId = (formData.get("groupPersonId") as string) || null;
+  const grantPersonId = (formData.get("grantPersonId") as string) || null;
+
+  await db
+    .insert(permissionPersonSettings)
+    .values({ personId, groupPersonId, grantPersonId })
+    .onDuplicateKeyUpdate({
+      set: { groupPersonId, grantPersonId },
+    });
+
+  revalidatePath("/modules/permission/grant-persons");
+  redirect("/modules/permission/grant-persons");
+}
+
+export async function basicCommentPermissionRequest(
+  id: number,
+  formData: FormData,
+) {
+  return approvePermissionRequest(id, formData);
 }

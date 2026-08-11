@@ -1,3 +1,4 @@
+import { insertAndGetId } from "../db/helpers";
 import "server-only";
 
 import { and, eq } from "drizzle-orm";
@@ -12,7 +13,7 @@ export async function acknowledgeMailRecipient(
   personId: string,
   documentId: number,
 ): Promise<boolean> {
-  const [updated] = await db
+  const [res] = await db
     .update(mailRecipients)
     .set({ answered: true, answeredAt: new Date() })
     .where(
@@ -21,10 +22,9 @@ export async function acknowledgeMailRecipient(
         eq(mailRecipients.sendTo, personId),
         eq(mailRecipients.answered, false),
       ),
-    )
-    .returning({ id: mailRecipients.id });
+    );
 
-  if (!updated) return false;
+  if (res.affectedRows === 0) return false;
 
   revalidatePath(INBOX_PATH);
   revalidatePath(`/modules/mail/${documentId}`);

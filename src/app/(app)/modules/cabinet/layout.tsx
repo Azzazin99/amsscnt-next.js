@@ -2,8 +2,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AppBreadcrumb } from "@/components/app-shell/app-breadcrumb";
 import { CabinetNav } from "@/components/cabinet/cabinet-nav";
+import { getModuleSettingsNavMode } from "@/lib/core/permissions";
 import {
-  canManageCabinetSettings,
   canUploadCabinet,
   canViewCabinetList,
   getCabinetPermissions,
@@ -23,7 +23,7 @@ export default async function CabinetLayout({
   }
 
   const canUpload = canUploadCabinet(session.user, perms);
-  const showAdmin = canManageCabinetSettings(session.user, perms);
+  const settingsNavMode = getModuleSettingsNavMode(session.user, "cabinet");
 
   return (
     <div className="px-4 py-6 lg:px-8">
@@ -41,7 +41,7 @@ export default async function CabinetLayout({
         </p>
       </div>
 
-      <CabinetNav canUpload={canUpload} showAdmin={showAdmin} />
+      <CabinetNav canUpload={canUpload} settingsNavMode={settingsNavMode} />
 
       {children}
     </div>

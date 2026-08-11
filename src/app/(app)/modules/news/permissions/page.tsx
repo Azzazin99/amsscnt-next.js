@@ -3,14 +3,14 @@ import { redirect } from "next/navigation";
 import { Check, Pencil, X } from "lucide-react";
 import { NewsPermissionDeleteButton } from "@/components/news/news-permission-delete-button";
 import { buttonVariants } from "@/components/ui/button";
-import { canManageNewsSettings } from "@/lib/news/permissions";
+import { canManageNewsStaffPermissions } from "@/lib/news/permissions";
 import { listNewsPermissions } from "@/lib/news/queries";
 import { requireNewsScope } from "@/lib/news/scope";
 import { cn } from "@/lib/utils";
 
 export default async function NewsPermissionsPage() {
   const { user } = await requireNewsScope();
-  if (!canManageNewsSettings(user)) redirect("/modules/news");
+  if (!canManageNewsStaffPermissions(user)) redirect("/modules/news");
 
   const rows = await listNewsPermissions();
 

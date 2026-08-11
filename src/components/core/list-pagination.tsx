@@ -5,10 +5,12 @@ import {
   ChevronsLeft,
   ChevronsRight,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export type ListPaginationProps = {
   page: number;
   totalPages: number;
+  onPageChange?: (page: number) => void;
   /** สร้าง URL ต่อหน้า — ใช้กับ admin / โมดูลที่มี build*ListUrl */
   hrefForPage?: (page: number) => string;
   /** คง query อื่น — ใช้คู่กับ basePath (bookregister) */
@@ -43,32 +45,48 @@ function resolveHref(
   return buildHrefFromParams(page, props.baseParams ?? {}, props.basePath);
 }
 
-/** เช่น 1 … 4 5 [6] 7 8 … 199 */
+/** เช่น 1 2 … 47 */
 function buildPageTokens(page: number, totalPages: number): (number | "gap")[] {
   const tokens: (number | "gap")[] = [];
-  const add = (p: number) => tokens.push(p);
 
-  const windowStart = Math.max(2, page - 1);
-  const windowEnd = Math.min(totalPages - 1, page + 1);
+  if (totalPages <= 7) {
+    for (let p = 1; p <= totalPages; p++) tokens.push(p);
+    return tokens;
+  }
 
-  add(1);
-  if (windowStart > 2) tokens.push("gap");
-  for (let p = windowStart; p <= windowEnd; p++) add(p);
-  if (windowEnd < totalPages - 1) tokens.push("gap");
-  if (totalPages > 1) add(totalPages);
+  tokens.push(1);
+
+  if (page > 3) {
+    tokens.push("gap");
+  }
+
+  const start = Math.max(2, page - 1);
+  const end = Math.min(totalPages - 1, page + 1);
+
+  for (let p = start; p <= end; p++) {
+    if (!tokens.includes(p)) {
+      tokens.push(p);
+    }
+  }
+
+  if (page < totalPages - 2) {
+    tokens.push("gap");
+  }
+
+  if (!tokens.includes(totalPages)) {
+    tokens.push(totalPages);
+  }
 
   return tokens;
 }
 
-const navButton =
-  "inline-flex h-11 min-h-11 min-w-11 items-center justify-center gap-1 rounded-lg border border-border bg-background px-3 text-sm transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-40";
-
-const navButtonCompact =
-  "inline-flex h-11 min-h-11 items-center justify-center gap-1 rounded-lg border border-border bg-background px-2.5 text-sm transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-40 sm:px-3";
+const navBtnClass =
+  "inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-lg border border-border/80 bg-card/60 px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-40 shadow-xs";
 
 export function ListPagination({
   page,
   totalPages,
+  onPageChange,
   hrefForPage,
   baseParams,
   basePath,
@@ -80,107 +98,145 @@ export function ListPagination({
   const onFirst = page === 1;
   const onLast = page === totalPages;
 
+  const renderButton = (
+    targetPage: number,
+    disabled: boolean,
+    label: string,
+    iconLeft?: React.ReactNode,
+    iconRight?: React.ReactNode,
+  ) => {
+    const content = (
+      <>
+        {iconLeft}
+        <span>{label}</span>
+        {iconRight}
+      </>
+    );
+
+    if (disabled) {
+      return (
+        <span className={navBtnClass} aria-disabled="true">
+          {content}
+        </span>
+      );
+    }
+
+    if (onPageChange) {
+      return (
+        <button
+          type="button"
+          onClick={() => onPageChange(targetPage)}
+          className={navBtnClass}
+        >
+          {content}
+        </button>
+      );
+    }
+
+    return (
+      <Link href={resolveHref(targetPage, hrefProps)} className={navBtnClass}>
+        {content}
+      </Link>
+    );
+  };
+
+  const renderPageItem = (p: number) => {
+    const isActive = p === page;
+
+    if (isActive) {
+      return (
+        <span
+          key={p}
+          aria-current="page"
+          className="inline-flex h-9 min-w-9 items-center justify-center rounded-lg bg-sky-500 px-3 font-semibold text-white shadow-sm dark:bg-sky-500"
+        >
+          {p}
+        </span>
+      );
+    }
+
+    if (onPageChange) {
+      return (
+        <button
+          key={p}
+          type="button"
+          onClick={() => onPageChange(p)}
+          className="inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+        >
+          {p}
+        </button>
+      );
+    }
+
+    return (
+      <Link
+        key={p}
+        href={resolveHref(p, hrefProps)}
+        className="inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+      >
+        {p}
+      </Link>
+    );
+  };
+
   return (
     <nav
-      className="flex flex-wrap items-center justify-center gap-1.5 py-3 text-sm"
+      className="flex flex-wrap items-center justify-center gap-2 py-3 text-sm"
       aria-label="แบ่งหน้า"
     >
-      {onFirst ? (
-        <span className={navButtonCompact} aria-disabled>
-          <ChevronsLeft className="size-4 shrink-0" aria-hidden />
-          <span className="hidden sm:inline">หน้าแรก</span>
-        </span>
-      ) : (
-        <Link
-          href={resolveHref(1, hrefProps)}
-          className={navButtonCompact}
-          aria-label="หน้าแรก"
-        >
-          <ChevronsLeft className="size-4 shrink-0" aria-hidden />
-          <span className="hidden sm:inline">หน้าแรก</span>
-        </Link>
+      {/* หน้าแรก */}
+      {renderButton(
+        1,
+        onFirst,
+        "หน้าแรก",
+        <ChevronsLeft className="size-4 shrink-0" aria-hidden="true" />,
       )}
 
-      {page > 1 ? (
-        <Link
-          href={resolveHref(page - 1, hrefProps)}
-          className={navButton}
-          rel="prev"
-        >
-          <ChevronLeft className="size-4" aria-hidden />
-          ก่อนหน้า
-        </Link>
-      ) : (
-        <span className={navButton} aria-disabled>
-          <ChevronLeft className="size-4" aria-hidden />
-          ก่อนหน้า
-        </span>
+      {/* ก่อนหน้า */}
+      {renderButton(
+        page - 1,
+        onFirst,
+        "ก่อนหน้า",
+        <ChevronLeft className="size-4 shrink-0" aria-hidden="true" />,
       )}
 
+      {/* เลขหน้า */}
       <div className="flex items-center gap-1">
         {tokens.map((token, index) =>
           token === "gap" ? (
             <span
               key={`gap-${index}`}
-              className="px-1 text-muted-foreground"
-              aria-hidden
+              className="px-1 text-muted-foreground font-semibold select-none"
+              aria-hidden="true"
             >
               …
             </span>
-          ) : token === page ? (
-            <span
-              key={token}
-              aria-current="page"
-              className="inline-flex h-11 min-w-11 items-center justify-center rounded-lg bg-primary px-3 font-semibold text-primary-foreground"
-            >
-              {token}
-            </span>
           ) : (
-            <Link
-              key={token}
-              href={resolveHref(token, hrefProps)}
-              aria-label={`หน้า ${token}`}
-              className="inline-flex h-11 min-w-11 items-center justify-center rounded-lg px-3 text-foreground transition-colors hover:bg-muted"
-            >
-              {token}
-            </Link>
+            renderPageItem(token)
           ),
         )}
       </div>
 
-      {page < totalPages ? (
-        <Link
-          href={resolveHref(page + 1, hrefProps)}
-          className={navButton}
-          rel="next"
-        >
-          ถัดไป
-          <ChevronRight className="size-4" aria-hidden />
-        </Link>
-      ) : (
-        <span className={navButton} aria-disabled>
-          ถัดไป
-          <ChevronRight className="size-4" aria-hidden />
-        </span>
+      {/* ถัดไป */}
+      {renderButton(
+        page + 1,
+        onLast,
+        "ถัดไป",
+        undefined,
+        <ChevronRight className="size-4 shrink-0" aria-hidden="true" />,
       )}
 
-      {onLast ? (
-        <span className={navButtonCompact} aria-disabled>
-          <span className="hidden sm:inline">หน้าสุดท้าย</span>
-          <ChevronsRight className="size-4 shrink-0" aria-hidden />
-        </span>
-      ) : (
-        <Link
-          href={resolveHref(totalPages, hrefProps)}
-          className={navButtonCompact}
-          aria-label="หน้าสุดท้าย"
-        >
-          <span className="hidden sm:inline">หน้าสุดท้าย</span>
-          <ChevronsRight className="size-4 shrink-0" aria-hidden />
-        </Link>
+      {/* หน้าสุดท้าย */}
+      {renderButton(
+        totalPages,
+        onLast,
+        "หน้าสุดท้าย",
+        undefined,
+        <ChevronsRight className="size-4 shrink-0" aria-hidden="true" />,
       )}
 
-      <span className="w-full text-center text-muted-foreground sm:ml-2 sm:w-auto sm:text-left">
+      {/* สรุปหน้า */}
+      <span className="ml-2 text-sm text-muted-foreground select-none">
         หน้า {page} จาก {totalPages}
       </span>
     </nav>

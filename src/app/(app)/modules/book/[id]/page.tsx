@@ -90,6 +90,7 @@ export default async function BookDetailPage({ params }: Props) {
           [
             "ทะเบียนรับที่เชื่อม",
             <Link
+              key={`receive-${receiveLinkId}`}
               href={`/modules/bookregister/receive/${receiveLinkId}`}
               className="text-primary hover:underline"
             >
@@ -103,6 +104,7 @@ export default async function BookDetailPage({ params }: Props) {
           [
             "ทะเบียนส่งต้นทาง",
             <Link
+              key={`send-${linkedSendId}`}
               href={`/modules/bookregister/send/${linkedSendId}`}
               className="text-primary hover:underline"
             >

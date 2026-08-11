@@ -1,12 +1,55 @@
+# มาตรฐานการเขียนโค้ด
+
+นโยบายสำหรับ agent ทุก session — อ่านก่อน implement · รายละเอียดเพิ่มใน [`.cursor/rules/project-coding.mdc`](.cursor/rules/project-coding.mdc) และ [`.cursor/rules/ponytail.mdc`](.cursor/rules/ponytail.mdc)
+
+## coding_rigor
+
+เขียนโค้ดอย่างรัดกุม ไม่ให้เกิดบั๊ก และปลอดภัย
+
+- diff เล็ก โฟกัสเฉพาะงานที่ขอ — ไม่ refactor นอก scope
+- validate ที่ trust boundary: auth/scope guard · Zod schema ฝั่ง server · สิทธิ์โมดูล (`canAccess*`, `require*`)
+- อัปโหลดไฟล์ใช้ **StandardAttachment** + path ที่ resolve จาก storage helper
+- match conventions รอบไฟล์ที่แก้ (`@/` imports, naming เดิม)
+- **การเชื่อมต่อและอ้างอิงฐานข้อมูล:** ให้เขียนโปรแกรมและอ้างอิงโครงสร้าง/ข้อมูลจาก [`AMSS.sql`](AMSS.sql) เท่านั้น ห้ามเชื่อมต่อหรือใช้อ้างอิงจากฐานข้อมูลอื่นนอกจากนี้โดยเด็ดขาด
+
+_Avoid_: ข้าม page guard · ใส่ secret ใน repo · SQL string concat นอก Drizzle · อ้างอิง DB file อื่นนอกจาก [`AMSS.sql`](AMSS.sql)
+
+## coding_tech_stack
+
+check/update version ของ tech stack ในการเขียนโค้ดแต่ละครั้ง
+
+- ก่อนเพิ่ม dependency หรือใช้ API ใหม่ — อ่าน [`package.json`](package.json) + lockfile ว่า version ปัจจุบันคืออะไร
+- เมื่อแตะ toolchain หรือเจอ error จาก version mismatch — รัน `npm outdated` เปรียบเทียบ
+- align runtime กับ [`engines`](package.json) / [`.nvmrc`](.nvmrc) (Node `>=22`)
+- patch/minor ใน semver เดียวกันอัปได้ · major (TypeScript 7, ESLint 10) รอ ecosystem — ไม่ข้ามโดยไม่ตั้งใจ
+- stack ปัจจุบัน: Next 16 · React 19 · TS 5 (build/lint) · TS7 native `tsgo` (`npm run typecheck`) · Drizzle 0.45 · PG 16/17
+
+_Avoid_: ติด dependency ใหม่ถ้า stdlib หรือ package ที่มีอยู่ทำได้ · downgrade major โดยไม่วางแผน
+
+## coding_low_code
+
+เขียนโค้ดแบบ low code แต่ code ต้องใช้งานได้จริง
+
+- YAGNI — ลบ/reuse มากกว่าเขียนใหม่ · ไม่สร้าง abstraction ใช้ครั้งเดียว
+- ต่อ route → action → query ครบถ้วน · ไม่ทิ้ง stub/placeholder แทน feature ที่ user ขอ
+- หลังแก้ app code ต้อง `npm run build` ผ่าน (type-check รวม)
+- UI งานเดียวใช้ component ที่มีอยู่ก่อนสร้างใหม่
+
+_Avoid_: dead code · TODO แทน implementation · helper 1 บรรทัดที่ไม่จำเป็น
+
 # Glossary
 
 ## module_settings_menu
 
-กลุ่มเมนู L3 ชื่อ **ตั้งค่าระบบ** ใน nav โมดูล — รวมลิงก์ config (ปี, สิทธิ์, master data) · เห็นเมื่อมีสิทธิ์ตั้งค่า (`showAdmin` / p1) ไม่จำกัดแค่ `module_admins` · UI: heading **ตั้งค่าระบบ** + flyout **เมนูตั้งค่า** (hover แสดงรายการย่อย)
+กลุ่มเมนู L3 ชื่อ **ตั้งค่าระบบ** ใน nav โมดูล — รวมลิงก์ config (ปี, สิทธิ์, master data) · **system_admin** (`canAccessModuleSettings`) เห็นลิงก์ครบ (`module_settings_nav_mode = full`) · **module_admin** เห็น section แต่เฉพาะ `…/permissions` (`mode = permissions`) · p1 / เจ้าหน้าที่ทั่วไปไม่เห็น section (`none`) · UI: heading **ตั้งค่าระบบ** + flyout **เมนูตั้งค่า** (บางโมดูล) · helper: `buildModuleSettingsNavSection` · ADR: [`docs/adr/004-module-settings-nav-visibility.md`](docs/adr/004-module-settings-nav-visibility.md)
 
 ## module_admin
 
 ผู้ดูแลโมดูลใน `module_admins` (legacy `system_module_admin`) · มักได้สิทธิ์ตั้งค่าด้วย แต่ไม่เท่ากับ p1 หรือเจ้าหน้าที่ที่มีสิทธิ์ใน `{slug}_permissions`
+
+## system_admin
+
+ผู้ดูแลระบบ SMSS ทั้งหมด — `users.is_admin` (= legacy `system_user.smss_admin`) · เข้า `/admin/*` และ bypass สิทธิ์โมดูล · หลัง `npm run db:migrate-system-admin` มอบให้บุคลากรเขต `position_code=15` (นักวิชาการคอมพิวเตอร์) ที่มีแถว `users` · ไม่ใช้ `username=admin` · แยกจาก `module_admin`
 
 ## menu_group_general
 
@@ -14,7 +57,27 @@
 
 ## menu_group_plan
 
-กลุ่มเมนู L1 **การวางแผน** (legacy `menu_groups.legacy_id = 2`, DB ชื่อ «บริหารงบประมาณ») — flyout + การ์ด `/home` แสดงเฉพาะ `plan` ชื่อ **การวางแผน** · แยกจาก flyout **การเงินและบัญชี** ใน workgroup เดียวกัน · `preferFlyout` บังคับ dropdown แม้มีโมดูลเดียว · config: `PLAN_MENU_MODULES` ใน `get-app-menu.ts`
+กลุ่มเมนู L1 **การวางแผน** (legacy `menu_groups.legacy_id = 2`, DB ชื่อ «บริหารงบประมาณ») — flyout + การ์ด `/home` แสดงเฉพาะ `plan` ชื่อ **การวางแผน** · แยกจาก flyout **การเงินและบัญชี** ใน workgroup เดียวกัน · `preferFlyout` บังคับ dropdown แม้มีโมดูลเดียว · in-module flyout 7 กลุ่ม Amssplus · config: `PLAN_MENU_MODULES` ใน `get-app-menu.ts`
+
+## plan_strategy
+
+ยุทธศาสตร์ประจำปีงบ — legacy `plan_stregic` (`id_tegic`, `strategic`) · โครงการอ้างอิงผ่าน `plan_projects.code_tegy` (= `id_tegic`)
+
+## plan_surplus
+
+โครงการจากเงินเหลือจ่าย — legacy แยกตาราง `plan_proj_2` / `plan_acti_2` / `plan_acti_3` · Next.js ใช้ `plan_projects.project_kind = 'surplus'` + `plan_activity_funding` · รหัสโครงการ surplus มัก ≥ 1001
+
+## code_approve
+
+รหัสอ้างอิงงบจัดสรรต่อกิจกรรม — รูปแบบ `2_{budget_receive.num}` เชื่อม `plan_activities` กับ `budget_receive`
+
+## deega
+
+ฎีกา/ทะเบียนเงินคงคลัง — ตาราง `budget_deega` · เลข `deega_num` · อ้างอิง `receive_num` (ใบงวดจาก `budget_receive`) · เชื่อม `budget_withdraw.deega` เมื่อวางฎีกา
+
+## budget_type
+
+ประเภทย่อยของเงิน (per year) — `budget_type` · `category_id` 1=นอกงบ, 2=งบประมาณ, 3=รายได้แผ่นดิน · `type_id=200` ใน `budget_main` = งบประมาณหลัก
 
 ## menu_group_budget
 
@@ -74,7 +137,15 @@
 
 ## bookobec
 
-โมดูลรับส่งหนังสือราชการ **สพฐ.** — slug `bookobec`, URL `/modules/bookobec/...` · แยกจาก `book` (รับส่งภายใน สพป.) · nav flyout: **รายการหนังสือรับ** · **รายการหนังสือส่ง** · **คู่มือ** · แผนที่เมนู legacy: [context.html §2.2](context.html#legacy-menu-bookobec)
+โมดูลรับส่งหนังสือราชการ **สพฐ.** — slug `bookobec`, URL `/modules/bookobec/...` · แยกจาก `book` (รับส่งภายใน สพป.) · nav flyout: **ตั้งค่าระบบ** (smss admin) · **รายการหนังสือรับ** · **รายการหนังสือส่ง** · **คู่มือ** · แผนที่เมนู legacy: [context.html §2.2](context.html#legacy-menu-bookobec)
+
+## bookobec_settings
+
+เมนู L3 **ตั้งค่าระบบ** ในโมดูล bookobec — เฉพาะ `is_admin` (smss admin) เห็นและเข้า route ได้ · ย่อย: **กำหนดเจ้าหน้าที่** → `/modules/bookobec/permissions`
+
+## bookobec_permissions
+
+ตาราง `bookobec_permissions` — สิทธิ์เจ้าหน้าที่ bookobec (p1=รับ, p2=ส่ง, officer_person_id) · import จาก legacy `bookobec_permission` (`p1_bookobec`, `p2_bookobec`)
 
 ## bookobec_inbox
 
@@ -94,7 +165,11 @@
 
 ## leave
 
-โมดูลระบบการลา (ยื่นคำขอ อนุมัติ ปีงบ สิทธิ์ p1/p2) — slug `leave`, URL `/modules/leave/...` · มาตรฐาน **ระเบียบ 2555** · nav L3: **ตั้งค่าระบบ** · **ขออนุญาตลา** (ยื่น/ทะเบียน/มอบงาน) · **พิจารณาอนุมัติ** (inbox ตามสิทธิ viewer) · **ขอยกเลิกวันลา** · **รายงาน** · **คู่มือ** · แผนที่เมนู legacy: [context.html §2.2](context.html#s2-2)
+โมดูลระบบการลา (ยื่นคำขอ อนุมัติ ปีงบ สิทธิ์ p1/p2) — slug `leave`, URL `/modules/leave/...` · มาตรฐาน **ระเบียบ 2555** · nav L3: **ตั้งค่าระบบ** · **ขออนุญาตลา** (บันทึก `/requests/new` · ทะเบียน `/requests` · มอบงาน) · **พิจารณาอนุมัติ** (inbox ตามสิทธิ viewer) · **ขอยกเลิกวันลา** · **รายงาน** · **คู่มือ** · แผนที่เมนู legacy: [context.html §2.2](context.html#s2-2)
+
+## leave_register
+
+ทะเบียนคำขอลาของตัวเอง — URL `/modules/leave/requests` · แก้ไข/ลบได้ก่อนอนุมัติ · เมนูแยกจาก **บันทึกขออนุญาตลา** (`/requests/new`)
 
 ## leave_type
 
@@ -104,6 +179,19 @@
 
 คำขอลาหนึ่งรายการของบุคลากร — มีประเภทลา ช่วงวัน จำนวนวัน และสถานะการอนุมัติ
 
+## leave_request_form
+
+ฟอร์มยื่นคำขอลา — Single-Page Task Form: เลือกประเภทลาครบ 10 แบบ 2555 ในหน้าเดียว (dropdown + optgroup กรองตามเพศ · แสดงโควต้าในรายการ) · วันลา/ครึ่งวัน · เหตุผลหลัก · optional collapsible (ติดต่อ/แนบ/มอบงาน) · preview หนังสือ on-demand · sticky สรุป+ยื่นบนมือถือ · เดสก์ท็อป = `leave_request_sidebar` · มือถือ = สิทธิและสถิติในฟอร์มหลักเต็มความกว้าง · URL `/modules/leave/requests/new` · ไม่แยกทางเข้าป่วย/พักผ่อนแบบ legacy
+_Avoid_: wizard หลายขั้น · การ์ดประเภทลา 10 ใบ · radio list ประเภทลา · preview หนังสือเต็มหน้าบังฟอร์ม · intent chips / `?group=` preset
+
+## leave_request_sidebar
+
+aside sticky เดสก์ท็อป — รวม `สิทธิและสถิติ` (ตาราง compact ไม่ scroll แนวนอน) ต่อด้วย `leave_request_summary` · มือถือไม่ใช้ sidebar นี้
+
+## leave_request_summary
+
+แถบยืนยันคำขอก่อนยื่น — aside เดสก์ท็อป = สรุปอย่างเดียว · มือถือ sticky = สรุป + ปุ่มยื่น/ยกเลิก · ปุ่มบนเดสก์ท็อปอยู่ท้ายฟอร์มเต็มความกว้าง · แสดงประเภท · ช่วงวันลา · ครึ่งวัน · จำนวนวัน · สิทธิคงเหลือ · เตือนเกินโควต้า · **ไม่** รวมตารางสถิติ 4 แถว (อยู่ในแผงโควต้าใน `leave_request_sidebar`)
+
 ## legacy_leave
 
 ตาราง `la_*` จาก dump PHP — staging อ่านอย่างเดียวสำหรับ import · แอป runtime ใช้ `leave_*` เท่านั้น
@@ -111,6 +199,10 @@
 ## legacy_leave_person
 
 บุคลากรที่สร้างจาก import เพื่ออ้างอิงประวัติลา legacy — เมื่อ `person_id` ใน `la_*` ไม่มีใน master ปัจจุบัน · ชื่อจาก `person_main`/`person_sch_main` ถ้ามี · ไม่มีใช้ placeholder **ประวัติลา** + เลขบัตร · **อัปเดตเป็นชื่อจริงได้** เมื่อโหลด `person_main` เข้า legacy แล้วรัน refresh ชื่อ
+
+## demo_staff
+
+บุคลากรสังเคราะห์สำหรับ dev/UAT — ช่วง `person_id` `1701999990xxx` (สพป.ชัยนาท) · แยกจาก `legacy_leave_person` และข้อมูล production · seed ด้วย `npm run db:seed-leave-demo` · ลบด้วย `--reset`
 
 ## leave_cancellation
 
@@ -146,7 +238,7 @@
 
 ## leave_reports_menu
 
-เมนู flyout **รายงาน** ในโมดูลการลา — ลิงก์ตรงไปแต่ละรายงาน (ไม่ผ่าน hub ใน nav) · hub `/modules/leave/reports` ยังเปิดได้ทาง URL · รายการหลัก 6 แบบตาม legacy เขต
+เมนู flyout **รายงาน** ในโมดูลการลา — ลิงก์ตรงไปแต่ละรายงาน (ไม่ผ่าน hub ใน nav) · hub `/modules/leave/reports` ยังเปิดได้ทาง URL · รายการหลัก 6 แบบตาม legacy เขต · ป้ายเมนู **ใช้งานได้** (`route status: ready`)
 
 ## school_principal_report_viewer
 
@@ -155,7 +247,7 @@ _Avoid_: ผอ.รร., รก.ผอ. (ใช้ในคำพูดได้
 
 ## leave_manual
 
-คู่มือใช้งานโมดูลการลา — flyout **คู่มือ** → **คู่มือการลา** · หน้า `/modules/leave/manual` · เนื้อหา legacy เป็น `la.pdf` (ยังไม่รวม v1)
+คู่มือใช้งานโมดูลการลา — flyout **คู่มือ** → **คู่มือการลา** · หน้า `/modules/leave/manual` · เนื้อหา in-app (สารบัญ เมนูย่อย ลิงก์ไปหน้างาน ประเภทลา 1–10) · legacy เดิมเป็น `la.pdf`
 
 ## leave_job_handover
 
@@ -166,10 +258,15 @@ _Avoid_: ผอ.รร., รก.ผอ. (ใช้ในคำพูดได้
 ขอบเขตงานอนุมัติคำขอลาแบบครบวงจร — **ทั้งเขตและโรงเรียน** (`leave_request` ของ `person_main` และ `person_sch_main`) ตั้งแต่ยื่นจน `commander_grant = 1` · รวม inbox เจ้าหน้าที่ ชั้นต้น ผู้อนุมัติเขต และ **grant2** (รอง ผอ.สพท. p2 อนุมัติแทนในส่วนโรงเรียน) · **ยังไม่รวม** `leave_cancellation` ในรอบนี้
 _Avoid_: loop การลา (กว้างเกิน — ใช้ระบุขอบเขตงาน)
 
+## module_approval_nav
+
+pattern การมองเห็นหน้าอนุมัติทุกโมดูล — resolver ใน layout (`resolve*ApprovalNav*`) · nav กรองรายการ/flyout · page guard `canAccess*Inbox` · detail ซ่อนฟอร์มด้วย check เดียวกัน · แหล่งสิทธิ์: person settings (leave/permission) หรือ module p1 (car/meeting บน detail) · บันทึกใน [ADR 003](docs/adr/003-module-approval-visibility.md)
+_Avoid_: hardcode inbox ใน nav client โดยไม่ผ่าน resolver · หน้า inbox ไม่มี redirect เมื่อไม่มีสิทธิ์
+
 ## leave_approval_nav
 
-flyout **พิจารณาอนุมัติ** ใน nav โมดูลการลา — รวม inbox ทุกขั้นที่ viewer มีสิทธิ์ (officer · group · group2 · commander · school-deputy) · แยกจาก flyout **ขออนุญาตลา** ที่เหลือแค่ยื่น/ทะเบียน/มอบงาน · เปิดด้วย hover เหมือน flyout อื่น
-_Avoid_: ซ่อน inbox อนุมัติใต้ “ขออนุญาตลา” (ทำให้ผู้อนุมัติหาเมนูไม่เจอ)
+flyout **พิจารณาอนุมัติ** ใน nav โมดูลการลา — inbox คำขอลาเท่านั้น (group · group2 · commander) ตาม `leave_person_settings` · คิวยกเลิกวันลาอยู่ flyout **ขอยกเลิกวันลา** (`resolveLeaveCancellationApprovalNavItems`) · ซ่อน flyout/รายการถ้า viewer ไม่มีสิทธิ์ · แยกจาก flyout **ขออนุญาตลา**
+_Avoid_: ซ่อน inbox อนุมัติใต้ “ขออนุญาตลา” · แสดงคิวอนุมัติให้บุคลากรทั่วไป
 
 ## leave_approval_inbox
 
@@ -205,19 +302,67 @@ _Avoid_: ขั้นเจ้าหน้าที่ (`officer_date`) แล�
 
 ## leave_attachment
 
-ไฟล์หลักฐานประกอบคำขอลา — แสดงช่องแนบ **ทุกประเภท** เมื่อเลือกประเภทแล้ว · ไม่บังคับทั่วไป · **ลาป่วย ≥30 วัน** ยังบังคับ (ข้อ 18, 2555 ชนะ legacy) · แนบได้ PDF และรูปภาพ
+ไฟล์หลักฐานประกอบคำขอลา — แสดงช่องแนบ **ทุกประเภท** เมื่อเลือกประเภทแล้ว · ไม่บังคับทั่วไป · **ลาป่วย ≥30 วัน** ยังบังคับ (ข้อ 18, 2555 ชนะ legacy) · ชนิดไฟล์ตาม **StandardAttachment**
+
+## StandardAttachment
+
+ชนิดไฟล์ที่อนุญาตอัปโหลดใหม่ทุกโมดูล — docx, xlsx, pptx, pdf, jpg, jpeg, png · ดู [ADR 002](docs/adr/002-standard-attachment-file-types.md) · config: `src/lib/form/attachment-allowed-types.ts`
 
 ## form_validation
 
 ฟอร์มตรวจข้อมูลฝั่ง client ด้วย Zod schema เดียวกับ server · ใช้ `noValidate` ปิด popup ภาษาอังกฤษของ browser · แสดงข้อความภาษาไทย **inline ใต้ช่องที่ผิด** (ทุกช่องพร้อมกัน) · แบนเนอร์เฉพาะ error จาก server (เช่น โควต้าเกิน)
 
-## phone_digits
+## thai_mobile_phone
 
-ช่องเบอร์โทรศัพท์ — กรอกได้เฉพาะตัวเลข 0–9 (ว่างได้ถ้าไม่บังคับ) · ข้อความ error มาตรฐาน: "กรุณากรอกเบอร์โทรศัพท์เป็นตัวเลขเท่านั้น"
+ช่องเบอร์มือถือไทย — ว่างได้ถ้าไม่บังคับ · ถ้ากรอกต้องเป็น **10 หลัก** ขึ้นต้น **06, 08 หรือ 09** · เก็บเป็นตัวเลขล้วน · paste `+66` / ขีดคั่น normalize ได้ · UI hint `รูปแบบ 08 xxxx xxxx` · ขณะพิมพ์ error เฉพาะตัวอักษร · ยื่นไม่ครบ/ไม่ถูก → "กรุณากรอกเบอร์ให้ครบ 10 หลัก" · utility: `src/lib/form/thai-mobile-phone.ts`
 
 ## permission
 
-โมดูลขออนุญาต**ไปราชการ** — ไม่ใช่การลา (slug `permission`)
+โมดูลขออนุญาต**ไปราชการ** — ไม่ใช่การลา (slug `permission`) · workflow 2 ขั้น: `basic_grant` (ผู้บังคับบัญชาชั้นต้น) → `grant_status` (ผู้อนุมัติขั้นสุดท้าย) · ตั้งค่าผู้อนุมัติรายบุคคลที่ `permission_person_settings` (`/modules/permission/grant-persons`)
+
+## permission_nav
+
+เมนู flyout โมดูล permission 4 กลุ่ม: ตั้งค่าระบบ · ขออนุญาตไปราชการ · รายงาน · คู่มือ
+
+## permission_basic_comment
+
+ขั้นผู้บังคับบัญชาชั้นต้น — inbox `/modules/permission/approvals/basic` · คอลัมน์ `basic_grant` / `basic_comment`
+
+## permission_grant
+
+ขั้นผู้อนุมัติขั้นสุดท้าย — inbox `/modules/permission/approvals/grant` · คอลัมน์ `grant_status`
+
+## permission_person_settings
+
+กำหนด `group_person_id` / `grant_person_id` ต่อผู้ขอ (เทียบ `leave_person_settings`) · UI `/modules/permission/grant-persons`
+
+## permission_vehicle
+
+ตัวเลือกพาหนะตอนยื่นคำขอ (ว่างได้) — รถยนต์สำนักงาน นข1565 / บจ543 ชัยนาท · รถยนต์ส่วนตัว (ต้องระบุหมายเลขทะเบียน) · อื่น ๆ (ต้องระบุข้อความ) · เก็บข้อความสรุปใน `permission_requests.vehicle` · ไม่ผูกโมดูล `car`
+
+## permission_attachment
+
+ไฟล์แนบคำขอไปราชการ (ไม่บังคับ) · ถ้าแนบต้องเป็น **StandardAttachment** (docx, xlsx, pptx, pdf, jpg, jpeg, png) · ตาราง `permission_request_files` · storage `storage/permission/requests/` · ดาวน์โหลด `/api/permission/requests/{id}/files/{fileId}` · คอลัมน์ `document` เก็บชื่อไฟล์ต้นฉบับเมื่อมีไฟล์
+
+## permission_report_today
+
+รายงานคนที่ช่วงไปราชการครอบคลุม**วันนี้** (timezone Bangkok) — `/modules/permission/reports/today` · ไม่มี date picker · ไม่รับ `?date=`
+
+## permission_report_print
+
+รายการคำขอไปราชการของผู้ใช้ที่ล็อกอินทั้งหมด สำหรับพิมพ์/PDF — `/modules/permission/reports/print` · ไม่มี scope selector · ไม่รับ `?scope=`
+
+## permission_manual
+
+คู่มือ in-app — `/modules/permission/manual`
+
+## permission_register
+
+ทะเบียนคำขอไปราชการของผู้ใช้ที่ล็อกอิน — `/modules/permission/requests` · เมนู **บันทึกขออนุญาตไปราชการ** เปิดหน้านี้ · ปุ่ม **เขียนขออนุญาตไปราชการ** ไปฟอร์ม `/modules/permission/requests/new` · แยกจาก `permission_org_travel_reference` (ตารางอ้างอิงหน่วยงานใต้ฟอร์ม)
+
+## permission_org_travel_reference
+
+ตารางอ้างอิง read-only บนหน้าบันทึกขอไปราชการ (`/modules/permission/requests/new`) — รายการคำขอไปราชการของทุกคนในหน่วยงานที่ user สังกัด (สำนักงานเขต: `school_id` null · โรงเรียน: `school_id` ตรง scope) · กรองตามปีงบ permission ที่เปิดใช้ (ถ้ามี) · **ไม่ใช่**โมดูล `leave` · CRUD อยู่ `/modules/permission/requests` · รายงานเต็ม `/modules/permission/reports/all`
 
 ## person
 

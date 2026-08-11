@@ -155,7 +155,7 @@ async function main() {
   }
 
   console.log("\nRebuild leave from legacy complete.");
-  await queryClient.end();
+  // queryClient.end() not needed for mysql pool
 }
 
 main().catch((err) => {

@@ -3,7 +3,7 @@ import {
   count,
   desc,
   eq,
-  ilike,
+  like,
   isNull,
   max,
   or,
@@ -59,10 +59,10 @@ function buildSearchCondition(q: string | undefined) {
 
   const pattern = `%${term}%`;
   const parts = [
-    ilike(registerCertificates.subject, pattern),
-    ilike(registerCertificates.bookNo, pattern),
-    ilike(registerCertificates.comment, pattern),
-    sql`CAST(${registerCertificates.registerNumber} AS TEXT) LIKE ${pattern}`,
+    like(registerCertificates.subject, pattern),
+    like(registerCertificates.bookNo, pattern),
+    like(registerCertificates.comment, pattern),
+    sql`CAST(${registerCertificates.registerNumber} AS CHAR) LIKE ${pattern}`,
   ];
 
   // รองรับรูปแบบ "เลข/ปี"

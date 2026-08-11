@@ -378,8 +378,8 @@
 <h4>กลุ่ม 1 — บริหารงานทั่วไป</h4>
 <table>
   <tr><th>slug</th><th>ชื่อเมนู (module_desc)</th><th>active*</th><th>v1 Next.js</th><th>หมายเหตุ</th></tr>
-  <tr><td><code>la</code> → <code>leave</code></td><td>ระบบการลา</td><td>1</td><td><span class="badge badge-warn">implement — UAT</span></td><td>legacy DB slug <code>la</code> · โฟลเดอร์ PHP / Next.js = <code>leave</code></td></tr>
-  <tr><td><code>permission</code></td><td>ขออนุมัติไปราชการ</td><td>1</td><td><span class="badge badge-warn">implement — UAT</span></td><td>PDF</td></tr>
+  <tr><td><code>la</code> → <code>leave</code></td><td>ระบบการลา</td><td>1</td><td><span class="badge badge-ok">done</span></td><td>legacy DB slug <code>la</code> · โฟลเดอร์ PHP / Next.js = <code>leave</code></td></tr>
+  <tr><td><code>permission</code></td><td>ขออนุมัติไปราชการ</td><td>1</td><td><span class="badge badge-ok">done</span></td><td>PDF</td></tr>
   <tr><td><code>idocument</code></td><td>ระบบบันทึกข้อความ</td><td>1</td><td><span class="badge badge-warn">นอก v1</span></td><td>ใช้บ่อยในเขต — ยังไม่ migrate</td></tr>
   <tr><td><code>car</code></td><td>ยานพาหนะ</td><td>1</td><td><span class="badge badge-warn">implement — UAT</span></td><td>PDF</td></tr>
   <tr><td><code>security_duty</code></td><td>เวรรักษาการณ์</td><td>0</td><td><span class="badge badge-warn">นอก v1</span></td><td>บางเขตเปิดใช้</td></tr>
@@ -400,8 +400,8 @@
 <table>
   <tr><th>slug</th><th>ชื่อเมนู</th><th>active*</th><th>v1 Next.js</th></tr>
   <tr><td><code>asset</code></td><td>ระบบบริหารพัสดุ</td><td>1</td><td><span class="badge badge-warn">นอก v1</span></td></tr>
-  <tr><td><code>plan</code></td><td>การวางแผน</td><td>1</td><td><span class="badge badge-warn">implement — UAT</span></td></tr>
-  <tr><td><code>budget</code></td><td>การเงินและบัญชี</td><td>1</td><td><span class="badge badge-warn">implement — UAT (MVP)</span></td></tr>
+  <tr><td><code>plan</code></td><td>การวางแผน</td><td>1</td><td><span class="badge badge-ok">done</span></td></tr>
+  <tr><td><code>budget</code></td><td>การเงินและบัญชี</td><td>1</td><td><span class="badge badge-warn">implement — UAT</span></td></tr>
 </table>
 
 <h4>กลุ่ม 3 — บริหารงานบุคคล</h4>
@@ -438,7 +438,7 @@
 <table>
   <tr><th>กลุ่ม</th><th>ใน v1 (18 โมดูล PDF)</th><th>นอก v1 — มักใช้บ่อย / ต้องวางแผนต่อ</th></tr>
   <tr><td>สารบรรณ/ธุรการ</td><td>leave, permission, car, mail, meeting, affair, cabinet, book, bookregister, news</td><td><code>idocument</code>, <code>delegate</code>, <code>bookobec</code>, <code>bookpv</code>, <code>work</code>, <code>time</code></td></tr>
-  <tr><td>งบ/พัสดุ</td><td>plan, budget (MVP)</td><td><code>asset</code></td></tr>
+  <tr><td>งบ/พัสดุ</td><td>plan (done), budget (v2 UAT)</td><td><code>asset</code></td></tr>
   <tr><td>บุคคล</td><td>person</td><td><code>award</code>, <code>homework</code></td></tr>
   <tr><td>วิชาการ</td><td>achievement, student_main, spacial_student</td><td><code>supervision</code>, <code>opportunity</code>, <code>warroom</code>, <code>bets</code></td></tr>
   <tr><td>แจ้งเตือน</td><td>—</td><td><code>alert</code></td></tr>
@@ -782,6 +782,15 @@
 <h3>ผู้ดูแลโมดูล (<code>system_module_admin</code>)</h3>
 <p>กำหนดว่า <code>person_id</code> ใดเป็น admin ของ module ใด (เช่น book, leave, person)</p>
 
+<h3>เมนูตั้งค่าระบบในโมดูล (Next.js — lock)</h3>
+<ul>
+  <li>L3 <strong>ตั้งค่าระบบ</strong> ใน nav โมดูล — ทุกโมดูลที่มี layout</li>
+  <li><code>users.is_admin</code> (= legacy <code>smss_admin</code>) — เห็นลิงก์ config ครบ (ปี, master data, สิทธิ์, ฯลฯ)</li>
+  <li><code>module_admin</code> — เห็น section แต่เฉพาะ <code>…/permissions</code> (สิทธิ์การใช้งาน)</li>
+  <li><code>p1</code> / เจ้าหน้าที่ทั่วไป — ไม่เห็น section · ใช้ทะเบียน/inbox ตามสิทธิ์เดิม</li>
+  <li>รายละเอียด: ADR 004 · <code>getModuleSettingsNavMode</code> ใน <code>src/lib/core/permissions.ts</code></li>
+</ul>
+
 <h3>Organization context ในระบบใหม่</h3>
 <ul>
   <li><code>organization_type</code>: <code>district</code> | <code>school</code></li>
@@ -1084,11 +1093,11 @@ amsscnt-next.js/
   <tr><td>A</td><td>Platform: login, home, จัดการระบบ</td><td>platform</td><td><span class="badge badge-ok">done</span> — P010–P019 (บุคลากรจาก Excel ชัยนาท)</td></tr>
   <tr><td>B</td><td>บุคลากร</td><td>person</td><td><span class="badge badge-warn">in progress</span> — P050–P052 implement แล้ว รอ UAT</td></tr>
   <tr><td>C</td><td>ทะเบียนหนังสือ (4 ชนิด + PDF) — priority สูง</td><td>bookregister</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569 — ดู <a href="docs/TESTING-MODULES.md#bookregister">คู่มือ</a></td></tr>
-  <tr><td>D</td><td>รับส่งหนังสือราชการ (+ Phase 2)</td><td>book</td><td><span class="badge badge-warn">in progress</span> — v1 done; Phase 2 implement มิ.ย. 2569 รอ UAT — <a href="docs/TESTING-MODULES.md#book">คู่มือ</a></td></tr>
+  <tr><td>D</td><td>รับส่งหนังสือราชการ (+ Phase 2)</td><td>book</td><td><span class="badge badge-ok">done</span> — v1 + Phase 2 + import data — ดู <a href="docs/TESTING-MODULES.md#book">คู่มือ</a></td></tr>
   <tr><td>E</td><td>งานธุรการ</td><td>leave, permission, car, mail, meeting</td><td><span class="badge badge-warn">in progress</span> — P070–P110 implement มิ.ย. 2569 รอ UAT</td></tr>
   <tr><td>F</td><td>งานสนับสนุน</td><td>affair, cabinet, news</td><td><span class="badge badge-warn">in progress</span> — P120–P140 implement มิ.ย. 2569 รอ UAT</td></tr>
   <tr><td>G</td><td>งานวิชาการ</td><td>achievement, student_main, spacial_student</td><td><span class="badge badge-warn">in progress</span> — P150–P170 implement มิ.ย. 2569 รอ UAT (P010.s deferred)</td></tr>
-  <tr><td>H</td><td>งบประมาณ (plan ก่อน budget)</td><td>plan, budget</td><td><span class="badge badge-warn">in progress</span> — P180–P190 MVP implement มิ.ย. 2569 รอ UAT</td></tr>
+  <tr><td>H</td><td>งบประมาณ (plan ก่อน budget)</td><td>plan, budget</td><td><span class="badge badge-warn">implement — UAT</span> — plan done · budget v2 full menu ก.ค. 2569</td></tr>
   <tr><td>—</td><td>Deploy on-prem + backup</td><td>—</td><td><span class="badge badge-warn">runbook ready</span> — <a href="docs/DEPLOY-ONPREM.md">DEPLOY-ONPREM</a>; cutover รอ UAT ครบ</td></tr>
 </table>
 
@@ -1107,7 +1116,8 @@ amsscnt-next.js/
   <tr><td>Domain / URL</td><td><strong>amsscnt.com (ยืนยันแล้ว)</strong> — cutover สลับ upstream ครั้งเดียว user ไม่เปลี่ยน bookmark</td></tr>
   <tr><td>SSL</td><td>ใบรับรองภายในเขต หรือ Let's Encrypt</td></tr>
   <tr><td>ไฟล์ PDF</td><td><code>/var/amsscnt/storage</code> — backup rsync รายวัน; <strong>go-live:</strong> migrate ไฟล์ทั้งหมดจาก PHP server ก่อน cutover</td></tr>
-  <tr><td>DB backup</td><td>pg_dump cron รายวัน</td></tr>
+  <tr><td>DB backup</td><td><strong>FullBackup:</strong> <code>pg_dump -Fc</code> cron รายวัน — ดู <a href="docs/DEPLOY-ONPREM.md">DEPLOY-ONPREM</a> §7</td></tr>
+  <tr><td>Legacy dump จากเว็บ</td><td><strong>LegacyDump (super-admin):</strong> <code>/admin/dev/export-legacy</code> — on-prem เท่านั้น; flag <code>AMSS_ENABLE_LEGACY_DUMP_EXPORT=1</code>; ไม่แทน FullBackup — ดู <a href="docs/adr/001-legacy-dump-web-export.md">ADR 001</a></td></tr>
   <tr><td>Cutover</td><td><strong>Big bang (ยืนยันแล้ว):</strong> UAT ผ่านบน staging → deploy บน<strong>เครื่อง PHP เดิม</strong> → สลับ Nginx ไป Next.js ครั้งเดียว ปิด PHP</td></tr>
   <tr><td>Rollback</td><td><strong>C (ยืนยันแล้ว):</strong> snapshot MySQL + PDF + Nginx ก่อน cutover; เก็บ PHP/MySQL ไว้ 1–2 สัปดาห์; สลับ Nginx กลับ PHP ได้ภายในนาที</td></tr>
   <tr><td>Build</td><td>pnpm build → pm2 start — ไม่ deploy บน Vercel</td></tr>
@@ -1140,7 +1150,7 @@ amsscnt-next.js/
   <tr><td>Production DB เป็น MySQL</td><td>UAT/go-live: export MySQL → แปลง PostgreSQL ก่อน import (ยืนยันแล้ว)</td></tr>
   <tr><td>ไฟล์ PDF จากระบบเดิม</td><td><strong>Dev (B):</strong> copy ตัวอย่างจาก <code>../Amssplus/modules/bookregister/upload_files*</code> — <strong>UAT/go-live (A):</strong> migrate ครบจาก production server</td></tr>
   <tr><td>Cutover ล้มเหลว</td><td><strong>Rollback C (ยืนยันแล้ว):</strong> snapshot ก่อน + PHP standby + Nginx rollback — ดู §7 + <span class="page-id">P999</span></td></tr>
-  <tr><td>โมดูล budget ซับซ้อน</td><td>MVP subset แล้วขยาย</td></tr>
+  <tr><td>โมดูล budget ซับซ้อน</td><td>v2 full menu implement แล้ว — รอ UAT</td></tr>
 </table>
 
 <hr>
@@ -1266,19 +1276,19 @@ amsscnt-next.js/
   <tr><th>รหัส</th><th>slug</th><th>ชื่อโมดูล</th><th>เมนู amsscnt.com (<code>module_desc</code>)</th><th>สถานะโมดูล</th><th>คู่มือทดสอบ</th></tr>
   <tr><td>M-platform</td><td><em>—</em></td><td>Login + หน้าแรก + จัดการระบบ</td><td>login / หลัง login / จัดการระบบ</td><td><span class="badge badge-ok">done</span></td><td><a href="docs/TESTING-MODULES.md#platform">คู่มือ</a></td></tr>
   <tr><td>M-person</td><td>person</td><td>ระบบบริหารงานบุคลากร</td><td>ระบบบริหารงานบุคลากร</td><td><span class="badge badge-warn">in progress</span> — P050–P052 implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#person">ทดสอบ</a></td></tr>
-  <tr><td>M-plan</td><td>plan</td><td>การวางแผน</td><td>การวางแผน</td><td><span class="badge badge-warn">in progress</span> — P180 implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#plan">ทดสอบ</a></td></tr>
-  <tr><td>M-budget</td><td>budget</td><td>การเงินและบัญชี</td><td>การเงินและบัญชี</td><td><span class="badge badge-warn">in progress</span> — P190 MVP implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#budget">ทดสอบ</a></td></tr>
+  <tr><td>M-plan</td><td>plan</td><td>การวางแผน</td><td>การวางแผน</td><td><span class="badge badge-ok">done</span></td><td><a href="docs/TESTING-MODULES.md#plan">คู่มือ</a></td></tr>
+  <tr><td>M-budget</td><td>budget</td><td>การเงินและบัญชี</td><td>การเงินและบัญชี</td><td><span class="badge badge-warn">implement — UAT</span> — v2 เมนูครบ Amssplus</td><td><a href="docs/TESTING-MODULES.md#budget">ทดสอบ</a></td></tr>
   <tr><td>M-mail</td><td>mail</td><td>ไปรษณีย์</td><td><strong>ไปรษณีย์</strong> (PDF/dump: ระบบส่งหนังสือเวียน)</td><td><span class="badge badge-ok">done</span></td><td><a href="docs/TESTING-MODULES.md#mail">คู่มือ</a></td></tr>
   <tr><td>M-meeting</td><td>meeting</td><td>ระบบจองห้องประชุม</td><td>ระบบจองห้องประชุม</td><td><span class="badge badge-warn">in progress</span> — P110 implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#meeting">ทดสอบ</a></td></tr>
   <tr><td>M-affair</td><td>affair</td><td>ภารกิจผู้อำนวยการ</td><td>ภารกิจผู้อำนวยการ</td><td><span class="badge badge-warn">in progress</span> — P120 implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#affair">ทดสอบ</a></td></tr>
-  <tr><td>M-leave</td><td>leave</td><td>ระบบการลา</td><td>ระบบการลา</td><td><span class="badge badge-warn">in progress</span> — ยึด 2555 L1–L6 แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#leave">ทดสอบ</a></td></tr>
-  <tr><td>M-permission</td><td>permission</td><td>ขออนุมัติไปราชการ</td><td>ขออนุมัติไปราชการ</td><td><span class="badge badge-warn">in progress</span> — P080 implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#permission">ทดสอบ</a></td></tr>
+  <tr><td>M-leave</td><td>leave</td><td>ระบบการลา</td><td>ระบบการลา</td><td><span class="badge badge-ok">done</span></td><td><a href="docs/TESTING-MODULES.md#leave">ทดสอบ</a></td></tr>
+  <tr><td>M-permission</td><td>permission</td><td>ขออนุมัติไปราชการ</td><td>ขออนุมัติไปราชการ</td><td><span class="badge badge-ok">done</span></td><td><a href="docs/TESTING-MODULES.md#permission">ทดสอบ</a></td></tr>
   <tr><td>M-car</td><td>car</td><td>ยานพาหนะ</td><td>ยานพาหนะ</td><td><span class="badge badge-warn">in progress</span> — P090 implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#car">ทดสอบ</a></td></tr>
   <tr><td>M-cabinet</td><td>cabinet</td><td>ตู้เอกสาร / วาระประชุม</td><td>ระบบวาระประชุมแผ่นเดียว QR-CODE</td><td><span class="badge badge-warn">in progress</span> — P130 implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#cabinet">ทดสอบ</a></td></tr>
   <tr><td>M-news</td><td>news</td><td>ข่าว</td><td>ข่าว</td><td><span class="badge badge-warn">in progress</span> — P140 implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#news">ทดสอบ</a></td></tr>
   <tr><td>M-achievement</td><td>achievement</td><td>ผลสัมฤทธิ์ทางการเรียน</td><td>ผลสัมฤทธิ์ทางการเรียน</td><td><span class="badge badge-warn">in progress</span> — P150 implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#achievement">ทดสอบ</a></td></tr>
   <tr><td>M-student</td><td>student_main</td><td>ข้อมูลนักเรียน</td><td>ข้อมูลนักเรียน</td><td><span class="badge badge-warn">in progress</span> — P160 MVP implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#student_main">ทดสอบ</a></td></tr>
-  <tr><td>M-book</td><td>book</td><td>รับส่งหนังสือราชการ</td><td>รับส่งหนังสือราชการ</td><td><span class="badge badge-warn">in progress</span> — v1 done; Phase 2 implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#book">คู่มือ</a></td></tr>
+  <tr><td>M-book</td><td>book</td><td>รับส่งหนังสือราชการ</td><td>รับส่งหนังสือราชการ</td><td><span class="badge badge-ok">done</span></td><td><a href="docs/TESTING-MODULES.md#book">คู่มือ</a></td></tr>
   <tr><td>M-bookregister</td><td>bookregister</td><td>ทะเบียนหนังสือราชการ</td><td>ทะเบียนหนังสือราชการ</td><td><span class="badge badge-ok">done</span></td><td><a href="docs/TESTING-MODULES.md#bookregister">คู่มือ</a></td></tr>
   <tr><td>M-spacial</td><td>spacial_student</td><td>นักเรียนพิเศษ</td><td>นักเรียนพิเศษ</td><td><span class="badge badge-warn">in progress</span> — P170 implement แล้ว รอ UAT</td><td><a href="docs/TESTING-MODULES.md#spacial_student">ทดสอบ</a></td></tr>
 </table>
@@ -1330,8 +1340,8 @@ amsscnt-next.js/
   <tr><td class="page-id">P150</td><td>achievement</td><td>ผลสัมฤทธิ์ — รายการ + บันทึกคะแนน</td><td>107–109</td><td>ผลการเรียน</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569 — UAT</td></tr>
   <tr><td class="page-id">P160</td><td>student_main</td><td>ข้อมูลนักเรียน — รายการ + ฟอร์ม</td><td>110–112</td><td>นักเรียน</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569 — UAT (login นักเรียน deferred)</td></tr>
   <tr><td class="page-id">P170</td><td>spacial_student</td><td>นักเรียนพิเศษ — รายการ + ฟอร์ม</td><td>129–135</td><td>นักเรียนพิเศษ</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569 — UAT</td></tr>
-  <tr><td class="page-id">P180</td><td>plan</td><td>วางแผน — โครงการ + กิจกรรม</td><td>21–25</td><td>การวางแผน</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569 — UAT</td></tr>
-  <tr><td class="page-id">P190</td><td>budget</td><td>การเงิน — MVP: รับ/จ่าย/แผนงบ (subset)</td><td>26–62</td><td>การเงิน (เริ่ม subset)</td><td><span class="badge badge-ok">done</span> มิ.ย. 2569 — UAT</td></tr>
+  <tr><td class="page-id">P180</td><td>plan</td><td>วางแผน — เมนูครบ Amssplus (ยุทธศาสตร์ · เงินเหลือจ่าย · SMSS · ตรวจสอบ/รายงาน)</td><td>21–25</td><td>การวางแผน</td><td><span class="badge badge-ok">done</span> ก.ค. 2569 — UAT</td></tr>
+  <tr><td class="page-id">P190</td><td>budget</td><td>การเงิน — เมนูครบ Amssplus (เบิก·ฎีกา·จ่าย·ตรวจสอบ·รายงาน)</td><td>26–62</td><td>การเงินและบัญชี</td><td><span class="badge badge-ok">done</span> ก.ค. 2569 — UAT</td></tr>
   <tr><td class="page-id">P999</td><td>—</td><td>Deploy on-prem + backup + rollback runbook (snapshot, Nginx rollback PHP)</td><td>—</td><td>—</td><td><span class="badge badge-warn">runbook ready</span> — <a href="docs/DEPLOY-ONPREM.md">DEPLOY-ONPREM</a>; cutover รอ UAT</td></tr>
 </table>
 <p><em>หน้าย่อยเพิ่ม (print, report, cancel) ให้แทรกเป็น P0xx.a ระหว่างหน้าหลัก — อย่าข้ามลำดับหลัก</em></p>
@@ -1440,7 +1450,7 @@ amsscnt-next.js/
   <li><strong>username + password</strong> — จาก <code>system_user</code> + bcrypt; หลัง import รหัสชั่วคราว <code>Imported123</code> (env: <code>AMSS_IMPORT_PASSWORD</code>)</li>
   <li><strong>เลขบัตร 13 หลักครั้งแรก</strong> — ยังไม่มี userpass: ตรวจ <code>person_main</code> (เขต, <code>login_status=5</code>) หรือ <code>person_sch_main</code> (โรงเรียน, <code>login_status=15</code>) แล้วให้ตั้งรหัส / ดำเนินการตาม legacy</li>
   <li><strong>multi-school</strong> — ถ้า <code>person_sch_other.other=1</code> แสดงหน้าเลือกโรงเรียนก่อนเข้าระบบ (เก็บ <code>user_school</code> ใน session)</li>
-  <li><strong>admin</strong> — <code>username=admin</code> → <code>login_status=99</code>, <code>smss_admin=1</code></li>
+  <li><strong>ผู้ดูแลระบบ</strong> — <code>users.is_admin=1</code> (= legacy <code>smss_admin</code>) · login ด้วยเลขบัตร 13 หลัก · โปรไฟล์จาก <code>people</code> (ไม่ใช้ <code>login_status=99</code>) · หลัง import รัน <code>npm run db:migrate-system-admin</code> → นักวิชาการคอมพิวเตอร์เขต (<code>position_code=15</code>) · ปิด <code>username=admin</code></li>
 </ol>
 <ul>
   <li><strong>ยังไม่ทำ v1:</strong> login นักเรียน (<code>student_main_main</code>, <code>login_status=16</code>) — รอ <span class="page-id">P160</span></li>
@@ -1449,7 +1459,7 @@ amsscnt-next.js/
   <li><strong>รหัสผ่าน v1:</strong> admin reset + user เปลี่ยนเอง — ไม่มี forgot password / email</li>
   <li>ลืมรหัส: admin ลบ user แล้ว login ด้วยเลขบัตรใหม่</li>
   <li>อ้างอิง PHP: <code>reset_pwd.php</code>, <code>reset_pwd_sch.php</code>, <code>user_change_pwd.php</code></li>
-  <li><code>smss_admin=1</code> → super admin ทุกโมดูล + ดูหนังสือลับ</li>
+  <li><code>smss_admin=1</code> / <code>users.is_admin</code> → ผู้ดูแลระบบ SMSS ทุกโมดูล + ดูหนังสือลับ + <code>/admin/*</code></li>
 </ul>
 
 <h3>Dev / Demo (lock)</h3>
@@ -1467,7 +1477,7 @@ pnpm dev
   <li>Demo DB: import จาก <code>smart_area_postgres.sql</code> (ข้อมูล สงขลา 2) + override ชื่อเขต</li>
   <li>เทียบ UI/flow กับ amsscnt.com ด้วยบัญชี production จริง (ข้อมูลใน DB dev อาจไม่ตรง 100%)</li>
   <li>ก่อน UAT sign-off: deploy บน <strong>server staging แยก</strong> + import MySQL ชัยนาท → PostgreSQL + migrate PDF</li>
-  <li>ทดสอบ login: username <code>admin</code> หรือเลขบัตรจาก dump + รหัส <code>Imported123</code></li>
+  <li>ทดสอบ login: เลขบัตรนักวิชาการคอมพิวเตอร์ (หลัง <code>db:migrate-system-admin</code>) หรือเลขบัตรจาก dump + รหัส <code>Imported123</code></li>
   <li>ทดสอบสิทธิ์ bookregister: ดู <code>bookregister_permission</code> ใน dump</li>
 </ul>
 

@@ -6,7 +6,7 @@ import {
   listAgedBooksForReview,
   listRetentionSettings,
 } from "@/lib/book/retention/queries";
-import { isBookModuleAdmin } from "@/lib/book/permissions";
+import { canManageBookSettings } from "@/lib/book/permissions";
 import { requireBookScope } from "@/lib/book/scope";
 import { formatThaiDate } from "@/lib/format/thai-date";
 
@@ -19,7 +19,7 @@ const BOOK_TYPE_LABELS: Record<number, string> = {
 
 export default async function BookRetentionPage() {
   const { user, scope } = await requireBookScope();
-  if (scope.kind !== "district" || !isBookModuleAdmin(user)) {
+  if (scope.kind !== "district" || !canManageBookSettings(user)) {
     redirect("/modules/book/inbox");
   }
 

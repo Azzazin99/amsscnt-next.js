@@ -1,12 +1,30 @@
 "use client";
 
+import { buildModuleSettingsNavSection } from "@/components/app-shell/module-settings-nav-section";
 import {
   ModuleNav,
   type ModuleNavSectionDef,
 } from "@/components/app-shell/module-nav";
+import type { ModuleSettingsNavMode } from "@/lib/core/permissions";
 
-export function BookobecNav() {
+type BookobecNavProps = {
+  settingsNavMode: ModuleSettingsNavMode;
+};
+
+export function BookobecNav({ settingsNavMode }: BookobecNavProps) {
+  const settingsSection = buildModuleSettingsNavSection(settingsNavMode, [
+    {
+      href: "/modules/bookobec/permissions",
+      label: "กำหนดเจ้าหน้าที่",
+    },
+    {
+      href: "/modules/bookobec/settings",
+      label: "เชื่อมกับ SMART OBEC",
+    },
+  ]);
+
   const sections: ModuleNavSectionDef[] = [
+    ...(settingsSection ? [settingsSection] : []),
     {
       title: "สพฐ.",
       links: [

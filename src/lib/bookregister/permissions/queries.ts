@@ -1,4 +1,5 @@
 import { and, asc, eq, notInArray } from "drizzle-orm";
+import { formatPersonName } from "@/lib/auth/format-name";
 import { db } from "@/lib/db";
 import { people, registerPermissions, users } from "@/lib/db/schema";
 
@@ -57,9 +58,12 @@ export async function listDistrictRegisterPermissions(): Promise<
     prefix: row.prefix,
     firstName: row.firstName,
     lastName: row.lastName,
-    displayName:
-      [row.prefix, row.firstName, row.lastName].filter(Boolean).join(" ").trim() ||
-      row.userName,
+    displayName: formatPersonName({
+      prefix: row.prefix,
+      firstName: row.firstName,
+      lastName: row.lastName,
+      fallback: row.userName,
+    }),
   }));
 }
 
@@ -118,9 +122,12 @@ export async function listDistrictStaffForPicker(
     .orderBy(asc(people.firstName), asc(people.lastName));
 
   return rows.map((row) => {
-    const name =
-      `${row.prefix ?? ""}${row.firstName}  ${row.lastName}`.trim() ||
-      row.userName;
+    const name = formatPersonName({
+      prefix: row.prefix,
+      firstName: row.firstName,
+      lastName: row.lastName,
+      fallback: row.userName,
+    });
     return {
       userId: row.userId,
       personId: row.personId,

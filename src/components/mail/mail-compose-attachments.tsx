@@ -4,6 +4,7 @@ import {
   AttachmentPicker,
   type PendingAttachment,
 } from "@/components/shared/attachment-picker";
+import { buildStandardAttachmentUploadHint } from "@/lib/form/attachment-allowed-types";
 import {
   MAIL_COMPOSE_FILE_ACCEPT,
   MAIL_MAX_TOTAL_ATTACHMENT_BYTES,
@@ -24,7 +25,9 @@ export function MailComposeAttachments({ value, onChange }: Props) {
       maxTotalBytes={MAIL_MAX_TOTAL_ATTACHMENT_BYTES}
       accept={MAIL_COMPOSE_FILE_ACCEPT}
       validate={validateMailAttachmentFileClient}
-      hint={`ไม่จำกัดจำนวนไฟล์ · doc, pdf, xls, ppt, รูป, zip, rar · ขนาดรวมสูงสุด ${formatFileSize(MAIL_MAX_TOTAL_ATTACHMENT_BYTES)} ต่อจดหมาย`}
+      hint={buildStandardAttachmentUploadHint(
+        formatFileSize(MAIL_MAX_TOTAL_ATTACHMENT_BYTES),
+      )}
     />
   );
 }

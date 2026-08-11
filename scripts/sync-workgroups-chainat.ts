@@ -50,7 +50,7 @@ async function main() {
     .orderBy(workgroups.sortOrder);
 
   const [total] = await db
-    .select({ n: sql<number>`count(*)::int` })
+    .select({ n: sql<number>`count(*)` })
     .from(workgroups);
 
   console.log(`sync เสร็จ — workgroups ใน DB: ${total?.n ?? 0}`);

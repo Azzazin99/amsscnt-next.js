@@ -4,7 +4,7 @@ import {
   count,
   desc,
   eq,
-  ilike,
+  like,
   inArray,
   or,
   sql,
@@ -83,11 +83,11 @@ function searchCondition(q: string) {
   if (q.length < 2) return undefined;
   const pattern = `%${q}%`;
   return or(
-    ilike(idocumentMain.bookNo, pattern),
-    ilike(idocumentMain.subject, pattern),
-    ilike(idocumentMain.workgroupTxt, pattern),
-    ilike(idocumentMain.officerName, pattern),
-    ilike(idocumentMain.bookTo, pattern),
+    like(idocumentMain.bookNo, pattern),
+    like(idocumentMain.subject, pattern),
+    like(idocumentMain.workgroupTxt, pattern),
+    like(idocumentMain.officerName, pattern),
+    like(idocumentMain.bookTo, pattern),
   );
 }
 

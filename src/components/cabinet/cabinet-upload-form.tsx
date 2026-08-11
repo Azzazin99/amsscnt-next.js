@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  STANDARD_ATTACHMENT_ACCEPT,
+  STANDARD_ATTACHMENT_TYPES_LABEL,
+} from "@/lib/form/attachment-allowed-types";
 import { cn } from "@/lib/utils";
 
 type CabinetUploadFormProps = {
@@ -64,11 +68,11 @@ export function CabinetUploadForm({ action, cancelHref }: CabinetUploadFormProps
           name="file"
           type="file"
           required
-          accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.zip,.rar"
+          accept={STANDARD_ATTACHMENT_ACCEPT}
           className="block w-full text-sm"
         />
         <p className="text-xs text-muted-foreground">
-          รองรับ PDF, Office, รูปภาพ, ZIP/RAR — สูงสุด 20MB
+          รองรับ {STANDARD_ATTACHMENT_TYPES_LABEL} — สูงสุด 20MB
         </p>
       </div>
 

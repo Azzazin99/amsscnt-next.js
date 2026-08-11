@@ -29,7 +29,7 @@ async function main() {
   console.log("people names refreshed:", result.namesRefreshed);
   console.log("Done.");
 
-  await queryClient.end();
+  // queryClient.end() not needed for mysql pool
 }
 
 main().catch((err) => {

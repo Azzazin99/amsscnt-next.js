@@ -2,8 +2,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AppBreadcrumb } from "@/components/app-shell/app-breadcrumb";
 import { NewsNav } from "@/components/news/news-nav";
+import { getModuleSettingsNavMode } from "@/lib/core/permissions";
 import {
-  canManageNewsSettings,
   canViewNewsList,
   canWriteNews,
   getNewsPermissions,
@@ -23,7 +23,7 @@ export default async function NewsLayout({
   }
 
   const canWrite = canWriteNews(session.user, perms);
-  const showAdmin = canManageNewsSettings(session.user);
+  const settingsNavMode = getModuleSettingsNavMode(session.user, "news");
 
   return (
     <div className="px-4 py-6 lg:px-8">
@@ -41,7 +41,7 @@ export default async function NewsLayout({
         </p>
       </div>
 
-      <NewsNav canWrite={canWrite} showAdmin={showAdmin} />
+      <NewsNav canWrite={canWrite} settingsNavMode={settingsNavMode} />
 
       {children}
     </div>

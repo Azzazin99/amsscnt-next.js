@@ -315,7 +315,7 @@ export async function verifyLogin(input: {
       firstTimeLogin: false,
     };
 
-    if (user.username === "admin" || user.isSuperAdmin) {
+    if (user.username === "admin") {
       return {
         ok: true,
         profile: {
@@ -328,7 +328,7 @@ export async function verifyLogin(input: {
           organizationType: user.organizationType,
           firstTimeLogin: false,
           prefix: null,
-          firstName: "admin",
+          firstName: user.name || "admin",
           lastName: null,
         },
       };

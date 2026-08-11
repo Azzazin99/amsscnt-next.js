@@ -29,6 +29,7 @@
 - บัญชีทดสอบเขต (username/password หรือเลขบัตรครั้งแรน)
 - ข้อมูล demo จาก `npm run db:import` (ถ้าทดสอบ local)
 - **ดูตาราง Postgres (dev + admin เท่านั้น):** `/admin/dev/database` — อ่านอย่างเดียว ปิดบน production
+- **ส่งออก legacy dump (super-admin + dev/staging):** `/admin/dev/export-legacy` — ต้องมี `pg_dump` บนเซิร์ฟเวอร์; เปิดด้วย `AMSS_ENABLE_LEGACY_DUMP_EXPORT=1` บน staging
 
 ### เดินลอง
 
@@ -54,6 +55,7 @@ Login **admin** — ปุ่ม ⚙ มุมขวาบน · แก้ **ช
 | 13 | ผู้ดูแลโมดูล | `/admin/module-admins` |
 | 14 | รายการผู้ใช้งานเขต | `/admin/users` |
 | 15 | สิทธิ์โมดูล (p1/p2/p3) | `/admin/permissions` |
+| 16 | ส่งออก legacy dump (super-admin, ต้องมี pg_dump) | `/admin/dev/export-legacy` |
 
 **ข้อมูลบุคลากร:** sync จาก Excel ด้วย `npm run db:sync-personnel-chainat` — people 1,508 คน · users เขต 67 คน (username = เบอร์โทร) · login โรงเรียนใช้เลข person_id สังเคราะห์ 13 หลัก (`1701xxxxxxxxx`)
 
@@ -62,7 +64,7 @@ Login **admin** — ปุ่ม ⚙ มุมขวาบน · แก้ **ช
 - Login สำเร็จ / ผิด password / เลขบัตรครั้งแรน
 - เมนูโมดูลตรงสิทธิ์ใน DB
 - **บริหารงานทั่วไป (flyout + การ์ดหน้าแรก):** เขตเห็น 6 รายการตามลำดับ — รับส่งหนังสือราชการ สพฐ. · ทะเบียนหนังสือราชการ · รับส่งหนังสือราชการ · ไปรษณีย์ · ขออนุญาตไปราชการ · การลา — ไม่มี car / meeting / delegate · โรงเรียนเห็นเฉพาะ book · permission · leave
-- **การวางแผน (flyout L1 + การ์ดหน้าแรก):** หัวเมนู **การวางแผน** · รายการย่อย **การวางแผน** → `/modules/plan`
+- **การวางแผน (flyout L1 + การ์ดหน้าแรก):** หัวเมนู **การวางแผน** · รายการย่อย **การวางแผน** → `/modules/plan` · in-module flyout 7 กลุ่ม Amssplus (ตั้งค่า · โครงการประจำปี · เงินเหลือจ่าย · ตรวจสอบ · รายงาน · คู่มือ)
 - **การเงินและบัญชี (flyout L1 + การ์ดหน้าแรก):** หัวเมนู **การเงินและบัญชี** · รายการย่อย **การเงินและบัญชี** → `/modules/budget` · ไม่มี asset ในกลุ่มนี้
 - **บริหารงานบุคคล (flyout L1 + การ์ดหน้าแรก):** หัวเมนู **บริหารงานบุคคล** · รายการย่อย **ข้อมูลพื้นฐานครูและบุคลากร** → `/modules/person` · ไม่มี award ในกลุ่มนี้
 - **บริหารงานวิชาการ (flyout L1 + การ์ดหน้าแรก):** หัวเมนู **บริหารงานวิชาการ** · 5 รายการตามลำดับ — การศึกษาทางไกล · ข้อมูลนักเรียน · ผลสัมฤทธิ์ทางการเรียน · ระบบทดสอบการศึกษา · นักเรียนพิเศษ · ไม่มี warroom/supervision/opportunity · `dltv` ต้อง seed (`npm run db:seed-dltv-module`) · `bets` เห็นเฉพาะ login_status 16
@@ -78,6 +80,21 @@ Login **admin** — ปุ่ม ⚙ มุมขวาบน · แก้ **ช
 - กลุ่มงาน: เพิ่ม/แก้ไข/ปิดใช้งาน/ลบ (ลบได้เมื่อไม่มีบุคลากรหรือทะเบียนอ้างอิง) · ลำดับแสดงผล · ใช้ในฟิลเตอร์ทะเบียนรับ/ส่ง
 - โมดูล: เปิด/ปิดแสดงบน /home · แก้ชื่อ/ลำดับ
 - ผู้ดูแลโมดูล / ผู้ใช้ / สิทธิ์โมดูล: CRUD บุคลากรเขต (P017–P019)
+
+### เมนู «ตั้งค่าระบบ» ในโมดูล (ทุก slug ที่มี layout)
+
+ทดสอบ 3 บทบาทในโมดูลเดียวกัน (เช่น `mail`, `leave`):
+
+| บทบาท | เห็น section «ตั้งค่าระบบ» | ลิงก์ที่เข้าได้ |
+|--------|---------------------------|----------------|
+| บุคลากรทั่วไป (p1 ไม่ใช่ admin) | ไม่เห็น | — |
+| `module_admin` (ไม่ใช่ `is_admin`) | เห็น | เฉพาะ `…/permissions` |
+| `is_admin` (smss admin) | เห็น | ครบ (ปี, master data, สิทธิ์ ฯลฯ) |
+
+- **book:** `groups` / `retention` อยู่ใต้ตั้งค่าระบบ — เฉพาะ `is_admin` · module admin / p1 redirect เมื่อเข้า URL ตรง
+- โมดูลที่ยังไม่มีหน้า permissions (`book`, `idocument`, `alert`, `questionnaire`) — module admin เห็นลิงก์สถานะ «เร็วๆ นี้»
+
+ADR: [`docs/adr/004-module-settings-nav-visibility.md`](adr/004-module-settings-nav-visibility.md)
 
 ---
 
@@ -98,7 +115,7 @@ Login **admin** — ปุ่ม ⚙ มุมขวาบน · แก้ **ช
 
 ### ก่อนเริ่ม
 
-- Login **ระดับเขต** (`login_status` 99 หรือ 2–4)
+- Login **ระดับเขต** (`login_status` 2–4 หรือผู้ดูแลระบบ `is_admin` ที่มี `login_status` ตามตำแหน่ง)
 - สิทธิ์ทะเบียน p1 ดู / p2 บันทึก / p3 ลบ (ตั้งที่ `/modules/bookregister/permissions`)
 - ปีทะเบียนเปิดรับและส่ง (`/modules/bookregister/years`)
 
@@ -153,35 +170,18 @@ Login **admin** — ปุ่ม ⚙ มุมขวาบน · แก้ **ช
 | 15 | รายการ + ค้นหา | `/modules/bookregister/certificate` |
 | 16 | เพิ่ม / แก้ไข (แนบไฟล์เดียว) | `/modules/bookregister/certificate/new`, `.../edit` |
 
-### เดินลอง — รายงาน / พิมพ์ (เขต)
-
-| ลำดับ | ทำอะไร | URL |
-|------|--------|-----|
-| 17 | ศูนย์รายงาน | `/modules/bookregister/reports` |
-| 18 | ทะเบียนรับ / ส่ง / คำสั่ง ตามปี | `/modules/bookregister/reports/receive`, `.../send`, `.../command` |
-
 ### เดินลอง — มุมมองโรงเรียน (P040)
 
-Login **โรงเรียน** (`login_status` 12–15, `organization_type = school`) — เห็นเฉพาะ **รับ / ส่ง / รายงาน** (ไม่มีตั้งค่า, คำสั่ง, เกียรติบัตร)
+Login **โรงเรียน** (`login_status` 12–15, `organization_type = school`) — เห็นเฉพาะ **รับ / ส่ง** (ไม่มีตั้งค่า, คำสั่ง, เกียรติบัตร, รายงาน)
 
 | ลำดับ | ทำอะไร | URL |
 |------|--------|-----|
-| 19 | รายการรับ (ไม่มีกรองกลุ่ม) | `/modules/bookregister/receive` |
-| 20 | เพิ่ม/แก้ไขรับ — จาก/ถึง default ชื่อโรงเรียน | `/modules/bookregister/receive/new`, `.../edit` |
-| 21 | รายการส่ง | `/modules/bookregister/send` |
-| 22 | เพิ่ม/แก้ไขส่ง — ต้องมีเลขที่หนังสือโรงเรียนใน DB | `/modules/bookregister/send/new`, `.../edit` |
-| 23 | รายงานรับ/ส่ง (เฉพาะข้อมูลโรงเรียน) | `/modules/bookregister/reports` |
+| 17 | รายการรับ (ไม่มีกรองกลุ่ม) | `/modules/bookregister/receive` |
+| 18 | เพิ่ม/แก้ไขรับ — จาก/ถึง default ชื่อโรงเรียน | `/modules/bookregister/receive/new`, `.../edit` |
+| 19 | รายการส่ง | `/modules/bookregister/send` |
+| 20 | เพิ่ม/แก้ไขส่ง — ต้องมีเลขที่หนังสือโรงเรียนใน DB | `/modules/bookregister/send/new`, `.../edit` |
 
 หมายเหตุ: ข้อมูลแยกด้วย `school_id` ในตารางเดียวกับเขต · ปีทะเบียนโรงเรียนใช้แถว `register_years` ที่มี `school_id` (ยังไม่มี UI ตั้งค่าปีโรงเรียน)
-
-### Export CSV (P041)
-
-| ลำดับ | ทำอะไร | URL |
-|------|--------|-----|
-| 24 | ปุ่ม **ส่งออก CSV** บนหน้ารายการรับ/ส่ง | `/modules/bookregister/receive`, `/modules/bookregister/send` |
-| 25 | API ดาวน์โหลด (UTF-8 BOM, คอลัมน์เดียวกับรายงาน) | `/api/bookregister/export/receive?year=…`, `/api/bookregister/export/send?year=…` |
-
-ใช้ได้ทั้งเขตและโรงเรียน — filter ตาม scope ของ session
 
 ### นอกขอบเขต v1 (รู้ไว้ — ไม่บล็อกการใช้งาน)
 
@@ -189,7 +189,7 @@ Login **โรงเรียน** (`login_status` 12–15, `organization_type =
 |------|----------|
 | ตั้งค่าปีทะเบียนโรงเรียน | legacy `year_sch` — ยังไม่มี UI (ใช้ข้อมูล import) |
 | เลขที่หนังสือโรงเรียน | legacy `office_no_sch` — ยังไม่มี UI (ต้องมีใน DB ก่อนลงทะเบียนส่ง) |
-| คำสั่ง / เกียรติบัตร โรงเรียน | legacy มี — Next.js v1 scope แค่รับ/ส่ง/รายงาน |
+| คำสั่ง / เกียรติบัตร โรงเรียน | legacy มี — Next.js v1 scope แค่รับ/ส่ง |
 | ส่งต่อโรงเรียน → โมดูล `book` | รอ Phase 2 (`book`) |
 
 ### สิ่งที่ควรเช็ค
@@ -408,35 +408,58 @@ Login **โรงเรียน** (`login_status` 12–15, `organization_type =
 
 ## bookobec — รับส่งหนังสือราชการ สพฐ.
 
-**สถานะ:** scaffold nav + หน้าว่าง (มิ.ย. 2569) — รอเชื่อมข้อมูล สพฐ.
+**สถานะ:** เชื่อม SmartObec (hybrid) — รับพร้อมลงทะเบียน (native) + iframe รับ/ส่ง/รายงาน · กำหนดเจ้าหน้าที่ + รหัสเชื่อม สพฐ. (ก.ค. 2569)
 **เทียบ amsscnt.com:** โมดูล `bookobec` — รายการหนังสือรับ/ส่ง สพฐ., คู่มือ (แยกจาก `book`)
+**ADR:** [006-smartobec-sync.md](adr/006-smartobec-sync.md)
 
 ### ก่อนเริ่ม
 
 - Login **ระดับเขต** (login_status 2–4 หรือ module admin) — โมดูล `where_work=1`
 - โมดูล `bookobec` ต้อง active ใน `modules` (จาก import legacy) และแสดงบน `/home`
+- ตาราง `system_sync_code` ต้องมี `office_code` + `sync_code` จริง (import legacy หรือตั้งที่ settings)
+- ลงทะเบียนรับต้องมี `register_years` ที่ `year_active=true` และ `start_receive_num > 0`
 
 ### เดินลอง
 
 | ลำดับ | ทำอะไร | URL |
 |------|--------|-----|
-| 1 | รายการหนังสือรับ สพฐ. (flyout **รายการหนังสือรับ** → รายการย่อย) | `/modules/bookobec/inbox` |
-| 2 | รายการหนังสือส่ง สพฐ. (flyout **รายการหนังสือส่ง** → รายการย่อย) | `/modules/bookobec/sent` |
+| 1 | รายการหนังสือรับ สพฐ. — รับพร้อมลงทะเบียน + iframe รับ | `/modules/bookobec/inbox` |
+| 2 | รายการหนังสือส่ง สพฐ. — iframe ส่ง + รายงาน | `/modules/bookobec/sent` |
 | 3 | คู่มือรับส่งหนังสือราชการ สพฐ. (flyout **คู่มือ** · placeholder) | `/modules/bookobec/manual` |
+| 4 | กำหนดเจ้าหน้าที่ (flyout **ตั้งค่าระบบ** · smss admin เท่านั้น) | `/modules/bookobec/permissions` |
+| 5 | เชื่อมกับ SMART OBEC — รหัสหน่วยงาน + Sync | `/modules/bookobec/settings` |
+
+### ก่อนทดสอบตั้งค่า
+
+- Login ผู้ใช้ **`is_admin=true`** (เช่น `sastar` ใน dump สงขลา) — ผู้มี p1 แต่ไม่ใช่ smss admin **ไม่เห็น** เมนูตั้งค่าระบบ
 
 ### สิ่งที่ควรเช็ค
 
 - **เมนู nav:** hover **รายการหนังสือรับ** / **รายการหนังสือส่ง** / **คู่มือ** → dropdown รายการย่อย (หัว flyout ไม่นำทาง)
-- inbox/sent แสดงหัวข้อตรงเมนูย่อย + empty state «ยังไม่มีข้อมูล — รอเชื่อมระบบ สพฐ.»
+- smss admin: เห็น **ตั้งค่าระบบ → กำหนดเจ้าหน้าที่** และ **เชื่อมกับ SMART OBEC**
+- ผู้มี `p1_bookobec`: inbox แสดงตารางหนังสือรอรับจาก SmartObec + ปุ่ม «ลงทะเบียนหนังสือ» + iframe รับหนังสือ
+- ผู้ไม่มี p1 แต่เข้าโมดูลได้: inbox แสดง iframe รายการหนังสือรับ สพฐ. (`receive_other`)
+- ผู้มี `p2_bookobec`: sent แสดง iframe ส่งหนังสือ + รายการส่ง
+- ลงทะเบียนสำเร็จ → มีรายการใน `/modules/bookregister/receive` และ `/modules/book/inbox`
+- iframe ถูกบล็อก → ใช้ปุ่ม «เปิดในแท็บใหม่»
 - manual: หัวข้อ **คู่มือ** + บรรทัดรอง **รับส่งหนังสือราชการ สพฐ.** + แบนเนอร์ placeholder
 - `/modules/bookobec` redirect ไป inbox
 - ผู้ใช้โรงเรียน / ไม่มีโมดูลบน home → redirect `/home`
 
+### ตรวจสอบ CLI
+
+```bash
+npx tsx scripts/check-obec-sync.ts
+```
+
+- `OK: XML parse self-check` — parser ทำงาน
+- `OK: OBEC fetch` — เชื่อม smart.obec.go.th ได้ (ต้องมี sync_code จริง)
+- `SKIP` — ยังไม่ตั้ง sync_code
+
 ### ยังไม่รวม (phase ถัดไป)
 
-- ตาราง `bookobec_permissions` + หน้าตั้งค่าเจ้าหน้าที่
-- รับหนังสือ / ส่งหนังสือ สพฐ. (`task=main/receive`, `main/send`)
-- sync รายการจริงจาก API สพฐ.
+- คู่มือ PDF จริง (`modules/bookobec/manual/bookobec.pdf`)
+- native UI แทน iframe ทั้งหมด (ถ้า สพฐ. เปิด API เพิ่ม)
 
 ---
 
@@ -449,16 +472,42 @@ Login **โรงเรียน** (`login_status` 12–15, `organization_type =
 ### ก่อนเริ่ม
 
 - Login **ระดับเขต** (login_status 2–4 หรือ module admin) หรือ **โรงเรียน** (12–15)
-- กำหนดปีงบประมาณ เจ้าหน้าที่ ผู้อนุมัติ และวันลาสะสม ในกลุ่ม **ตั้งค่าระบบ** (module admin หรือ p1=1)
+- กำหนดปีงบประมาณ เจ้าหน้าที่ ผู้อนุมัติ และวันลาสะสม ในกลุ่ม **ตั้งค่าระบบ** — เฉพาะ **ผู้ดูแลระบบ SMSS** (`is_admin`) · p1 / module admin ไม่เห็นเมนูนี้
+
+### ข้อมูล demo (dev / Mac mini — ไม่พึ่ง legacy dump)
+
+สำหรับทดทะเบียนการลาและรายงานโดยไม่ต้อง `db:import-leave`:
+
+```bash
+docker compose up -d
+npm run db:migrate
+npm run db:seed-leave-demo
+```
+
+| รายการ | ค่า |
+|--------|-----|
+| กลุ่ม | `demo_staff` (สังเคราะห์ — ดู glossary `demo_staff` ใน CONTEXT.md) |
+| username / person_id | `1701999990001` |
+| รหัสผ่าน | `AMSS_IMPORT_PASSWORD` (default `Imported123`) |
+| ปีงบ active | 2569 |
+| คำขออนุมัติแล้ว | 3 รายการ (ป่วย 2 วัน · กิจ 1 วัน · พักผ่อน 1 วัน) |
+
+**ทด:** `/modules/leave/requests` · `/modules/leave/reports/today`
+
+**ลบเฉพาะ demo:** `npm run db:seed-leave-demo -- --reset`
+
+**ข้อจำกัดรอบ minimal:** ไม่ seed `leave_permissions` / `leave_person_settings` — ดูรายการและรายงานได้ · ยื่นลาใหม่ผ่าน UI ต้องตั้งผู้อนุมัติเอง (หรือรอ phase 2)
+
+รันได้เฉพาะ `DATABASE_URL` ชี้ localhost หรือตั้ง `AMSS_DEMO_SEED_OK=1`
 
 ### เดินลอง
 
-**เมนู leave:** หัว flyout L3 (**ตั้งค่าระบบ** / **ขออนุญาตลา** / **พิจารณาอนุมัติ** / **ขอยกเลิกวันลา** / **รายงาน** / **คู่มือ**) — **hover เปิดเมนูย่อย คลิกหัวเมนูไม่นำทาง** · **ตั้งค่าระบบ** → **เมนูตั้งค่า** (5 รายการ) · **ขออนุญาตลา** (ยื่น/ทะเบียน/มอบงาน) · **พิจารณาอนุมัติ** (inbox ตามสิทธิ viewer) · **ขอยกเลิกวันลา** (3 รายการ) · **รายงาน** (6 รายการ) · **คู่มือ** → คู่มือการลา
+**เมนู leave:** หัว flyout L3 (**ตั้งค่าระบบ** / **ขออนุญาตลา** / **พิจารณาอนุมัติ** / **ขอยกเลิกวันลา** / **รายงาน** / **คู่มือ**) — **hover เปิดเมนูย่อย คลิกหัวเมนูไม่นำทาง** · **ตั้งค่าระบบ** → **เมนูตั้งค่า** (5 รายการ) · **ขออนุญาตลา** (บันทึก `/new` · ทะเบียน · มอบงาน) · **พิจารณาอนุมัติ** (inbox ตามสิทธิ viewer) · **ขอยกเลิกวันลา** (3 รายการ) · **รายงาน** (6 รายการ) · **คู่มือ** → คู่มือการลา
 
 | ลำดับ | ทำอะไร | URL |
 |------|--------|-----|
-| 1 | ทะเบียนการลา (เฉพาะคำขอของตัวเอง) + ปุ่มลาป่วย/กิจ/คลอด · พักผ่อน · แก้ไข/ลบก่อนอนุมัติ | `/modules/leave/requests` |
-| 2 | บันทึกขออนุญาตลา (ฟอร์มใหม่ — preset จากปุ่ม `?group=sick` / `?group=vacation`) | `/modules/leave/requests/new` |
+| 1 | บันทึกขออนุญาตลา (เลือกประเภทลา 1–10 ในหน้าเดียว) — เมนูเข้าฟอร์มโดยตรง | `/modules/leave/requests/new` |
+| 2 | ทะเบียนการลา (เฉพาะคำขอของตัวเอง) · แก้ไข/ลบก่อนอนุมัติ · ไม่มีปุ่มบันทึกซ้ำ | `/modules/leave/requests` |
 | 3 | รับมอบงาน (inbox ผู้รับมอบ) | `/modules/leave/job-handover` |
 | 4 | ผอ.กลุ่ม — inbox เห็นชอบ | `/modules/leave/approvals/group` |
 | 4a | รอง ผอ.สพท. — inbox อนุมัติขั้นสุดท้าย (บุคลากรเขต) | `/modules/leave/approvals/group2` |
@@ -476,7 +525,7 @@ Login **โรงเรียน** (`login_status` 12–15, `organization_type =
 | 13 | กำหนดผู้อนุมัติ รร. (รอง ผอ.เขต p1=0 p2=1) | `/modules/leave/school-grant-persons` |
 | 14 | วันลาสะสม (`leave_collect`) | `/modules/leave/collection` |
 | 15 | ศูนย์รายงานการลา (hub — เปิดทาง URL ไม่มีใน nav) | `/modules/leave/reports` |
-| 16 | คู่มือการลา (placeholder — เนื้อหาจริงภายหลัง) | `/modules/leave/manual` |
+| 16 | คู่มือการลา (สารบัญ + ลิงก์เมนูย่อย + ประเภทลา) | `/modules/leave/manual` |
 
 ### รายงาน (flyout **รายงาน**)
 
@@ -511,7 +560,7 @@ Login **โรงเรียน** (`login_status` 12–15, `organization_type =
 ### สิ่งที่ควรเช็ค
 
 - ประเภทลาครบ 10 แบบตาม 2555 (ป่วย, กิจ, คลอด, พักผ่อน, อุปสมบท, ตรวจเลือก/เตรียมพล, ติดตามคู่สมรส, ศึกษา/ฝึกอบรม, ช่วยภริยาคลอด, ฟื้นฟูสมรรถภาพ)
-- **ฟอร์มบันทึกขออนุญาตลา** (`/modules/leave/requests/new`): เลย์เอาต์หนังสือราชการ — เขียนที่ · เรื่อง (10 ประเภท) · เรียน ผอ.เขต · ข้าพเจ้า+ตำแหน่ง · เนื่องจาก · ขอลาตั้งแต่/ถึง/มีกำหนด · ลาครั้งสุดท้าย (auto) · ติดต่อ+โทร · เอกสาร · ตารางสถิติปีงบ (read-only)
+- **ฟอร์มบันทึกขออนุญาตลา** (`/modules/leave/requests/new`): Single-Page Task Form — เลือกประเภทลา dropdown + optgroup (ป่วย/กิจ/คลอด · พักผ่อน · อื่น 2555) แสดงโควต้าในรายการ · ประเภทหมดสิทธิ์ = disabled · วันลา/ครึ่งวัน · เหตุผลหลัก · optional collapsible (ติดต่อ/แนบ/มอบงาน) · preview หนังสือ on-demand · sticky สรุป+ยื่นบนมือถือ · เดสก์ท็อป aside (`leave_request_sidebar`) = สิทธิและสถิติ compact + สรุปคำขอ · มือถือ = สิทธิและสถิติในฟอร์มหลัก · ตาราง aside ไม่ scroll แนวนอน · กดบันทึกว่าง → «กรุณาเลือกประเภทการลา» ใต้ dropdown · `?group=sick|vacation` redirect ไป `/new` · แก้ไขคำขอ = หน้าเดียว scroll-to-error
 - **ตำแหน่งบนฟอร์มลา:** บุคลากร `position_code = 14` → แสดง `ตำแหน่งนักวิเคราะห์นโยบายและแผน` (ไม่ใช่ "ตำแหน่งตำแหน่ง 14")
 - ฟอร์มยื่นคำขอ: ปฏิทิน **จิ้มเลือกวัน** พ.ศ. · แสดงยอดโควต้าคงเหลือ (กิจ/คลอด/พักผ่อน/อุปสมบท)
 - **ลาครึ่งวัน:** ติ๊กครึ่งวัน → เลือกช่วง (เช้า/บ่าย) → ปฏิทินเดียว (ไม่เห็น "ถึงวันที่") · เปลี่ยนวัน → finish sync อัตโนมัติ · มีกำหนด 0.5 · ยกเลิกติ๊ก → สองปฏิทิน · คงวันเดิม · ติ๊กครึ่งวันขณะมีช่วงหลายวัน → เหลือแค่วันเริ่ม
@@ -527,13 +576,13 @@ Login **โรงเรียน** (`login_status` 12–15, `organization_type =
 - **เพศ / สิทธิ์ประเภทลา:** เลือกคำนำหน้าใน person (นาย/นาง/นางสาว) → sync sex อัตโนมัติ · ชายเห็นลาช่วยภริยาคลอด (9) ไม่เห็นลาคลอด (3) · หญิงตรงกันข้าม · ยังไม่เลือกคำนำหน้า → ยื่นลาป่วยได้ · tamper ส่ง type 3 → server ปฏิเสธ
 - **ลาย้อนหลัง:** ลาป่วย / ลาคลอด — ได้ · ลากิจ / ลาพักผ่อน — ไม่ได้
 - **Workflow:** ผู้ลายื่น → ผอ.กลุ่ม (`/approvals/group`) → ผู้อนุมัติขั้นสุดท้าย · **บุคลากรเขต** (`school_id` ว่าง): รอง ผอ.สพท. (`/approvals/group2`) · **บุคลากรโรงเรียน**: ผอ.สพท. (`/approvals/commander`) · ปฏิเสธที่ขั้น 2 หรือ 3 → `commander_grant = 0` · อนุมัติขั้นสุดท้าย → `commander_grant = 1` + sync โควต้า · เมนู **พิจารณาอนุมัติ** ไม่มีเจ้าหน้าที่ / school-deputy · คำขอค้างรอเจ้าหน้าที่ (legacy) จะไป inbox ผอ.กลุ่ม
-- **ทะเบียนการลา** (`/modules/leave/requests`): แสดงเฉพาะคำขอของผู้ login · หัวกลาง "ทะเบียนการลา" + ชื่อผู้ใช้ + pagination ด้านบน · ปุ่ม **ลาป่วย ลากิจ ลาคลอด** (`?group=sick`) และ **ลาพักผ่อน** (`?group=vacation`) · ตาราง 12 คอลัมน์ (เลขที่ · วันขออนุญาต · ประเภท · วันลา · เอกสาร · อนุมัติ · ดาวน์โหลด · รายละเอียด · ลบ · แก้ไข) · แก้ไข/ลบได้เมื่อ `commander_grant` ยังว่าง · รายการทั้งเขตใช้ `/modules/leave/reports/all`
-- **ตั้งค่าระบบ (5 รายการ):** เห็น section เมื่อเป็น module admin หรือ p1=1 · hover **เมนูตั้งค่า** ภายใต้ heading → 5 ลิงก์ย่อย · ชื่อเมนูตรง legacy
+- **ทะเบียนการลา** (`/modules/leave/requests`): แสดงเฉพาะคำขอของผู้ login · หัวกลาง "ทะเบียนการลา" + ชื่อผู้ใช้ + pagination ด้านบน · เข้าจากเมนู **ทะเบียนการลา** (ไม่มีปุ่มบันทึกซ้ำ — ยื่นใหม่ใช้เมนู **บันทึกขออนุญาตลา** → `/new`) · ตาราง 12 คอลัมน์ (เลขที่ · วันขออนุญาต · ประเภท · วันลา · เอกสาร · อนุมัติ · ดาวน์โหลด · รายละเอียด · ลบ · แก้ไข) · แก้ไข/ลบได้เมื่อ `commander_grant` ยังว่าง · รายการทั้งเขตใช้ `/modules/leave/reports/all`
+- **ตั้งค่าระบบ (5 รายการ):** เห็น section เฉพาะผู้ดูแลระบบ SMSS (`is_admin`) · hover **เมนูตั้งค่า** ภายใต้ heading → 5 ลิงก์ย่อย · p1/module admin เข้าหน้า config โดยตรงไม่ได้
   - **กำหนดผู้อนุมัติ (สพท.):** รายการบุคลากรเขต · แก้ไขผู้เห็นชอบ (ผอ.กลุ่ม / รอง ผอ.สพท.) และผู้อนุมัติ → บันทึก `leave_person_settings`
   - **กำหนดผู้อนุมัติ (รร.):** CRUD รอง ผอ.เขต (position 2) ใน `leave_permissions` p1=0 p2=1 · ไม่ปนกับหน้าเจ้าหน้าที่
   - **วันลาสะสม:** แก้ `collect_day` / `this_year_day` ต่อคนตามปีงบปัจจุบัน → ฟอร์มยื่นลาพักผ่อนแสดงสะสม/ปีนี้ตามที่ตั้ง · import จาก `la_collect` → `leave_collect`
 - **Validation ภาษาไทย:** กดบันทึกฟอร์มว่าง (ยื่นคำขอ / อนุมัติ / ปีงบ / สิทธิ์) → เห็นข้อความไทย **ใต้แต่ละช่องที่ผิด** (หลายช่องพร้อมกัน) ไม่ใช่ popup อังกฤษของ browser · ตัวอย่างยื่นคำขอว่าง: ใต้ประเภท "กรุณาเลือกประเภทการลา" / ใต้เหตุผล "กรุณาระบุเหตุผล" / ใต้วัน "กรุณาระบุวันเริ่มลา" · error จาก server (โควต้าเกิน ฯลฯ) → แบนเนอร์ล่าง · ยื่นคำขอครบฟิลด์ → ไม่ขึ้น "Invalid input: expected string, received null"
-- **โทรศัพท์ติดต่อ:** กรอกได้เฉพาะตัวเลข 0–9 (ว่างได้) · พิมพ์ตัวอักษร/ขีด → แจ้ง "กรุณากรอกเบอร์โทรศัพท์เป็นตัวเลขเท่านั้น" ใต้ช่อง · `0812345678` ผ่าน
+- **โทรศัพท์ติดต่อ:** ว่างได้ · hint `รูปแบบ 08 xxxx xxxx` · พิมพ์ `081` ขณะกรอกไม่ error · `0812345678` / paste `08-1234-5678` ผ่าน · ตัวอักษร → "กรุณากรอกเบอร์โทรศัพท์เป็นตัวเลขเท่านั้น" · ยื่นด้วย `08123` (ไม่ครบ) หรือ `0212345678` (ไม่ใช่มือถือ) → "กรุณากรอกเบอร์ให้ครบ 10 หลัก"
 - **ไฟล์แนบ:** แสดงช่องเมื่อเลือกประเภทแล้ว (ทุกประเภท) · ไม่บังคับทั่วไป · ลาป่วย ≥30 วัน บังคับ (2555) · แนบได้ **PDF และรูปภาพ** · ดาวน์โหลดจากหน้ารายละเอียด
 - **เคส UI แนบไฟล์:**
   - เลือกประเภทใดก็เห็นช่องแนบ
@@ -544,118 +593,179 @@ Login **โรงเรียน** (`login_status` 12–15, `organization_type =
 - **สถิติการลา:** ตาราง 4 แถว (ป่วย/กิจ/คลอด/พักผ่อน) อัปเดต live · บันทึก snapshot ในหน้ารายละเอียด
 - **เขต:** เห็นคำขอทั้งหมด · **โรงเรียน:** เห็นในโรงเรียน + ของตนเอง
 - สิทธิ์: p1 อนุมัติ · p2 ยื่นคำขอ · module admin ตั้งค่า
+- **คู่มือการลา:** `/modules/leave/manual` — สารบัญ ลิงก์ไปหน้างานตามเมนู รายการประเภทลา 1–10 · ป้ายเมนู **ใช้งานได้** (ไม่ใช่ placeholder)
 - Pagination: 25 รายการต่อหน้า
 
 ---
 
 ## permission — ขออนุญาตไปราชการ
 
-**สถานะ:** v1 พร้อมทดสอบ (มิ.ย. 2569) — คำขอไปราชการ, อนุมัติ, ปีงบประมาณ, สิทธิ์ p1/p2
-**เทียบ amsscnt.com:** โมดูล `permission` — บันทึกขออนุญาตไปราชการ, รายการ, พิจารณาอนุมัติ, ตั้งค่าปีและสิทธิ์
+**สถานะ:** v2 พร้อมทดสอบ (มิ.ย. 2569) — workflow 2 ขั้น, inbox อนุมัติ, รายงาน 3 รายการ, คู่มือ
+**เทียบ amsscnt.com:** โมดูล `permission` — บันทึกขออนุญาตไปราชการ, พิจารณา 2 ขั้น, รายงาน, ตั้งค่าปี/สิทธิ์/ผู้อนุมัติรายบุคคล
 
 ### ก่อนเริ่ม
 
 - Login **ระดับเขต** (login_status 2–4 หรือ module admin) หรือ **โรงเรียน** (12–15)
 - กำหนดปีงบประมาณและสิทธิ์ที่ `/modules/permission/years` และ `/modules/permission/permissions` (ผู้ดูแล)
+- กำหนดผู้บังคับบัญชาชั้นต้นและผู้อนุมัติต่อผู้ขอที่ `/modules/permission/grant-persons`
 
 ### เดินลอง
 
-**เมนู permission:** **ตั้งค่าระบบ** (ปีงบประมาณ, สิทธิ์การใช้งาน) · **ทะเบียนไปราชการ(ส่วนบุคคล)** (คำขอ, ยื่นคำขอ)
+**เมนู permission (flyout 4 กลุ่ม):**
 
+| กลุ่ม | รายการ |
+|------|--------|
+| ตั้งค่าระบบ | ปีงบประมาณ · สิทธิ์การใช้งาน · กำหนดผู้อนุมัติ |
+| ขออนุญาตไปราชการ | บันทึกขออนุญาต · ผู้บังคับบัญชาชั้นต้น · ผู้บังคับบัญชา (ผู้อนุมัติ) |
+| รายงาน | ขออนุญาตฯวันนี้ · ขออนุญาตฯทั้งหมด · พิมพ์การขออนุญาตฯ |
+| คู่มือ | คู่มือการขออนุญาตไปราชการ |
 
 | ลำดับ | ทำอะไร | URL |
 |------|--------|-----|
-| 1 | รายการคำขอ + กรอง | `/modules/permission/requests` |
-| 2 | ยื่นคำขอใหม่ | `/modules/permission/requests/new` |
-| 3 | รายละเอียด + อนุมัติ/ไม่อนุมัติ | `/modules/permission/requests/{id}` |
-| 4 | ปีงบประมาณ (admin) | `/modules/permission/years` |
-| 5 | สิทธิ์ p1/p2 (admin) | `/modules/permission/permissions` |
+| 1 | ยื่นคำขอใหม่ (home redirect) | `/modules/permission/requests/new` |
+| 2 | คิวผู้บังคับบัญชาชั้นต้น | `/modules/permission/approvals/basic` |
+| 3 | คิวผู้อนุมัติขั้นสุดท้าย | `/modules/permission/approvals/grant` |
+| 4 | รายละเอียด + พิจารณา | `/modules/permission/requests/{id}` |
+| 5 | รายงานวันนี้ | `/modules/permission/reports/today` |
+| 6 | รายงานทั้งหมด | `/modules/permission/reports/all` |
+| 7 | พิมพ์รายงาน | `/modules/permission/reports/print` |
+| 8 | คู่มือ | `/modules/permission/manual` |
+| 9 | กำหนดผู้อนุมัติ (admin) | `/modules/permission/grant-persons` |
+| 10 | ปีงบประมาณ (admin) | `/modules/permission/years` |
+| 11 | สิทธิ์ p1/p2 (admin) | `/modules/permission/permissions` |
+| — | รายการเดิม (bookmark) | `/modules/permission/requests` |
 
 ### สิ่งที่ควรเช็ค
 
 - ฟิลด์: เรื่อง/วัตถุประสงค์, สถานที่, ช่วงวันไปราชการ — เลือกวันจากปฏิทิน **พ.ศ.**
-- จำนวนวัน: นับรวมวันเริ่ม–สิ้นสุด
+- **สรุปการขอไปราชการ (อ้างอิง)** ใต้ฟอร์มบันทึก (`/requests/new`): ตาราง read-only คำขอไปราชการของทุกคนในหน่วยงานที่สังกัด · **เขต:** เฉพาะบุคลากรสำนักงานเขต (`school_id` null) · **โรงเรียน:** ทุกคนในโรงเรียน · กรองปีงบ permission ที่เปิดใช้ · ลิงก์ไป `/modules/permission/reports/all` — **ไม่มี** ลิงก์ leave · **ไม่มี** แก้ไข/ยื่นจากหน้านี้
+- Workflow: ยื่น → `basic_grant` (เห็นชอบ/ไม่เห็นชอบ) → `grant_status` (อนุมัติ/ไม่อนุมัติ) · ไม่เห็นชอบชั้นต้น = จบ flow
+- Inbox แสดงเฉพาะคำขอที่ผู้ใช้ถูกกำหนดใน `permission_person_settings` (module admin เข้า inbox ได้)
 - **เขต:** เห็นคำขอทั้งหมด · **โรงเรียน:** เห็นคำขอในโรงเรียน + คำขอของตนเอง
-- สิทธิ์: p1 ดู/อนุมัติ · p2 อนุมัติส่วนโรงเรียน · module admin จัดการตั้งค่า
-- สถานะ: รอพิจารณา / อนุมัติ / ไม่อนุมัติ
-- Pagination: 25 รายการต่อหน้า
+- รายงานวันนี้: `travel_start <= วันที่เลือก <= travel_finish`
+- Pagination: 25 รายการต่อหน้า (รายงานทั้งหมด / inbox)
 
 ### ยังไม่รวม (phase ถัดไป)
 
 - ปฏิทินเลือกวันแบบ legacy (`permission_date`)
-- ความเห็นผู้บังคับบัญชาขั้นต้น / เจ้าหน้าที่ / รายงานการไปราชการ
-- กำหนดผู้อนุมัติรายบุคคล (`permission_person_set`)
 
 ---
 
 ## plan — การวางแผน
 
-**สถานะ:** v1 พร้อมทดสอบ (มิ.ย. 2569) — ปีงบประมาณ + โครงการ + กิจกรรม
-**เทียบ amsscnt.com:** โมดูล `plan` — `plan_year`, `plan_proj`, `plan_acti` (subset หลัก)
+**สถานะ:** **ปิดโมดูลแล้ว (ก.ค. 2569)** — เมนูครบ Amssplus + ยุทธศาสตร์ + เงินเหลือจ่าย + SMSS + ตรวจสอบ/รายงาน
+**เทียบ amsscnt.com:** โมดูล `plan` — `plan_year`, `plan_proj`, `plan_acti`, `plan_stregic`, `plan_permission`, `plan_acti_3` (surplus → `project_kind`)
+**ADR:** [007-plan-module-full-menu.md](adr/007-plan-module-full-menu.md)
 
 ### ก่อนเริ่ม
 
 - Login **ระดับเขต** (`login_status` 2–4 หรือ module admin)
-- Top nav / หน้าแรก — กลุ่ม L1 **การวางแผน** (ไม่ใช่ «บริหารงบประมาณ») มีรายการย่อย **การวางแผน** เท่านั้น
-- กำหนดปีงบประมาณที่ `/modules/plan/years` (module admin) แล้วตั้งหนึ่งปีเป็น "ปีปัจจุบัน"
+- Top nav — กลุ่ม L1 **การวางแผน** → `/modules/plan`
+- กำหนดปีงบประมาณที่ `/modules/plan/years` แล้วตั้งหนึ่งปีเป็น "ปีปัจจุบัน"
+- กำหนดสิทธิ์ `perm_add/edit/dele` ที่ `/modules/plan/permissions` (module admin)
+- หน้าตรวจสอบที่อ่าน `budget_receive` — ต้อง import legacy หรือมีข้อมูลจริง ไม่มีจะแสดง empty-state
 
-### เดินลอง
+### เดินลอง — ตั้งค่าระบบ
 
 | ลำดับ | ทำอะไร | URL |
 |------|--------|-----|
-| 1 | หน้าโมดูล → โครงการ | `/modules/plan` |
-| 2 | กำหนดปีงบประมาณ (admin) | `/modules/plan/years` |
-| 3 | รายการโครงการ + ค้นหา | `/modules/plan/projects` |
-| 4 | เพิ่ม / แก้ไข / ลบโครงการ | `/modules/plan/projects/new`, `.../{id}`, `.../edit` |
-| 5 | รายการกิจกรรม + กรองโครงการ | `/modules/plan/activities` |
-| 6 | เพิ่ม / แก้ไข / ลบกิจกรรม | `/modules/plan/activities/new`, `.../{id}`, `.../edit` |
+| 1 | กำหนดเจ้าหน้าที่ (add/edit/delete) | `/modules/plan/permissions` |
+| 2 | กำหนดปีงบประมาณ | `/modules/plan/years` |
+| 3 | กำหนดยุทธศาสตร์ | `/modules/plan/strategies` |
+
+### เดินลอง — โครงการประจำปี
+
+| ลำดับ | ทำอะไร | URL |
+|------|--------|-----|
+| 4 | รายการโครงการ + ค้นหา | `/modules/plan/projects` |
+| 5 | เพิ่ม / แก้ไข / ลบโครงการ (เลือกยุทธศาสตร์) | `/modules/plan/projects/new`, `.../{id}`, `.../edit` |
+| 6 | แนบเอกสารโครงการ | `/modules/plan/attachments` |
+| 7 | เรียกข้อมูลจาก SMSS (preview + import) | `/modules/plan/smss-import` |
+
+### เดินลอง — เงินเหลือจ่าย
+
+| ลำดับ | ทำอะไร | URL |
+|------|--------|-----|
+| 8 | โครงการเงินเหลือจ่าย | `/modules/plan/surplus/projects` |
+| 9 | รายงานการจัดสรรเงิน | `/modules/plan/surplus/reports/allocation` |
+| 10 | หยุดกิจกรรม/โครงการ | `/modules/plan/surplus/activities/stop` |
+| 11 | เหลือจ่ายจากยุติกิจกรรม | `/modules/plan/surplus/reports/remaining` |
+
+### เดินลอง — ตรวจสอบ + รายงาน
+
+| ลำดับ | ทำอะไร | URL |
+|------|--------|-----|
+| 12 | ทะเบียนเงินงวด | `/modules/plan/checks/installment-register` |
+| 13 | ตรวจสอบการจัดสรรงบประมาณ | `/modules/plan/checks/allocation` |
+| 14 | ตรวจสอบการใช้จ่ายโครงการ | `/modules/plan/checks/spending` |
+| 15 | โครงการจำแนกตามกลุ่มงาน | `/modules/plan/reports/by-workgroup` |
+| 16 | รายงานการจัดสรรงบประมาณ | `/modules/plan/reports/allocation-summary` |
+| 17 | โครงการตามยุทธศาสตร์ | `/modules/plan/reports/by-strategy` |
+| 18 | รายงานผลการดำเนินงาน | `/modules/plan/reports/owner-results` |
+| 19 | โครงการเงินเหลือจ่าย | `/modules/plan/reports/surplus-projects` |
+| 20 | คู่มือ | `/modules/plan/manual` |
 
 ### สิ่งที่ควรเช็ค
 
-- ต้องมีปีปัจจุบันก่อนบันทึกโครงการ/กิจกรรม
-- รหัสโครงการ (3 หลัก) และรหัสกิจกรรม (6 หลัก) ไม่ซ้ำในปีเดียวกัน
+- **เมนู nav:** flyout 7 กลุ่ม — ตั้งค่าระบบ · โครงการประจำปี · เงินเหลือจ่าย · ตรวจสอบ · รายงานโครงการ · คู่มือ (กลุ่ม 2–4 เห็นเฉพาะ `login_status≤4` + มี perm add/edit/delete)
+- ต้องมีปีปัจจุบันก่อนบันทึกโครงการ/กิจกรรม/ยุทธศาสตร์
+- รหัสโครงการ annual (3 หลัก) / surplus (4 หลัก เริ่ม 1001) ไม่ซ้ำในปีเดียวกัน
 - ลบโครงการไม่ได้ถ้ามีกิจกรรมอ้างอิง
-- กลุ่มงานจาก `workgroups.legacy_code` · หัวหน้าโครงการจาก `people`
-- Pagination: 25 รายการต่อหน้า
+- สิทธิ์: module admin ครบ · บุคลากรเขตต้องมีแถว `plan_permissions` ถึงจะ add/edit/delete
+- ตรวจสอบ/รายงานจัดสรร: empty-state เมื่อไม่มี `budget_receive` · มีข้อมูลแล้วแสดงตาราง
+- SMSS: ต้องมี `system_sync_smss_2` + เครือข่ายเข้าถึง SMSS ได้
+- Pagination: 25 รายการต่อหน้า (โครงการ)
 
 ### ยังไม่รวม (phase ถัดไป)
 
-- ยุทธศาสตร์, เงินเหลือจ่าย, รายงาน, แนบเอกสาร, SMSS sync
+- คู่มือ PDF จริง (`modules/plan/handbook/plan.pdf`)
+- รายงานผลการดำเนินงานแบบฟอร์ม eval เต็ม (legacy eval_* fields)
+- `budget_withdraw` / `budget_money_return` ในหน้ารายงานเหลือจ่าย (ต้องขยาย budget module)
 
 ---
 
 ## budget — การเงินและบัญชี
 
-**สถานะ:** MVP พร้อมทดสอบ (มิ.ย. 2569) — ปีงบประมาณ + ทะเบียนรับ/จ่ายงบประมาณ (`budget_main` subset)
-**เทียบ amsscnt.com:** `budget_year`, `main/receive_bud`, `main/pay_bud` (ไม่รวม ~37 ตารางอื่น)
+**สถานะ:** v2 พร้อมทดสอบ (ก.ค. 2569) — เมนูครบ Amssplus 9 กลุ่ม flyout + workflow เบิก→ฎีกา→จ่าย
+**เทียบ amsscnt.com:** โมดูล `budget` — `budget_*` tables (~16 ตาราง)
+**ADR:** [008-budget-module-full-menu.md](adr/008-budget-module-full-menu.md)
 
 ### ก่อนเริ่ม
 
-- Login **ระดับเขต** + สิทธิ์ `budget_permission` (p2=ตั้งค่า, p5=รับ/จ่าย) หรือ module admin
-- Top nav / หน้าแรก — กลุ่ม L1 **การเงินและบัญชี** (แยกจาก **การวางแผน**) มีรายการย่อย **การเงินและบัญชี** เท่านั้น
-- กำหนดปีงบประมาณที่ `/modules/budget/years`
+- Login **ระดับเขต** (`login_status` 2–4) + สิทธิ์ `budget_permissions` (p1–p10) หรือ module admin
+- Top nav — กลุ่ม L1 **การเงินและบัญชี** · in-module flyout 9 กลุ่ม
+- กำหนดปีงบประมาณ + หมวดงบ (แผนงาน, งบรายจ่าย, ประเภทเงิน) ก่อนทดสอบ workflow
 
-### เดินลอง
+### เดินลอง (สรุป)
 
 | ลำดับ | ทำอะไร | URL |
 |------|--------|-----|
-| 1 | หน้าโมดูล → ทะเบียนรับ | `/modules/budget` |
-| 2 | กำหนดปีงบประมาณ (p2/admin) | `/modules/budget/years` |
-| 3 | ทะเบียนรับเงินงบประมาณ | `/modules/budget/receive` |
-| 4 | เพิ่ม / แก้ไข / ลบรายการรับ | `/modules/budget/receive/new`, `.../{id}`, `.../edit` |
-| 5 | ทะเบียนสั่งจ่ายเงินงบประมาณ | `/modules/budget/disburse` |
-| 6 | เพิ่ม / แก้ไข / ลบรายการจ่าย | `/modules/budget/disburse/new`, `.../{id}`, `.../edit` |
+| 1 | หน้าโมดูล → รับงบประมาณ | `/modules/budget` |
+| 2 | เจ้าหน้าที่การเงินฯ (admin) | `/modules/budget/permissions` |
+| 3 | ปีงบ + หมวดงบ (p2) | `/modules/budget/years`, `/plans`, `/pay-types`, `/types` |
+| 4 | รับจัดสรรงบประมาณ (p2) | `/modules/budget/allocation` |
+| 5 | รับเงินงบ/นอกงบ/รายได้ (p5–p7) | `/modules/budget/receive/{budget,extra,income}` |
+| 6 | ขอเบิกโครงการ (p3) | `/modules/budget/withdraw` |
+| 7 | ฎีกา/คงคลัง (p4) | `/modules/budget/deega` |
+| 8 | สั่งจ่าย (p5–p8) | `/modules/budget/pay/{budget,extra,income,reserve}` |
+| 9 | อนุมัติ/จ่ายจริง (p1/p9) | `/modules/budget/approve/main`, `/pay-check/main` |
+| 10 | เปลี่ยนแปลงสถานะ | `/modules/budget/status-change/budget` |
+| 11 | ตรวจสอบ (p10) | `/modules/budget/checks/allocation` |
+| 12 | รายงาน | `/modules/budget/reports/allocation` |
 
 ### สิ่งที่ควรเช็ค
 
-- รับ: ลักษณะรายการ (เงินสด / เช็ค) · `type_id=200`
-- จ่าย: เลือกงบรายจ่ายจาก `budget_pay_types` (ต้องมีข้อมูลจาก legacy import)
-- ผู้บันทึก = `officer` (person_id ผู้ login)
-- Pagination: 25 รายการต่อหน้า
+- รับจัดสรร: CRUD `budget_receive` + แนบไฟล์ → ปลด empty-state ฝั่ง plan
+- ขอเบิก: เชื่อม `plan_activities` ผ่าน `pj_activity`
+- ฎีกา: เลือก `receive_num` จากใบงวด · อัปเดต `budget_withdraw.deega`
+- สั่งจ่าย: อ้างอิง `refer_wd_id` / `refer_deega_id`
+- MVP redirect: `/receive` → `/receive/budget`, `/disburse` → `/pay/budget`
 
-### ยังไม่รวม (phase ถัดไป)
+### ข้อจำกัดที่ทราบ
 
-- ทะเบียนขอเบิก, ฎีกา, เงินนอกงบ, รายได้แผ่นดิน, อนุมัติจ่าย, รายงาน, ตรวจสอบ (~35 ตารางที่เหลือ)
+- คู่มือ PDF placeholder (`/modules/budget/manual`)
+- `approve/reserve` + `pay-check/reserve` รอบแรกเป็น read-only list
+- ตรวจสอบบางรายการใช้ query ใกล้เคียง (ดู ADR 008)
 
 ---
 
@@ -808,7 +918,7 @@ Login **โรงเรียน** (`login_status` 12–15, `organization_type =
 
 - เลือกรถได้เฉพาะสถานะ «อนุญาตให้จองใช้งาน» (status=2)
 - ฟิลด์: สถานที่, วัตถุประสงค์, ช่วงวันที่, เชื้อเพลิง
-- สิทธิ์: p1=1 ตั้งค่าระบบ · p1=3 อนุมัติคำขอ · module admin ครบสิทธิ์
+- สิทธิ์: p1=1 อนุมัติ/ดูรายการ · p1=3 อนุมัติคำขอ (บางโมดูล) · ตั้งค่าระบบโมดูลเฉพาะ `is_admin` · module admin ครบสิทธิ์งานปกติ
 - สถานะคำขอ: รอพิจารณา / อนุมัติ / ไม่อนุมัติ
 - Pagination: 25 รายการต่อหน้า
 

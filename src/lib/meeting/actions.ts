@@ -1,5 +1,7 @@
 "use server";
 
+import { insertAndGetId } from "../db/helpers";
+
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -95,9 +97,7 @@ export async function createMeetingBooking(formData: FormData) {
     return { ok: false as const, message: "ห้องประชุมไม่พร้อมใช้งาน" };
   }
 
-  const [inserted] = await db
-    .insert(meetingBookings)
-    .values({
+  const insertedId = await insertAndGetId(meetingBookings, {
       roomCode: data.roomCode,
       bookDate: data.bookDate,
       bookDateEnd: data.bookDateEnd,
@@ -107,8 +107,8 @@ export async function createMeetingBooking(formData: FormData) {
       personNum: data.personNum,
       other: data.other,
       bookPersonId: user.personId,
-    })
-    .returning({ id: meetingBookings.id });
+    });
+  const inserted = { id: insertedId };
 
   revalidatePath(BOOKINGS_PATH);
   revalidatePath(CALENDAR_PATH);

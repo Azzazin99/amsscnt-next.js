@@ -4,6 +4,13 @@ import Link from "next/link";
 import { useState } from "react";
 import { ThaiDatePicker } from "@/components/shared/thai-date-picker";
 import { Button } from "@/components/ui/button";
+import { bangkokTodayIso } from "@/lib/book/dates";
+import {
+  STANDARD_ATTACHMENT_ACCEPT,
+  STANDARD_ATTACHMENT_TYPES_LABEL,
+  validateStandardAttachmentFile,
+} from "@/lib/form/attachment-allowed-types";
+import { PERMISSION_VEHICLE_OPTIONS } from "@/lib/permission/constants";
 import { cn } from "@/lib/utils";
 
 type PermissionRequestFormProps = {
@@ -20,13 +27,32 @@ export function PermissionRequestForm({
 }: PermissionRequestFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [vehicleKind, setVehicleKind] = useState("");
+  const todayIso = bangkokTodayIso();
+
+  const needsDetail =
+    vehicleKind === "private" || vehicleKind === "other";
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+
+    const form = e.currentTarget;
+    const attachmentInput = form.elements.namedItem(
+      "attachment",
+    ) as HTMLInputElement | null;
+    const file = attachmentInput?.files?.[0];
+    if (file && file.size > 0) {
+      const fileErr = validateStandardAttachmentFile(file);
+      if (fileErr) {
+        setError(fileErr);
+        return;
+      }
+    }
+
     setLoading(true);
     try {
-      const result = await action(new FormData(e.currentTarget));
+      const result = await action(new FormData(form));
       if (result && "ok" in result && !result.ok) {
         setError(result.message ?? "บันทึกไม่สำเร็จ");
       }
@@ -73,28 +99,80 @@ export function PermissionRequestForm({
           <label htmlFor="travelStart" className="text-sm font-medium">
             วันเริ่มไปราชการ
           </label>
-          <ThaiDatePicker id="travelStart" name="travelStart" required />
+          <ThaiDatePicker
+            id="travelStart"
+            name="travelStart"
+            minIso={todayIso}
+            required
+          />
         </div>
         <div className="space-y-2">
           <label htmlFor="travelFinish" className="text-sm font-medium">
             วันสิ้นสุด
           </label>
-          <ThaiDatePicker id="travelFinish" name="travelFinish" required />
+          <ThaiDatePicker
+            id="travelFinish"
+            name="travelFinish"
+            minIso={todayIso}
+            required
+          />
         </div>
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="vehicle" className="text-sm font-medium">
+        <label htmlFor="vehicleKind" className="text-sm font-medium">
           พาหนะ (ถ้ามี)
         </label>
-        <input id="vehicle" name="vehicle" maxLength={150} className={inputClass} />
+        <select
+          id="vehicleKind"
+          name="vehicleKind"
+          value={vehicleKind}
+          onChange={(e) => setVehicleKind(e.target.value)}
+          className={inputClass}
+        >
+          <option value="">— ไม่ระบุ —</option>
+          {PERMISSION_VEHICLE_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
       </div>
 
+      {needsDetail ? (
+        <div className="space-y-2">
+          <label htmlFor="vehicleDetail" className="text-sm font-medium">
+            {vehicleKind === "private" ? "หมายเลขทะเบียน" : "ระบุพาหนะ"}
+          </label>
+          <input
+            id="vehicleDetail"
+            name="vehicleDetail"
+            required
+            maxLength={100}
+            className={inputClass}
+            placeholder={
+              vehicleKind === "private"
+                ? "เช่น กข 1234 ชัยนาท"
+                : "ระบุพาหนะที่ใช้"
+            }
+          />
+        </div>
+      ) : null}
+
       <div className="space-y-2">
-        <label htmlFor="document" className="text-sm font-medium">
-          เอกสารแนบ (ชื่อ)
+        <label htmlFor="attachment" className="text-sm font-medium">
+          เอกสารแนบ (ถ้ามี)
         </label>
-        <input id="document" name="document" maxLength={150} className={inputClass} />
+        <input
+          id="attachment"
+          name="attachment"
+          type="file"
+          accept={STANDARD_ATTACHMENT_ACCEPT}
+          className="block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-muted file:px-3 file:py-2 file:text-sm"
+        />
+        <p className="text-xs text-muted-foreground">
+          รองรับ {STANDARD_ATTACHMENT_TYPES_LABEL}
+        </p>
       </div>
 
       {error ? (

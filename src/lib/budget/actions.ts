@@ -1,5 +1,7 @@
 "use server";
 
+import { insertAndGetId } from "../db/helpers";
+
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -156,9 +158,7 @@ export async function createBudgetReceive(formData: FormData) {
   }
 
   const { data } = parsed;
-  const [inserted] = await db
-    .insert(budgetMain)
-    .values({
+  const insertedId = await insertAndGetId(budgetMain, {
       budgetYear: yearCheck.budgetYear,
       doc: data.doc,
       typeId: BUDGET_TYPE_MAIN,
@@ -167,8 +167,8 @@ export async function createBudgetReceive(formData: FormData) {
       status: data.status,
       recDate: data.recDate,
       officer: user.personId,
-    })
-    .returning({ id: budgetMain.id });
+    });
+  const inserted = { id: insertedId };
 
   revalidatePath(RECEIVE_PATH);
   redirect(`${RECEIVE_PATH}/${inserted.id}`);
@@ -246,9 +246,7 @@ export async function createBudgetDisburse(formData: FormData) {
   }
 
   const { data } = parsed;
-  const [inserted] = await db
-    .insert(budgetMain)
-    .values({
+  const insertedId = await insertAndGetId(budgetMain, {
       budgetYear: yearCheck.budgetYear,
       doc: data.doc,
       typeId: BUDGET_TYPE_MAIN,
@@ -258,8 +256,8 @@ export async function createBudgetDisburse(formData: FormData) {
       payedPerson: data.payedPerson,
       recDate: data.recDate,
       officer: user.personId,
-    })
-    .returning({ id: budgetMain.id });
+    });
+  const inserted = { id: insertedId };
 
   revalidatePath(DISBURSE_PATH);
   redirect(`${DISBURSE_PATH}/${inserted.id}`);

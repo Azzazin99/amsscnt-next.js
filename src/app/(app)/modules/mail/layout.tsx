@@ -2,9 +2,9 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AppBreadcrumb } from "@/components/app-shell/app-breadcrumb";
 import { MailNav } from "@/components/mail/mail-nav";
+import { getModuleSettingsNavMode } from "@/lib/core/permissions";
 import {
   canViewMailList,
-  canManageMailSettings,
   canWriteMail,
   getMailPermissions,
 } from "@/lib/mail/permissions";
@@ -23,7 +23,7 @@ export default async function MailLayout({
   }
 
   const canWrite = canWriteMail(session.user, perms);
-  const showAdmin = canManageMailSettings(session.user);
+  const settingsNavMode = getModuleSettingsNavMode(session.user, "mail");
 
   return (
     <div className="px-4 py-6 lg:px-8">
@@ -41,7 +41,7 @@ export default async function MailLayout({
         </p>
       </div>
 
-      <MailNav canWrite={canWrite} showAdmin={showAdmin} />
+      <MailNav canWrite={canWrite} settingsNavMode={settingsNavMode} />
 
       {children}
     </div>

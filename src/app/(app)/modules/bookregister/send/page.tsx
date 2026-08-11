@@ -3,8 +3,6 @@ import { Suspense } from "react";
 import { BookregisterListFilters } from "@/components/bookregister/bookregister-list-filters";
 import { BookregisterListPageLayout } from "@/components/bookregister/bookregister-list-page-layout";
 import { BookregisterListTableSkeleton } from "@/components/bookregister/bookregister-list-table-skeleton";
-import { RegisterReportLink } from "@/components/bookregister/reports/register-report-link";
-import { RegisterCsvExportLink } from "@/components/bookregister/export/register-csv-export-link";
 import { buttonVariants } from "@/components/ui/button";
 import {
   canDeleteRegisters,
@@ -69,16 +67,6 @@ export default async function DistrictSendPage({ searchParams }: Props) {
         )}
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        {activeYear ? (
-          <>
-            <RegisterReportLink kind="send" year={activeYear.year} />
-            <RegisterCsvExportLink
-              kind="send"
-              year={activeYear.year}
-              scope={scope}
-            />
-          </>
-        ) : null}
         {sendEnabled && canWrite ? (
           <Link
             href="/modules/bookregister/send/new"

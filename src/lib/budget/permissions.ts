@@ -96,3 +96,57 @@ export function canWriteBudgetDisburse(
 ): boolean {
   return isBudgetModuleAdmin(user) || perms.p5 === 1;
 }
+
+export const canWithdrawBudget = (user: AmssSessionUser, perms: BudgetPermissionFlags): boolean =>
+  canViewBudget(user, perms);
+export const canManageBudgetSettingsData = (user: AmssSessionUser, _perms?: BudgetPermissionFlags): boolean =>
+  isBudgetModuleAdmin(user);
+
+export function canReceiveBudgetByKind(
+  user: AmssSessionUser,
+  perms: BudgetPermissionFlags,
+  _kind?: string,
+): boolean {
+  return isBudgetModuleAdmin(user) || perms.p5 === 1;
+}
+
+export function canPayBudgetByKind(
+  user: AmssSessionUser,
+  perms: BudgetPermissionFlags,
+  _kind?: string,
+): boolean {
+  return isBudgetModuleAdmin(user) || perms.p5 === 1;
+}
+
+export function canChangeBudgetStatusByKind(
+  user: AmssSessionUser,
+  perms: BudgetPermissionFlags,
+  _kind?: string,
+): boolean {
+  return isBudgetModuleAdmin(user) || perms.p5 === 1;
+}
+
+
+export function canChangeBudgetStatus(user: AmssSessionUser, perms: BudgetPermissionFlags, _kind?: string): boolean {
+  return isBudgetModuleAdmin(user) || perms.p5 === 1;
+}
+export function canManageBudgetAllocation(user: AmssSessionUser, perms: BudgetPermissionFlags): boolean {
+  return isBudgetModuleAdmin(user) || perms.p3 === 1;
+}
+export function canManageBudgetDeega(user: AmssSessionUser, perms: BudgetPermissionFlags): boolean {
+  return isBudgetModuleAdmin(user) || perms.p7 === 1;
+}
+export function canPayCheckBudget(user: AmssSessionUser, perms: BudgetPermissionFlags): boolean {
+  return isBudgetModuleAdmin(user) || perms.p8 === 1;
+}
+export function canViewBudgetChecks(user: AmssSessionUser, perms: BudgetPermissionFlags): boolean {
+  return isBudgetModuleAdmin(user) || perms.p10 === 1;
+}
+export function canViewBudgetWideReports(user: AmssSessionUser, _perms?: BudgetPermissionFlags): boolean {
+  return isBudgetModuleAdmin(user) || _perms?.p10 === 1;
+}
+export function canWriteBudgetPay(user: AmssSessionUser, perms: BudgetPermissionFlags, _kind?: string): boolean {
+  return isBudgetModuleAdmin(user) || perms.p5 === 1;
+}
+
+export const canManageBudgetStaffPermissions = isBudgetModuleAdmin;

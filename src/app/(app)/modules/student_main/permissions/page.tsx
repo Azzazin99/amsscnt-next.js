@@ -4,11 +4,11 @@ import { Check, Pencil, X } from "lucide-react";
 import { StudentPermissionDeleteButton } from "@/components/student-main/student-permission-delete-button";
 import { buttonVariants } from "@/components/ui/button";
 import { listStudentPermissions } from "@/lib/student-main/queries";
-import { requireStudentSettingsAccess } from "@/lib/student-main/scope";
+import { requireStudentStaffPermissionsAccess } from "@/lib/student-main/scope";
 import { cn } from "@/lib/utils";
 
 export default async function StudentMainPermissionsPage() {
-  await requireStudentSettingsAccess();
+  await requireStudentStaffPermissionsAccess();
   const rows = await listStudentPermissions();
 
   return (

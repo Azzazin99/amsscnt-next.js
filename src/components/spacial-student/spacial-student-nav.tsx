@@ -1,28 +1,28 @@
 "use client";
 
+import { buildModuleSettingsNavSection } from "@/components/app-shell/module-settings-nav-section";
 import {
   ModuleNav,
   type ModuleNavSectionDef,
 } from "@/components/app-shell/module-nav";
+import type { ModuleSettingsNavMode } from "@/lib/core/permissions";
 
 export function SpacialStudentNav({
   canWrite,
-  showAdmin,
+  settingsNavMode,
 }: {
   canWrite: boolean;
-  showAdmin: boolean;
+  settingsNavMode: ModuleSettingsNavMode;
 }) {
-  const sections: ModuleNavSectionDef[] = [
+  const settingsSection = buildModuleSettingsNavSection(settingsNavMode, [
     {
-      title: "ตั้งค่าระบบ",
-      visible: showAdmin,
-      links: [
-        {
-          href: "/modules/spacial_student/permissions",
-          label: "สิทธิ์การใช้งาน",
-        },
-      ],
+      href: "/modules/spacial_student/permissions",
+      label: "สิทธิ์การใช้งาน",
     },
+  ]);
+
+  const sections: ModuleNavSectionDef[] = [
+    ...(settingsSection ? [settingsSection] : []),
     {
       title: "นักเรียนพิเศษ",
       links: [

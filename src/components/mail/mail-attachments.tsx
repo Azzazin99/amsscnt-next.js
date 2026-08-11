@@ -57,6 +57,7 @@ export function MailAttachments({ documentId, canUpload, className }: Props) {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch attachment list on mount / URL change
     void refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baseUrl]);

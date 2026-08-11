@@ -1,10 +1,10 @@
 import { MailPermissionForm } from "@/components/mail/mail-permission-form";
 import { createMailPermission } from "@/lib/mail/actions";
 import { listStaffForMailPermissionPicker } from "@/lib/mail/queries";
-import { requireMailSettingsAccess } from "@/lib/mail/scope";
+import { requireMailStaffPermissionsAccess } from "@/lib/mail/scope";
 
 export default async function MailPermissionNewPage() {
-  await requireMailSettingsAccess();
+  await requireMailStaffPermissionsAccess();
   const staffOptions = await listStaffForMailPermissionPicker();
 
   return (

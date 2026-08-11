@@ -3,6 +3,7 @@
 import { Paperclip } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { STANDARD_ATTACHMENT_ACCEPT } from "@/lib/form/attachment-allowed-types";
 import { cn } from "@/lib/utils";
 
 type BookFileRow = {
@@ -18,8 +19,7 @@ type Props = {
   className?: string;
 };
 
-const ACCEPT =
-  ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.zip,.rar";
+const ACCEPT = STANDARD_ATTACHMENT_ACCEPT;
 
 export function BookAttachments({ documentId, canUpload, className }: Props) {
   const [files, setFiles] = useState<BookFileRow[]>([]);
@@ -54,6 +54,7 @@ export function BookAttachments({ documentId, canUpload, className }: Props) {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch attachment list on mount / URL change
     void refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baseUrl]);

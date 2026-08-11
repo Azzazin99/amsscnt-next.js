@@ -1,13 +1,13 @@
 import { redirect } from "next/navigation";
 import { MeetingPermissionForm } from "@/components/meeting/meeting-permission-form";
 import { createMeetingPermission } from "@/lib/meeting/actions";
-import { canManageMeetingSettings } from "@/lib/meeting/permissions";
+import { canManageMeetingStaffPermissions } from "@/lib/meeting/permissions";
 import { listDistrictStaffForMeetingPicker } from "@/lib/meeting/queries";
 import { requireMeetingScope } from "@/lib/meeting/scope";
 
 export default async function MeetingPermissionNewPage() {
   const { user } = await requireMeetingScope();
-  if (!canManageMeetingSettings(user)) {
+  if (!canManageMeetingStaffPermissions(user)) {
     redirect("/modules/meeting/bookings");
   }
 

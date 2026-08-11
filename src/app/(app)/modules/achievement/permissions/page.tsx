@@ -3,14 +3,14 @@ import { redirect } from "next/navigation";
 import { Check, Pencil, X } from "lucide-react";
 import { AchievementPermissionDeleteButton } from "@/components/achievement/achievement-permission-delete-button";
 import { buttonVariants } from "@/components/ui/button";
-import { canManageAchievementSettings } from "@/lib/achievement/permissions";
+import { canManageAchievementStaffPermissions } from "@/lib/achievement/permissions";
 import { listAchievementPermissions } from "@/lib/achievement/queries";
 import { requireAchievementScope } from "@/lib/achievement/scope";
 import { cn } from "@/lib/utils";
 
 export default async function AchievementPermissionsPage() {
   const { user, perms } = await requireAchievementScope();
-  if (!canManageAchievementSettings(user, perms)) {
+  if (!canManageAchievementStaffPermissions(user)) {
     redirect("/modules/achievement/scores");
   }
 

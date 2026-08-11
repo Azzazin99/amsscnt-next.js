@@ -106,13 +106,17 @@ export function BookregisterListDataTable<TRow extends { id: number }>({
   );
 
   const resizeSessionRef = useRef(resizeSession);
-  resizeSessionRef.current = resizeSession;
+
+  useEffect(() => {
+    resizeSessionRef.current = resizeSession;
+  }, [resizeSession]);
 
   useEffect(() => {
     if (!resizeSession) return;
 
     const column = columns.find((c) => c.id === resizeSession.columnId);
     if (!column) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clear stale resize when column disappears
       setResizeSession(null);
       return;
     }

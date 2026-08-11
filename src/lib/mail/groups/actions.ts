@@ -1,6 +1,8 @@
 "use server";
 
-import { and, eq, ilike, ne } from "drizzle-orm";
+import { insertAndGetId } from "../../db/helpers";
+
+import { and, eq, like, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { mailGroupMembers, mailGroups } from "@/lib/db/schema";
@@ -33,8 +35,8 @@ async function nameTaken(name: string, excludeId?: number): Promise<boolean> {
     .from(mailGroups)
     .where(
       excludeId != null
-        ? and(ilike(mailGroups.name, trimmed), ne(mailGroups.id, excludeId))
-        : ilike(mailGroups.name, trimmed),
+        ? and(like(mailGroups.name, trimmed), ne(mailGroups.id, excludeId))
+        : like(mailGroups.name, trimmed),
     )
     .limit(1);
   return row != null;
@@ -81,13 +83,11 @@ export async function createMailGroup(formData: FormData) {
     return { ok: false as const, message: "ชื่อกลุ่มนี้มีในระบบแล้ว" };
   }
 
-  const [inserted] = await db
-    .insert(mailGroups)
-    .values({
+  const insertedId = await insertAndGetId(mailGroups, {
       name: parsed.data.name,
       sortOrder: parsed.data.sortOrder,
-    })
-    .returning({ id: mailGroups.id });
+    });
+  const inserted = { id: insertedId };
 
   if (!inserted) {
     return { ok: false as const, message: "ไม่สามารถบันทึกได้" };

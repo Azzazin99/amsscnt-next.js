@@ -1,4 +1,4 @@
-import { and, asc, count, eq, ilike, or } from "drizzle-orm";
+import { and, asc, count, eq, like, or } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { menuGroups, modules } from "@/lib/db/schema";
 
@@ -36,7 +36,7 @@ function buildModuleWhere(q: string, status: "all" | "active" | "inactive") {
   const conditions = [];
   if (q.length >= 2) {
     conditions.push(
-      or(ilike(modules.name, `%${q}%`), ilike(modules.slug, `%${q}%`)),
+      or(like(modules.name, `%${q}%`), like(modules.slug, `%${q}%`)),
     );
   }
   if (status === "active") conditions.push(eq(modules.active, true));

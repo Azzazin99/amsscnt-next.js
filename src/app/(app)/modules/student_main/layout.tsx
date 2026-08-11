@@ -2,8 +2,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AppBreadcrumb } from "@/components/app-shell/app-breadcrumb";
 import { StudentMainNav } from "@/components/student-main/student-main-nav";
+import { getModuleSettingsNavMode } from "@/lib/core/permissions";
 import {
-  canManageStudentSettings,
   canViewStudentList,
   canWriteStudent,
   getStudentPermissions,
@@ -40,7 +40,7 @@ export default async function StudentMainLayout({
       </div>
       <StudentMainNav
         canWrite={canWriteStudent(session.user, perms)}
-        showAdmin={canManageStudentSettings(session.user, perms)}
+        settingsNavMode={getModuleSettingsNavMode(session.user, "student_main")}
       />
       {children}
     </div>

@@ -1,5 +1,7 @@
 "use server";
 
+import { insertAndGetId } from "../db/helpers";
+
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -205,9 +207,7 @@ export async function createLeaveRequest(formData: FormData) {
   const birthRow = statsSnapshot.rows.find((r) => r.leaveType === 3)!;
   const relaxRow = statsSnapshot.rows.find((r) => r.leaveType === 4)!;
 
-  const [inserted] = await db
-    .insert(leaveRequests)
-    .values({
+  const insertedId = await insertAndGetId(leaveRequests, {
       personId: user.personId,
       schoolId,
       leaveType: data.leaveType,
@@ -240,8 +240,8 @@ export async function createLeaveRequest(formData: FormData) {
       noComment: data.noComment,
       grantPersonSelected: data.grantPersonSelected,
       jobPersonId: data.jobPersonId,
-    })
-    .returning({ id: leaveRequests.id });
+    });
+  const inserted = { id: insertedId };
 
   if (hasFile && attachment instanceof File) {
     try {
@@ -683,9 +683,7 @@ export async function createLeaveCancellation(formData: FormData) {
     return { ok: false as const, message: validationErr };
   }
 
-  const [inserted] = await db
-    .insert(leaveCancellations)
-    .values({
+  const insertedId = await insertAndGetId(leaveCancellations, {
       personId: user.personId,
       sourceRequestId: source.id,
       leaveType: source.leaveType,
@@ -699,8 +697,8 @@ export async function createLeaveCancellation(formData: FormData) {
       cancelTotal,
       noComment: data.noComment,
       grantPersonSelected: data.grantPersonSelected,
-    })
-    .returning({ id: leaveCancellations.id });
+    });
+  const inserted = { id: insertedId };
 
   revalidatePath(CANCELLATIONS_PATH);
   revalidatePath(REQUESTS_PATH);

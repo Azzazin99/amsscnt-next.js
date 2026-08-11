@@ -1,3 +1,4 @@
+import { insertAndGetId } from "../db/helpers";
 import "server-only";
 
 import { stat } from "node:fs/promises";
@@ -82,18 +83,17 @@ export async function uploadMailAttachment(
   const storedName = buildStoredMailFileName(refId, file.name);
   await saveMailFileToStorage(storedName, file);
 
-  const [inserted] = await db
+  const [res] = await db
     .insert(mailFiles)
     .values({
       refId,
       fileName: storedName,
       fileDes: fileDes ?? file.name,
-    })
-    .returning({
-      id: mailFiles.id,
-      fileName: mailFiles.fileName,
-      fileDes: mailFiles.fileDes,
     });
 
-  return inserted;
+  return {
+    id: res.insertId,
+    fileName: storedName,
+    fileDes: fileDes ?? file.name,
+  };
 }

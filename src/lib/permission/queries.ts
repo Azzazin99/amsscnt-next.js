@@ -4,7 +4,7 @@ import {
   count,
   desc,
   eq,
-  ilike,
+  like,
   isNull,
   notInArray,
   or,
@@ -41,6 +41,7 @@ export type PermissionListRow = {
   travelDays: number;
   grantStatus: number | null;
   grantStatusLabel: string;
+  workflowStatusLabel: string;
   createdAt: Date;
 };
 
@@ -62,6 +63,12 @@ export type PermissionRequestDetail = {
   grantComment: string | null;
   grantPersonId: string | null;
   grantDate: Date | null;
+  basicGrant: number | null;
+  basicComment: string | null;
+  basicAt: Date | null;
+  groupGrant: number | null;
+  groupComment: string | null;
+  groupAt: Date | null;
   createdAt: Date;
 };
 
@@ -105,12 +112,12 @@ function buildWhere(
   if (q.length >= 2) {
     conditions.push(
       or(
-        ilike(permissionRequests.personId, `%${q}%`),
-        ilike(permissionRequests.subject, `%${q}%`),
-        ilike(permissionRequests.place, `%${q}%`),
-        ilike(people.firstName, `%${q}%`),
-        ilike(people.lastName, `%${q}%`),
-        ilike(people.prefix, `%${q}%`),
+        like(permissionRequests.personId, `%${q}%`),
+        like(permissionRequests.subject, `%${q}%`),
+        like(permissionRequests.place, `%${q}%`),
+        like(people.firstName, `%${q}%`),
+        like(people.lastName, `%${q}%`),
+        like(people.prefix, `%${q}%`),
       ),
     );
   }
@@ -227,6 +234,7 @@ export async function listPermissionRequestsPage(input: {
     travelDays: computeTravelDays(row.travelStart, row.travelFinish),
     grantStatus: row.grantStatus,
     grantStatusLabel: grantStatusLabel(row.grantStatus),
+    workflowStatusLabel: grantStatusLabel(row.grantStatus),
     createdAt: row.createdAt,
   }));
 }
@@ -254,6 +262,12 @@ export async function getPermissionRequest(
       grantComment: permissionRequests.grantComment,
       grantPersonId: permissionRequests.grantPersonId,
       grantDate: permissionRequests.grantDate,
+      basicGrant: permissionRequests.basicGrant,
+      basicComment: permissionRequests.basicComment,
+      basicDate: permissionRequests.basicDate,
+      groupGrant: permissionRequests.groupGrant,
+      groupComment: permissionRequests.groupComment,
+      groupDate: permissionRequests.groupDate,
       createdAt: permissionRequests.createdAt,
     })
     .from(permissionRequests)
@@ -287,6 +301,12 @@ export async function getPermissionRequest(
     grantComment: row.grantComment,
     grantPersonId: row.grantPersonId,
     grantDate: row.grantDate,
+    basicGrant: row.basicGrant,
+    basicComment: row.basicComment,
+    basicAt: row.basicDate,
+    groupGrant: row.groupGrant,
+    groupComment: row.groupComment,
+    groupAt: row.groupDate,
     createdAt: row.createdAt,
   };
 }
@@ -309,7 +329,7 @@ export async function listPermissionYears(): Promise<PermissionYearRow[]> {
       yearActive: permissionYears.yearActive,
     })
     .from(permissionYears)
-    .orderBy(asc(permissionYears.budgetYear));
+    .orderBy(desc(permissionYears.budgetYear));
 }
 
 export async function getPermissionYear(id: number) {
@@ -459,4 +479,46 @@ export async function getPersonSchoolId(personId: string): Promise<number | null
     .where(eq(people.personId, personId))
     .limit(1);
   return row?.schoolId ?? null;
+}
+
+// ---- Aliases / Stub exports for missing functions ----
+export async function countOwnPermissionRequests(
+  personId: string,
+  q: string = "",
+  grant: "all" | "pending" | "approved" | "rejected" = "all"
+): Promise<number> {
+  const scope: PermissionScope = { kind: "school", schoolId: -1, schoolCode: "", schoolName: "" };
+  return countPermissionRequests(scope, personId, q, grant);
+}
+
+export async function listOwnPermissionRequestsPage(input: {
+  personId: string;
+  page: number;
+  q?: string;
+  grant?: "all" | "pending" | "approved" | "rejected";
+}): Promise<PermissionListRow[]> {
+  const scope: PermissionScope = { kind: "school", schoolId: -1, schoolCode: "", schoolName: "" };
+  return listPermissionRequestsPage({
+    scope,
+    viewerPersonId: input.personId,
+    page: input.page,
+    q: input.q ?? "",
+    grant: input.grant ?? "all",
+  });
+}
+
+export const parseOwnPermissionRegisterParams = parsePermissionListParams;
+
+export async function getPermissionRequesterDisplayName(personId: string): Promise<string> {
+  const [row] = await db
+    .select({ prefix: people.prefix, firstName: people.firstName, lastName: people.lastName })
+    .from(people)
+    .where(eq(people.personId, personId))
+    .limit(1);
+  if (!row) return personId;
+  return [row.prefix, row.firstName, row.lastName].filter(Boolean).join(" ");
+}
+
+export async function listPermissionRequestFiles(_requestId: number): Promise<any[]> {
+  return [];
 }

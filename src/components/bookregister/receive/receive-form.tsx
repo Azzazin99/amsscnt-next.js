@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { ThaiDatePicker } from "@/components/shared/thai-date-picker";
 import { SchoolCombobox } from "@/components/bookregister/school-combobox";
 import {
@@ -328,7 +328,7 @@ export function ReceiveForm({
       )}
 
       <p className="text-xs text-muted-foreground">
-        แนบไฟล์ (pdf, doc, xls, …) ได้หลังบันทึกรายการ (ในหน้าแก้ไข)
+        แนบไฟล์ (docx, xlsx, pptx, pdf, jpg, …) ได้หลังบันทึกรายการ (ในหน้าแก้ไข)
       </p>
 
       {error ? (
@@ -337,15 +337,13 @@ export function ReceiveForm({
         </p>
       ) : null}
 
-      <div className="flex flex-wrap gap-2 pt-2">
-        <Button type="submit" disabled={loading} className="min-h-10">
+      <div className="flex flex-wrap gap-3 pt-2">
+        <Button type="submit" disabled={loading} className="min-h-11 min-w-28 justify-center">
           {loading ? "กำลังบันทึก..." : "ตกลง"}
         </Button>
         <Link
           href={cancelHref}
-          className={cn(
-            "inline-flex min-h-10 items-center justify-center rounded-lg border border-border px-3 text-sm hover:bg-muted",
-          )}
+          className={buttonVariants({ variant: "outline", className: "min-h-11 min-w-28 justify-center" })}
         >
           ย้อนกลับ
         </Link>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type NewsMainitemFormProps = {
@@ -103,14 +103,12 @@ export function NewsMainitemForm({
       ) : null}
 
       <div className="flex flex-wrap gap-3 pt-2">
-        <Button type="submit" disabled={loading} className="min-h-11">
+        <Button type="submit" disabled={loading} className="min-h-11 min-w-28 justify-center">
           {loading ? "กำลังบันทึก…" : "บันทึก"}
         </Button>
         <Link
           href={cancelHref}
-          className={cn(
-            "inline-flex min-h-11 items-center rounded-lg border px-4 text-sm hover:bg-muted",
-          )}
+          className={buttonVariants({ variant: "outline", className: "min-h-11 min-w-28 justify-center" })}
         >
           ยกเลิก
         </Link>

@@ -1,8 +1,6 @@
-import { LeaveRegisterActions } from "@/components/leave/leave-register-actions";
 import { LeaveRegisterHeader } from "@/components/leave/leave-register-header";
 import { LeaveRegisterTable } from "@/components/leave/leave-register-table";
 import { getLeaveRequesterProfile } from "@/lib/leave/form-context";
-import { canWriteLeaveRequest } from "@/lib/leave/permissions";
 import {
   PAGE_SIZE,
   countOwnLeaveRequests,
@@ -19,7 +17,7 @@ type Props = {
 };
 
 export default async function LaRequestsPage({ searchParams }: Props) {
-  const { user, perms } = await requireLeaveScope();
+  const { user } = await requireLeaveScope();
   const params = await searchParams;
   const parsed = parseOwnLeaveRegisterParams(params);
 
@@ -33,7 +31,6 @@ export default async function LaRequestsPage({ searchParams }: Props) {
   const requester = await getLeaveRequesterProfile(user.personId);
   const displayName = requester?.displayName ?? user.personId;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const canWrite = canWriteLeaveRequest(user, perms);
 
   return (
     <section className="space-y-4">
@@ -42,7 +39,6 @@ export default async function LaRequestsPage({ searchParams }: Props) {
         page={page}
         totalPages={totalPages}
       />
-      <LeaveRegisterActions canWrite={canWrite} />
       <LeaveRegisterTable rows={rows} viewerPersonId={user.personId} />
     </section>
   );

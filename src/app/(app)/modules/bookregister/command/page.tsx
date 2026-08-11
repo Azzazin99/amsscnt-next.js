@@ -5,7 +5,6 @@ import { auth } from "@/auth";
 import { BookregisterListFilters } from "@/components/bookregister/bookregister-list-filters";
 import { BookregisterListPageLayout } from "@/components/bookregister/bookregister-list-page-layout";
 import { BookregisterListTableSkeleton } from "@/components/bookregister/bookregister-list-table-skeleton";
-import { RegisterReportLink } from "@/components/bookregister/reports/register-report-link";
 import { buttonVariants } from "@/components/ui/button";
 import {
   canDeleteDistrictRegisters,
@@ -62,9 +61,6 @@ export default async function DistrictCommandPage({ searchParams }: Props) {
         )}
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        {activeYear ? (
-          <RegisterReportLink kind="command" year={activeYear.year} />
-        ) : null}
         {commandEnabled && canWrite ? (
         <Link
           href="/modules/bookregister/command/new"

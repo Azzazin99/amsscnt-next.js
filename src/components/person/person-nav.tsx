@@ -1,28 +1,113 @@
 "use client";
 
+import { buildModuleSettingsNavSection } from "@/components/app-shell/module-settings-nav-section";
 import {
   ModuleNav,
   type ModuleNavSectionDef,
 } from "@/components/app-shell/module-nav";
+import type { ModuleSettingsNavMode } from "@/lib/core/permissions";
 
 type PersonNavProps = {
-  showPermissions: boolean;
+  settingsNavMode: ModuleSettingsNavMode;
 };
 
-export function PersonNav({ showPermissions }: PersonNavProps) {
-  const sections: ModuleNavSectionDef[] = [
+export function PersonNav({ settingsNavMode }: PersonNavProps) {
+  const settingsSection = buildModuleSettingsNavSection(settingsNavMode, [
     {
-      title: "ตั้งค่าระบบ",
-      visible: showPermissions,
+      label: "เมนูตั้งค่า",
+      children: [
+        {
+          href: "/modules/person/settings/sys-admin",
+          label: "เจ้าหน้าที่ระบบข้อมูลพื้นฐานครูและบุคลากร",
+        },
+        {
+          href: "/modules/person/settings/district-positions",
+          label: "กำหนดตำแหน่งครูและบุคลากรใน สพท.",
+        },
+        {
+          href: "/modules/person/settings/school-positions",
+          label: "กำหนดตำแหน่งครูและบุคลากรในสถานศึกษา",
+        },
+        {
+          href: "/modules/person/settings/import-district-text",
+          label: "นำเข้าข้อมูลครูและบุคลากรใน สพท. จาก Text File",
+        },
+        {
+          href: "/modules/person/settings/import-school-text",
+          label: "นำเข้าข้อมูลครูและบุคลากรในสถานศึกษา จาก Text File",
+        },
+        {
+          href: "/modules/person/settings/import-birthdate-text",
+          label: "นำเข้าข้อมูลวันเดือนปีเกิด จาก Text File",
+        },
+        {
+          href: "/modules/person/settings/district-signatures",
+          label: "ลายเซ็นบุคลากร สพท.",
+        },
+        {
+          href: "/admin/schools",
+          label: "ชื่อและรหัสสถานศึกษา",
+        },
+      ],
+    },
+  ]);
+
+  const sections: ModuleNavSectionDef[] = [
+    ...(settingsSection ? [settingsSection] : []),
+    {
+      title: "ครูและบุคลากรปัจจุบัน",
       links: [
-        { href: "/modules/person/permissions", label: "สิทธิ์การใช้งาน" },
+        {
+          label: "ครูและบุคลากรปัจจุบัน",
+          children: [
+            {
+              href: "/modules/person/staff?org=district",
+              label: "ครูและบุคลากร สพท.",
+            },
+            {
+              href: "/modules/person/staff?org=school",
+              label: "ครูและบุคลากร สถานศึกษา",
+            },
+            {
+              href: "/modules/person/staff?status=pending",
+              label: "ครูและบุคลากร สถานศึกษารอการรับรอง",
+            },
+            {
+              href: "/modules/person/staff?filter=multi-school",
+              label: "บุคลากรในสถานศึกษาปฏิบัติงานมากกว่า 1 แห่ง",
+            },
+            {
+              href: "/modules/person/staff?filter=acting-director",
+              label: "รักษาการในตำแหน่ง ผอ.รร.",
+            },
+            {
+              href: "/modules/person/settings/import-school-text",
+              label: "เรียกข้อมูลจากSMSS",
+            },
+          ],
+        },
       ],
     },
     {
-      title: "บุคลากร",
-      links: [{ href: "/modules/person/staff", label: "รายชื่อบุคลากร" }],
+      title: "ครูและบุคลากรพ้นสภาพ",
+      links: [
+        {
+          label: "ครูและบุคลากรพ้นสภาพ",
+          children: [
+            {
+              href: "/modules/person/staff?status=inactive&org=district",
+              label: "ครูและบุคลากรพ้นสภาพ สพท.",
+            },
+            {
+              href: "/modules/person/staff?status=inactive&org=school",
+              label: "ครูและบุคลากรพ้นสภาพ สถานศึกษา",
+            },
+          ],
+        },
+      ],
     },
   ];
 
   return <ModuleNav ariaLabel="เมนูบุคลากร" sections={sections} />;
 }
+

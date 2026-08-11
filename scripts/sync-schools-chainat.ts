@@ -47,11 +47,9 @@ async function main() {
     );
   });
 
-  const [countRow] = await db
-    .select({ total: sql<number>`count(*)::int` })
-    .from(schools);
+  const [total] = await db.select({ n: sql<number>`count(*)` }).from(schools);
 
-  console.log(`sync เสร็จ — schools ใน DB: ${countRow?.total ?? 0} แห่ง`);
+  console.log(`sync เสร็จ — schools ใน DB: ${total?.n ?? 0} แห่ง`);
   console.log("ตัวอย่าง:", rows.slice(0, 3).map((r) => `${r.schoolCode} ${r.name}`).join(" | "));
   console.log(
     "\nหมายเหตุ: people/users ที่เคยผูก school_id ถูกปลดแล้ว — login โรงเรียนต้องใช้รหัส 101809xxxx จาก Excel",

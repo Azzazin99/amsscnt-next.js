@@ -38,11 +38,11 @@ export function sortWorkgroupsForMailCompose<
       (row) =>
         row.legacyCode != null &&
         row.legacyCode !== 0 &&
-        orderIndex.has(row.legacyCode),
+        orderIndex.has(row.legacyCode as any),
     )
     .sort((a, b) => {
-      const aOrder = orderIndex.get(a.legacyCode!) ?? 999;
-      const bOrder = orderIndex.get(b.legacyCode!) ?? 999;
+      const aOrder = orderIndex.get(a.legacyCode as any) ?? 999;
+      const bOrder = orderIndex.get(b.legacyCode as any) ?? 999;
       if (aOrder !== bOrder) return aOrder - bOrder;
       return a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, "th");
     });

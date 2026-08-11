@@ -1,4 +1,4 @@
-import { asc, count, eq, ilike, or } from "drizzle-orm";
+import { asc, count, eq, like, or } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { moduleAdmins, modules, users } from "@/lib/db/schema";
 
@@ -17,9 +17,9 @@ export async function countModuleAdmins(q: string): Promise<number> {
   const where =
     q.length >= 2
       ? or(
-          ilike(users.username, `%${q}%`),
-          ilike(users.name, `%${q}%`),
-          ilike(moduleAdmins.moduleSlug, `%${q}%`),
+          like(users.username, `%${q}%`),
+          like(users.name, `%${q}%`),
+          like(moduleAdmins.moduleSlug, `%${q}%`),
         )
       : undefined;
 
@@ -39,9 +39,9 @@ export async function listModuleAdminsPage(input: {
   const where =
     input.q.length >= 2
       ? or(
-          ilike(users.username, `%${input.q}%`),
-          ilike(users.name, `%${input.q}%`),
-          ilike(moduleAdmins.moduleSlug, `%${input.q}%`),
+          like(users.username, `%${input.q}%`),
+          like(users.name, `%${input.q}%`),
+          like(moduleAdmins.moduleSlug, `%${input.q}%`),
         )
       : undefined;
 

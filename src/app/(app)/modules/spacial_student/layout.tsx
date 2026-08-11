@@ -2,9 +2,9 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AppBreadcrumb } from "@/components/app-shell/app-breadcrumb";
 import { SpacialStudentNav } from "@/components/spacial-student/spacial-student-nav";
+import { getModuleSettingsNavMode } from "@/lib/core/permissions";
 import { resolveSchoolIdByCode } from "@/lib/student-main/scope";
 import {
-  canManageSpacialStudentSettings,
   canViewSpacialStudentList,
   canWriteSpacialStudent,
   getSpacialStudentPermissions,
@@ -37,7 +37,7 @@ export default async function SpacialStudentLayout({ children }: { children: Rea
       </div>
       <SpacialStudentNav
         canWrite={canWriteSpacialStudent(session.user, perms)}
-        showAdmin={canManageSpacialStudentSettings(session.user, perms)}
+        settingsNavMode={getModuleSettingsNavMode(session.user, "spacial_student")}
       />
       {children}
     </div>

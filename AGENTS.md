@@ -13,6 +13,11 @@ This version has breaking changes — APIs, conventions, and file structure may 
 1. [`context.html`](context.html) §10 + [`docs/TESTING-MODULES.md`](docs/TESTING-MODULES.md)#{slug}
 2. [`CONTEXT.md`](CONTEXT.md) สำหรับคำศัพท์ domain
 3. เทียบ [amsscnt.com](https://amsscnt.com) / [`../Amssplus`](../Amssplus)
+4. สั่ง `/grill-with-docs` เมื่อต้องการให้อ่านเอกสารและสัมภาษณ์ประเด็นขอบเขตงานก่อนเริ่มอิมพลีเมนต์
+
+# impeccable / UI
+
+งาน `@impeccable` หรือ `/impeccable craft` — อ่าน [`PRODUCT.md`](PRODUCT.md) § **Agent scope (impeccable / UI tasks)** ก่อนแก้โค้ด (โหลดผ่าน `context.mjs` อัตโนมัติ)
 
 # ส่งมอบ
 

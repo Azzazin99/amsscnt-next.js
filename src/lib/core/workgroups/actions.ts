@@ -1,6 +1,8 @@
 "use server";
 
-import { and, eq, ilike, ne } from "drizzle-orm";
+import { insertAndGetId } from "../../db/helpers";
+
+import { and, eq, like, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { workgroups } from "@/lib/db/schema";
@@ -29,8 +31,8 @@ async function nameTaken(name: string, excludeId?: number): Promise<boolean> {
     .from(workgroups)
     .where(
       excludeId != null
-        ? and(ilike(workgroups.name, trimmed), ne(workgroups.id, excludeId))
-        : ilike(workgroups.name, trimmed),
+        ? and(like(workgroups.name, trimmed), ne(workgroups.id, excludeId))
+        : like(workgroups.name, trimmed),
     )
     .limit(1);
 
@@ -54,20 +56,12 @@ export async function createWorkgroup(formData: FormData) {
 
   let insertedId: number;
   try {
-    const [inserted] = await db
-      .insert(workgroups)
-      .values({
-        name: parsed.data.name,
-        sortOrder: parsed.data.sortOrder,
-        active: parsed.data.active,
-        legacyCode: null,
-      })
-      .returning({ id: workgroups.id });
-
-    if (!inserted) {
-      return { ok: false as const, message: "ไม่สามารถบันทึกได้" };
-    }
-    insertedId = inserted.id;
+    insertedId = await insertAndGetId(workgroups, {
+      name: parsed.data.name,
+      sortOrder: parsed.data.sortOrder,
+      active: parsed.data.active,
+      legacyCode: null,
+    });
   } catch {
     return { ok: false as const, message: "ไม่สามารถบันทึกได้" };
   }

@@ -37,7 +37,7 @@ export default async function ModulePlaceholderPage({ params }: Props) {
   }
 
   if (slug === "mail") {
-    redirect("/modules/mail");
+    redirect("/modules/mail/inbox");
   }
 
   if (slug === "book") {
@@ -118,6 +118,7 @@ export default async function ModulePlaceholderPage({ params }: Props) {
 
       <div className="mx-auto max-w-lg rounded-xl border bg-card p-8 text-center shadow-sm">
         <span className="mx-auto flex size-14 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          {/* eslint-disable-next-line react-hooks/static-components -- Icon from stable MODULE_ICONS map lookup */}
           <Icon className="size-7" aria-hidden />
         </span>
         <h1 className="mt-4 text-xl font-semibold">{mod.name}</h1>

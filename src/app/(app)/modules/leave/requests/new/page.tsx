@@ -6,7 +6,6 @@ import { getDistrictSettingsRow } from "@/lib/core/district-settings/queries";
 import { loadLeaveFormContext } from "@/lib/leave/form-context";
 import { canWriteLeaveRequest } from "@/lib/leave/permissions";
 import { requireLeaveScope } from "@/lib/leave/scope";
-import type { LeaveTypeId } from "@/lib/leave/regulation/types";
 
 type Props = {
   searchParams: Promise<{
@@ -21,16 +20,8 @@ export default async function LeaveRequestNewPage({ searchParams }: Props) {
   }
 
   const params = await searchParams;
-  const group = params.group;
-
-  let leaveTypeFilter: LeaveTypeId[] | undefined;
-  let defaultLeaveType: LeaveTypeId | undefined;
-
-  if (group === "sick") {
-    leaveTypeFilter = [1, 2, 3];
-  } else if (group === "vacation") {
-    leaveTypeFilter = [4];
-    defaultLeaveType = 4;
+  if (params.group === "sick" || params.group === "vacation") {
+    redirect("/modules/leave/requests/new");
   }
 
   const todayIso = bangkokTodayIso();
@@ -67,8 +58,7 @@ export default async function LeaveRequestNewPage({ searchParams }: Props) {
       lastLeaveByType={formContext.lastLeaveByType}
       quotaHints={formContext.quotaHints}
       personSex={formContext.personSex}
-      leaveTypeFilter={leaveTypeFilter}
-      defaultLeaveType={defaultLeaveType}
+      personId={user.personId}
     />
   );
 }

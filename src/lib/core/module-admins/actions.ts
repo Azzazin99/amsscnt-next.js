@@ -1,5 +1,7 @@
 "use server";
 
+import { insertAndGetId } from "../../db/helpers";
+
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
@@ -46,13 +48,11 @@ export async function createModuleAdmin(formData: FormData) {
   }
 
   try {
-    const [inserted] = await db
-      .insert(moduleAdmins)
-      .values({
+    const insertedId = await insertAndGetId(moduleAdmins, {
         userId: parsed.data.userId,
         moduleSlug: parsed.data.moduleSlug,
-      })
-      .returning({ id: moduleAdmins.id });
+      });
+  const inserted = { id: insertedId };
 
     if (!inserted) {
       return { ok: false as const, message: "ไม่สามารถบันทึกได้" };

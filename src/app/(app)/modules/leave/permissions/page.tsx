@@ -4,7 +4,7 @@ import { Check, Pencil, X } from "lucide-react";
 import { LeavePermissionDeleteButton } from "@/components/leave/leave-permission-delete-button";
 import { buttonVariants } from "@/components/ui/button";
 import {
-  canManageLeaveSettings,
+  canManageLeaveStaffPermissions,
 } from "@/lib/leave/permissions";
 import { listLeaveStaffPermissions } from "@/lib/leave/queries";
 import { requireLeaveScope } from "@/lib/leave/scope";
@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 export default async function LaPermissionsPage() {
   const { user, perms } = await requireLeaveScope();
-  if (!canManageLeaveSettings(user, perms)) {
+  if (!canManageLeaveStaffPermissions(user)) {
     redirect("/modules/leave/requests");
   }
 

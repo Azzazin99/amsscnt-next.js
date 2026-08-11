@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, ilike, inArray, ne } from "drizzle-orm";
+import { and, asc, count, desc, eq, like, inArray, ne } from "drizzle-orm";
 import { formatPersonName } from "@/lib/auth/format-name";
 import { db } from "@/lib/db";
 import {
@@ -162,7 +162,7 @@ export async function countNewsArticles(
     conditions.push(eq(newsArticles.sectionCode, sectionCode));
   }
   if (q.length >= 2) {
-    conditions.push(ilike(newsArticles.news, `%${q}%`));
+    conditions.push(like(newsArticles.news, `%${q}%`));
   }
 
   const [row] = await db
@@ -185,7 +185,7 @@ export async function listNewsArticlesPage(input: {
     conditions.push(eq(newsArticles.sectionCode, input.sectionCode));
   }
   if (input.q.length >= 2) {
-    conditions.push(ilike(newsArticles.news, `%${input.q}%`));
+    conditions.push(like(newsArticles.news, `%${input.q}%`));
   }
 
   const rows = await db

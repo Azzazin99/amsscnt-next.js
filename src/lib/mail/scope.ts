@@ -39,3 +39,6 @@ export async function requireMailSettingsAccess() {
   }
   return ctx;
 }
+
+export const requireMailStaffPermissionsAccess = requireMailSettingsAccess;
+

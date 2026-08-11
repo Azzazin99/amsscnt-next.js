@@ -115,3 +115,6 @@ export async function requireSpacialStudentSettingsAccess() {
   }
   return ctx;
 }
+
+export const requireSpacialStudentStaffPermissionsAccess = requireSpacialStudentSettingsAccess;
+

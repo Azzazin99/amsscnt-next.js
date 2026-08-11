@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, ilike, inArray } from "drizzle-orm";
+import { and, asc, count, desc, eq, like, inArray } from "drizzle-orm";
 import { formatPersonName } from "@/lib/auth/format-name";
 import { db } from "@/lib/db";
 import {
@@ -35,7 +35,7 @@ export async function resolveCabinetListPage(
 
 function searchCondition(q: string) {
   if (q.length < 2) return undefined;
-  return ilike(cabinetDocuments.docSubject, `%${q}%`);
+  return like(cabinetDocuments.docSubject, `%${q}%`);
 }
 
 export async function countCabinetDocuments(q: string): Promise<number> {

@@ -1,5 +1,5 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import { drizzle } from "drizzle-orm/mysql2";
+import mysql from "mysql2/promise";
 import * as schema from "./schema";
 
 const connectionString = process.env.DATABASE_URL;
@@ -9,16 +9,16 @@ if (!connectionString) {
 }
 
 const globalForDb = globalThis as unknown as {
-  queryClient?: ReturnType<typeof postgres>;
+  pool?: mysql.Pool;
 };
 
-export const queryClient =
-  globalForDb.queryClient ?? postgres(connectionString, { max: 10 });
+export const pool =
+  globalForDb.pool ?? mysql.createPool(connectionString);
 
 if (process.env.NODE_ENV !== "production") {
-  globalForDb.queryClient = queryClient;
+  globalForDb.pool = pool;
 }
 
-export const db = drizzle(queryClient, { schema });
+export const db = drizzle(pool, { schema, mode: "default" });
 
 export type Database = typeof db;

@@ -2,8 +2,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AppBreadcrumb } from "@/components/app-shell/app-breadcrumb";
 import { AffairNav } from "@/components/affair/affair-nav";
+import { getModuleSettingsNavMode } from "@/lib/core/permissions";
 import {
-  canManageAffairSettings,
   canViewAffairList,
   canWriteAffair,
   getAffairPermissions,
@@ -23,7 +23,7 @@ export default async function AffairLayout({
   }
 
   const canWrite = canWriteAffair(session.user, perms);
-  const showAdmin = canManageAffairSettings(session.user);
+  const settingsNavMode = getModuleSettingsNavMode(session.user, "affair");
 
   return (
     <div className="px-4 py-6 lg:px-8">
@@ -41,7 +41,7 @@ export default async function AffairLayout({
         </p>
       </div>
 
-      <AffairNav canWrite={canWrite} showAdmin={showAdmin} />
+      <AffairNav canWrite={canWrite} settingsNavMode={settingsNavMode} />
 
       {children}
     </div>

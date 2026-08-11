@@ -1,5 +1,7 @@
 "use server";
 
+import { insertAndGetId } from "../db/helpers";
+
 import path from "node:path";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -83,16 +85,14 @@ export async function uploadCabinetDocument(formData: FormData) {
   const storedName = buildStoredCabinetFileName(user.personId, file.name);
   const { size } = await saveCabinetFileToStorage(storedName, file);
 
-  const [inserted] = await db
-    .insert(cabinetDocuments)
-    .values({
+  const insertedId = await insertAndGetId(cabinetDocuments, {
       docSubject: parsed.data.docSubject,
       docSize: size,
       docName: storedName,
       docType: ext,
       personId: user.personId,
-    })
-    .returning({ id: cabinetDocuments.id });
+    });
+  const inserted = { id: insertedId };
 
   if (!inserted) {
     return { ok: false as const, message: "ไม่สามารถบันทึกได้" };

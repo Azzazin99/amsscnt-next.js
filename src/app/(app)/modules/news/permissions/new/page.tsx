@@ -1,13 +1,13 @@
 import { redirect } from "next/navigation";
 import { NewsPermissionForm } from "@/components/news/news-permission-form";
 import { createNewsPermission } from "@/lib/news/actions";
-import { canManageNewsSettings } from "@/lib/news/permissions";
+import { canManageNewsStaffPermissions } from "@/lib/news/permissions";
 import { listStaffForNewsPermissionPicker } from "@/lib/news/queries";
 import { requireNewsScope } from "@/lib/news/scope";
 
 export default async function NewsPermissionNewPage() {
   const { user } = await requireNewsScope();
-  if (!canManageNewsSettings(user)) redirect("/modules/news");
+  if (!canManageNewsStaffPermissions(user)) redirect("/modules/news");
 
   const staffOptions = await listStaffForNewsPermissionPicker();
 

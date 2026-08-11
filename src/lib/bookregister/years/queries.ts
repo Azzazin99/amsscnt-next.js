@@ -1,5 +1,5 @@
 import type { BookregisterScope } from "@/lib/bookregister/scope";
-import { and, asc, eq, isNull } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { registerYears } from "@/lib/db/schema";
 
@@ -26,7 +26,7 @@ export async function listDistrictYears(): Promise<RegisterYearRow[]> {
     })
     .from(registerYears)
     .where(isNull(registerYears.schoolId))
-    .orderBy(asc(registerYears.year));
+    .orderBy(desc(registerYears.year));
 
   return rows;
 }
@@ -88,7 +88,7 @@ export async function listSchoolYears(
     })
     .from(registerYears)
     .where(eq(registerYears.schoolId, schoolId))
-    .orderBy(asc(registerYears.year));
+    .orderBy(desc(registerYears.year));
 }
 
 export async function listRegisterYears(

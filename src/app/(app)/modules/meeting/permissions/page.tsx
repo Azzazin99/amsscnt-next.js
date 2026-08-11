@@ -3,14 +3,14 @@ import { redirect } from "next/navigation";
 import { Check, Pencil, X } from "lucide-react";
 import { MeetingPermissionDeleteButton } from "@/components/meeting/meeting-permission-delete-button";
 import { buttonVariants } from "@/components/ui/button";
-import { canManageMeetingSettings } from "@/lib/meeting/permissions";
+import { canManageMeetingStaffPermissions } from "@/lib/meeting/permissions";
 import { listMeetingPermissions } from "@/lib/meeting/queries";
 import { requireMeetingScope } from "@/lib/meeting/scope";
 import { cn } from "@/lib/utils";
 
 export default async function MeetingPermissionsPage() {
   const { user } = await requireMeetingScope();
-  if (!canManageMeetingSettings(user)) {
+  if (!canManageMeetingStaffPermissions(user)) {
     redirect("/modules/meeting/bookings");
   }
 

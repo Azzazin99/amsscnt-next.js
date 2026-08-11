@@ -22,6 +22,7 @@ const ADMIN_LINKS = [
   { href: "/admin/module-admins", label: "ผู้ดูแลโมดูล" },
   { href: "/admin/users", label: "ผู้ใช้งาน" },
   { href: "/admin/permissions", label: "สิทธิ์โมดูล" },
+  { href: "/admin/sql-console", label: "SQL Console" },
 ] as const;
 
 function AdminNavLink({

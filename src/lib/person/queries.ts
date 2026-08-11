@@ -1,4 +1,4 @@
-import { and, asc, count, eq, ilike, or, type SQL } from "drizzle-orm";
+import { and, asc, count, eq, like, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   people,
@@ -22,6 +22,9 @@ export type PersonListRow = {
   positionCode: number | null;
   positionLabel: string;
   status: number;
+  birthDate: string | null;
+  personOrder: number | null;
+  pictureUrl: string | null;
 };
 
 function scopeCondition(scope: PersonScope): SQL | undefined {
@@ -34,7 +37,7 @@ function scopeCondition(scope: PersonScope): SQL | undefined {
 function buildWhere(
   scope: PersonScope,
   q: string,
-  status: "all" | "active" | "inactive",
+  status: "all" | "active" | "inactive" | "pending",
   org: "all" | "district" | "school",
   schoolId: number | null,
   workgroupId: number | null,
@@ -44,16 +47,17 @@ function buildWhere(
   if (q.length >= 2) {
     conditions.push(
       or(
-        ilike(people.personId, `%${q}%`),
-        ilike(people.firstName, `%${q}%`),
-        ilike(people.lastName, `%${q}%`),
-        ilike(people.prefix, `%${q}%`),
+        like(people.personId, `%${q}%`),
+        like(people.firstName, `%${q}%`),
+        like(people.lastName, `%${q}%`),
+        like(people.prefix, `%${q}%`),
       ),
     );
   }
 
   if (status === "active") conditions.push(eq(people.status, 0));
   if (status === "inactive") conditions.push(eq(people.status, 1));
+  if (status === "pending") conditions.push(eq(people.status, 9));
 
   if (scope.kind === "district") {
     if (org === "district") conditions.push(eq(people.organizationType, "district"));
@@ -69,7 +73,7 @@ function buildWhere(
 export async function countPeople(
   scope: PersonScope,
   q: string,
-  status: "all" | "active" | "inactive",
+  status: "all" | "active" | "inactive" | "pending",
   org: "all" | "district" | "school",
   schoolId: number | null,
   workgroupId: number | null,
@@ -84,7 +88,7 @@ export async function countPeople(
 export async function listPeoplePage(input: {
   scope: PersonScope;
   q: string;
-  status: "all" | "active" | "inactive";
+  status: "all" | "active" | "inactive" | "pending";
   org: "all" | "district" | "school";
   schoolId: number | null;
   workgroupId: number | null;
@@ -104,6 +108,9 @@ export async function listPeoplePage(input: {
       workgroupName: workgroups.name,
       positionCode: people.positionCode,
       status: people.status,
+      birthDate: people.birthDate,
+      personOrder: people.personOrder,
+      pictureUrl: people.pictureUrl,
     })
     .from(people)
     .leftJoin(schools, eq(people.schoolId, schools.id))
@@ -118,7 +125,17 @@ export async function listPeoplePage(input: {
         input.workgroupId,
       ),
     )
-    .orderBy(asc(people.firstName), asc(people.lastName))
+    .orderBy(
+      ...(input.org === "district" || input.scope.kind === "district"
+        ? [
+            asc(workgroups.sortOrder),
+            asc(people.positionCode),
+            asc(people.personOrder),
+            asc(people.firstName),
+            asc(people.lastName),
+          ]
+        : [asc(people.firstName), asc(people.lastName)]),
+    )
     .limit(PERSON_PAGE_SIZE)
     .offset(offset);
 
@@ -134,8 +151,44 @@ export async function listPeoplePage(input: {
     schoolName: row.schoolName,
     workgroupName: row.workgroupName,
     positionCode: row.positionCode,
-    positionLabel: positionLabel(row.positionCode),
+    positionLabel: positionLabel(row.positionCode, row.organizationType),
     status: row.status,
+    birthDate: row.birthDate,
+    personOrder: row.personOrder,
+    pictureUrl: row.pictureUrl,
+  }));
+}
+
+export async function listAllDistrictPeople() {
+  const rows = await db
+    .select({
+      id: people.id,
+      personId: people.personId,
+      prefix: people.prefix,
+      firstName: people.firstName,
+      lastName: people.lastName,
+      positionCode: people.positionCode,
+      workgroupName: workgroups.name,
+    })
+    .from(people)
+    .leftJoin(workgroups, eq(people.workgroupId, workgroups.id))
+    .where(
+      and(
+        eq(people.organizationType, "district"),
+        eq(people.status, 0),
+      ),
+    )
+    .orderBy(asc(people.positionCode), asc(people.id));
+
+  return rows.map((row) => ({
+    id: row.id,
+    personId: row.personId,
+    prefix: row.prefix,
+    firstName: row.firstName,
+    lastName: row.lastName,
+    positionName: positionLabel(row.positionCode),
+    groupName: row.workgroupName,
+    hasSignature: false,
   }));
 }
 
@@ -184,7 +237,7 @@ export function parsePersonListParams(params: {
   const q = params.q?.trim() ?? "";
   const statusRaw = params.status?.trim();
   const status =
-    statusRaw === "inactive" || statusRaw === "active" ? statusRaw : "all";
+    statusRaw === "all" || statusRaw === "inactive" || statusRaw === "pending" ? statusRaw : "active";
   const orgRaw = params.org?.trim();
   const org =
     orgRaw === "district" || orgRaw === "school" ? orgRaw : "all";
@@ -240,7 +293,7 @@ export type PersonExportRow = PersonListRow;
 export async function listPeopleForExport(input: {
   scope: PersonScope;
   q: string;
-  status: "all" | "active" | "inactive";
+  status: "all" | "active" | "inactive" | "pending";
   org: "all" | "district" | "school";
   schoolId: number | null;
   workgroupId: number | null;
@@ -257,6 +310,9 @@ export async function listPeopleForExport(input: {
       workgroupName: workgroups.name,
       positionCode: people.positionCode,
       status: people.status,
+      birthDate: people.birthDate,
+      personOrder: people.personOrder,
+      pictureUrl: people.pictureUrl,
     })
     .from(people)
     .leftJoin(schools, eq(people.schoolId, schools.id))
@@ -285,7 +341,10 @@ export async function listPeopleForExport(input: {
     schoolName: row.schoolName,
     workgroupName: row.workgroupName,
     positionCode: row.positionCode,
-    positionLabel: positionLabel(row.positionCode),
+    positionLabel: positionLabel(row.positionCode, row.organizationType),
     status: row.status,
+    birthDate: row.birthDate,
+    personOrder: row.personOrder,
+    pictureUrl: row.pictureUrl,
   }));
 }

@@ -1,5 +1,7 @@
 "use server";
 
+import { insertAndGetId } from "../../db/helpers";
+
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
@@ -50,21 +52,13 @@ export async function createSchool(formData: FormData) {
 
   let insertedId: number;
   try {
-    const [inserted] = await db
-      .insert(schools)
-      .values({
-        schoolCode: parsed.data.schoolCode,
-        name: parsed.data.name,
-        schoolType: parsed.data.schoolType,
-        schoolGroupId: parsed.data.schoolGroupId,
-        active: parsed.data.active,
-      })
-      .returning({ id: schools.id });
-
-    if (!inserted) {
-      return { ok: false as const, message: "ไม่สามารถบันทึกได้" };
-    }
-    insertedId = inserted.id;
+    insertedId = await insertAndGetId(schools, {
+      schoolCode: parsed.data.schoolCode,
+      name: parsed.data.name,
+      schoolType: parsed.data.schoolType,
+      schoolGroupId: parsed.data.schoolGroupId,
+      active: parsed.data.active,
+    });
   } catch {
     return { ok: false as const, message: "ไม่สามารถบันทึกได้" };
   }

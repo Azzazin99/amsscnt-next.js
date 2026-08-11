@@ -5,8 +5,6 @@ import {
 } from "@/components/bookregister/bookregister-list-filters";
 import { BookregisterListPageLayout } from "@/components/bookregister/bookregister-list-page-layout";
 import { BookregisterListTableSkeleton } from "@/components/bookregister/bookregister-list-table-skeleton";
-import { RegisterReportLink } from "@/components/bookregister/reports/register-report-link";
-import { RegisterCsvExportLink } from "@/components/bookregister/export/register-csv-export-link";
 import { buttonVariants } from "@/components/ui/button";
 import {
   canDeleteRegisters,
@@ -72,16 +70,6 @@ export default async function DistrictReceivePage({ searchParams }: Props) {
         )}
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        {activeYear ? (
-          <>
-            <RegisterReportLink kind="receive" year={activeYear.year} />
-            <RegisterCsvExportLink
-              kind="receive"
-              year={activeYear.year}
-              scope={scope}
-            />
-          </>
-        ) : null}
         {receiveEnabled && canWrite ? (
           <Link
             href="/modules/bookregister/receive/new"

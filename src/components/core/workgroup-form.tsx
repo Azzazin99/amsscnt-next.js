@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type WorkgroupFormProps = {
@@ -175,15 +175,13 @@ export function WorkgroupForm({
         </p>
       ) : null}
 
-      <div className="flex flex-wrap gap-2 pt-2">
-        <Button type="submit" disabled={loading || deleting} className="min-h-10">
+      <div className="flex flex-wrap gap-3 pt-2">
+        <Button type="submit" disabled={loading || deleting} className="min-h-11 min-w-28 justify-center">
           {loading ? "กำลังบันทึก..." : "บันทึก"}
         </Button>
         <Link
           href={cancelHref}
-          className={cn(
-            "inline-flex min-h-10 items-center justify-center rounded-lg border border-border px-3 text-sm hover:bg-muted",
-          )}
+          className={buttonVariants({ variant: "outline", className: "min-h-11 min-w-28 justify-center" })}
         >
           ย้อนกลับ
         </Link>
@@ -193,7 +191,7 @@ export function WorkgroupForm({
             variant="destructive"
             disabled={loading || deleting || hasRefs}
             onClick={handleDelete}
-            className="min-h-10"
+            className="min-h-11 min-w-28 justify-center"
           >
             {deleting ? "กำลังลบ..." : "ลบกลุ่มงาน"}
           </Button>

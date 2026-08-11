@@ -3,14 +3,14 @@ import { redirect } from "next/navigation";
 import { Check, Pencil, X } from "lucide-react";
 import { PermissionModulePermissionDeleteButton } from "@/components/permission/permission-module-permission-delete-button";
 import { buttonVariants } from "@/components/ui/button";
-import { canManagePermissionSettings } from "@/lib/permission/permissions";
+import { canManagePermissionStaffPermissions } from "@/lib/permission/permissions";
 import { listPermissionModulePermissions } from "@/lib/permission/queries";
 import { requirePermissionScope } from "@/lib/permission/scope";
 import { cn } from "@/lib/utils";
 
 export default async function PermissionModulePermissionsPage() {
   const { user, perms } = await requirePermissionScope();
-  if (!canManagePermissionSettings(user, perms)) {
+  if (!canManagePermissionStaffPermissions(user)) {
     redirect("/modules/permission/requests");
   }
 

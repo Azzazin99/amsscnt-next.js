@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type ModuleFormProps = {
@@ -70,9 +70,9 @@ export function ModuleForm({
         เปิดใช้งาน (แสดงบน /home)
       </label>
       {error ? <p className="text-sm text-destructive" role="alert">{error}</p> : null}
-      <div className="flex flex-wrap gap-2 pt-2">
-        <Button type="submit" disabled={loading}>{loading ? "กำลังบันทึก..." : "บันทึก"}</Button>
-        <Link href={cancelHref} className="inline-flex min-h-10 items-center rounded-lg border px-3 text-sm hover:bg-muted">ย้อนกลับ</Link>
+      <div className="flex flex-wrap gap-3 pt-2">
+        <Button type="submit" disabled={loading} className="min-h-11 min-w-28 justify-center">{loading ? "กำลังบันทึก..." : "บันทึก"}</Button>
+        <Link href={cancelHref} className={buttonVariants({ variant: "outline", className: "min-h-11 min-w-28 justify-center" })}>ย้อนกลับ</Link>
       </div>
     </form>
   );

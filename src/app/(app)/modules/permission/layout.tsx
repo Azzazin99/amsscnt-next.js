@@ -2,8 +2,9 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AppBreadcrumb } from "@/components/app-shell/app-breadcrumb";
 import { PermissionNav } from "@/components/permission/permission-nav";
+import { getModuleSettingsNavMode } from "@/lib/core/permissions";
+import { resolvePermissionApprovalNavFlags } from "@/lib/permission/approval-nav";
 import {
-  canManagePermissionSettings,
   canViewPermissionList,
   canWritePermissionRequest,
   getPermissionModuleFlags,
@@ -25,7 +26,8 @@ export default async function PermissionLayout({
 
   const scope = await resolvePermissionScope(session.user, perms);
   const canWrite = canWritePermissionRequest(session.user, perms);
-  const showAdmin = canManagePermissionSettings(session.user, perms);
+  const settingsNavMode = getModuleSettingsNavMode(session.user, "permission");
+  const approvalNav = await resolvePermissionApprovalNavFlags(session.user);
 
   return (
     <div className="px-4 py-6 lg:px-8">
@@ -39,12 +41,16 @@ export default async function PermissionLayout({
       <div className="mb-4">
         <h1 className="text-xl font-semibold">ขออนุญาตไปราชการ</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          โมดูล permission — สพป.ชัยนาท
-          {scope ? ` · ${scopeLabel(scope)}` : ""}
+          สพป.ชัยนาท{scope ? ` · ${scopeLabel(scope)}` : ""}
         </p>
       </div>
 
-      <PermissionNav canWrite={canWrite} showAdmin={showAdmin} />
+      <PermissionNav
+        canWrite={canWrite}
+        settingsNavMode={settingsNavMode}
+        showBasicInbox={approvalNav.showBasic}
+        showGrantInbox={approvalNav.showGrant}
+      />
 
       {children}
     </div>

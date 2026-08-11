@@ -2,8 +2,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AppBreadcrumb } from "@/components/app-shell/app-breadcrumb";
 import { CarNav } from "@/components/car/car-nav";
+import { getModuleSettingsNavMode } from "@/lib/core/permissions";
 import {
-  canManageCarSettings,
   canViewCarList,
   canWriteCarRequest,
   getCarPermissions,
@@ -25,7 +25,7 @@ export default async function CarLayout({
 
   const scope = await resolveCarScope(session.user, perms);
   const canWrite = canWriteCarRequest(session.user, perms);
-  const showAdmin = canManageCarSettings(session.user, perms);
+  const settingsNavMode = getModuleSettingsNavMode(session.user, "car");
 
   return (
     <div className="px-4 py-6 lg:px-8">
@@ -44,7 +44,7 @@ export default async function CarLayout({
         </p>
       </div>
 
-      <CarNav canWrite={canWrite} showAdmin={showAdmin} />
+      <CarNav canWrite={canWrite} settingsNavMode={settingsNavMode} />
 
       {children}
     </div>

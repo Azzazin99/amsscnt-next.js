@@ -117,3 +117,6 @@ export async function requireStudentSettingsAccess() {
   }
   return ctx;
 }
+
+export const requireStudentStaffPermissionsAccess = requireStudentSettingsAccess;
+

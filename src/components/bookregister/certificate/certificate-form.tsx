@@ -4,13 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Paperclip } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { ThaiDatePicker } from "@/components/shared/thai-date-picker";
 import { UrgencyLevelSelect, SecretLevelSelect } from "@/components/bookregister/regulation-selects";
+import { STANDARD_ATTACHMENT_ACCEPT, STANDARD_ATTACHMENT_TYPES_LABEL } from "@/lib/form/attachment-allowed-types";
 import { cn } from "@/lib/utils";
 
-const ATTACHMENT_ACCEPT =
-  ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.zip,.rar";
+const ATTACHMENT_ACCEPT = STANDARD_ATTACHMENT_ACCEPT;
 
 export type CertificateFormDefaults = {
   signdate?: string;
@@ -250,7 +250,7 @@ export function CertificateForm({
         )}
 
         <p className="text-xs text-muted-foreground">
-          รองรับ PDF, Word, Excel, PowerPoint, รูปภาพ, ZIP/RAR
+          รองรับ {STANDARD_ATTACHMENT_TYPES_LABEL}
         </p>
       </div>
 
@@ -261,14 +261,12 @@ export function CertificateForm({
       ) : null}
 
       <div className="flex flex-wrap gap-3 pt-2">
-        <Button type="submit" disabled={loading}>
+        <Button type="submit" disabled={loading} className="min-h-11 min-w-28 justify-center">
           {loading ? "กำลังบันทึก…" : "บันทึก"}
         </Button>
         <Link
           href={cancelHref}
-          className={cn(
-            "inline-flex h-10 items-center justify-center rounded-lg border px-4 text-sm font-medium",
-          )}
+          className={buttonVariants({ variant: "outline", className: "min-h-11 min-w-28 justify-center" })}
         >
           ยกเลิก
         </Link>

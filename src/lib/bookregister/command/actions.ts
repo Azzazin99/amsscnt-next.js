@@ -1,7 +1,10 @@
 "use server";
 
+import { insertAndGetId } from "../../db/helpers";
+
 import { and, eq, isNull } from "drizzle-orm";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag as nextRevalidateTag } from "next/cache";
+const revalidateTag = nextRevalidateTag as any;
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
@@ -151,9 +154,7 @@ export async function createDistrictCommand(formData: FormData) {
     };
   }
 
-  const [inserted] = await db
-    .insert(registerCommands)
-    .values({
+  const insertedId = await insertAndGetId(registerCommands, {
       schoolId: null,
       year: activeYear.year,
       registerNumber,
@@ -165,8 +166,8 @@ export async function createDistrictCommand(formData: FormData) {
       refId,
       officerId: Number(user.id),
       fileName,
-    })
-    .returning({ id: registerCommands.id });
+    });
+  const inserted = { id: insertedId };
 
   revalidatePath(COMMAND_PATH);
   revalidateTag(BOOKREGISTER_REPORTS_CACHE_TAG);

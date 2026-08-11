@@ -1,4 +1,4 @@
-import { and, asc, count, eq, ilike } from "drizzle-orm";
+import { and, asc, count, eq, like } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   people,
@@ -75,7 +75,7 @@ export async function countRegisterRefsForWorkgroup(
 function buildWhere(q: string, status: "all" | "active" | "inactive") {
   const conditions = [];
   if (q.length >= 2) {
-    conditions.push(ilike(workgroups.name, `%${q}%`));
+    conditions.push(like(workgroups.name, `%${q}%`));
   }
   if (status === "active") {
     conditions.push(eq(workgroups.active, true));

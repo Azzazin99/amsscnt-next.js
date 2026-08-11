@@ -1,4 +1,4 @@
-import { asc, count, eq, ilike } from "drizzle-orm";
+import { asc, count, eq, like } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { mailGroupMembers, mailGroups } from "@/lib/db/schema";
 
@@ -34,7 +34,7 @@ export async function listMailGroupMemberIds(groupId: number): Promise<string[]>
 }
 
 function buildWhere(q: string) {
-  if (q.length >= 2) return ilike(mailGroups.name, `%${q}%`);
+  if (q.length >= 2) return like(mailGroups.name, `%${q}%`);
   return undefined;
 }
 

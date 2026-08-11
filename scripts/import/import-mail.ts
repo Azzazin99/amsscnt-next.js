@@ -34,14 +34,15 @@ export async function importMail(maps: ImportMaps) {
     >`SELECT * FROM mail_group ORDER BY grp_id`;
     for (const row of groupRows) {
       const legacyId = Number(row.grp_id);
-      const [inserted] = await db
+      const [res_inserted] = await db
         .insert(mailGroups)
         .values({
           legacyId,
           name: String(row.grp_name ?? ""),
           sortOrder: legacyId,
         })
-        .returning({ id: mailGroups.id });
+        ;
+      const inserted = { id: res_inserted.insertId };
       groupMap.set(legacyId, inserted.id);
     }
   }

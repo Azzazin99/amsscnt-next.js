@@ -1,24 +1,24 @@
 "use client";
 
+import { buildModuleSettingsNavSection } from "@/components/app-shell/module-settings-nav-section";
 import {
   ModuleNav,
   type ModuleNavSectionDef,
 } from "@/components/app-shell/module-nav";
+import type { ModuleSettingsNavMode } from "@/lib/core/permissions";
 
 type AffairNavProps = {
   canWrite: boolean;
-  showAdmin: boolean;
+  settingsNavMode: ModuleSettingsNavMode;
 };
 
-export function AffairNav({ canWrite, showAdmin }: AffairNavProps) {
+export function AffairNav({ canWrite, settingsNavMode }: AffairNavProps) {
+  const settingsSection = buildModuleSettingsNavSection(settingsNavMode, [
+    { href: "/modules/affair/permissions", label: "สิทธิ์การใช้งาน" },
+  ]);
+
   const sections: ModuleNavSectionDef[] = [
-    {
-      title: "ตั้งค่าระบบ",
-      visible: showAdmin,
-      links: [
-        { href: "/modules/affair/permissions", label: "สิทธิ์การใช้งาน" },
-      ],
-    },
+    ...(settingsSection ? [settingsSection] : []),
     {
       title: "ภารกิจผู้บริหาร",
       links: [

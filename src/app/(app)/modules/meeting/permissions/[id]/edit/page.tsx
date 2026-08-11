@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { MeetingPermissionForm } from "@/components/meeting/meeting-permission-form";
 import { updateMeetingPermission } from "@/lib/meeting/actions";
-import { canManageMeetingSettings } from "@/lib/meeting/permissions";
+import { canManageMeetingStaffPermissions } from "@/lib/meeting/permissions";
 import {
   getMeetingModulePermission,
   listDistrictStaffForMeetingPicker,
@@ -12,7 +12,7 @@ type Props = { params: Promise<{ id: string }> };
 
 export default async function MeetingPermissionEditPage({ params }: Props) {
   const { user } = await requireMeetingScope();
-  if (!canManageMeetingSettings(user)) {
+  if (!canManageMeetingStaffPermissions(user)) {
     redirect("/modules/meeting/bookings");
   }
 

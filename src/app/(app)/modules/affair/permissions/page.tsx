@@ -3,14 +3,14 @@ import { redirect } from "next/navigation";
 import { Check, Pencil, X } from "lucide-react";
 import { AffairPermissionDeleteButton } from "@/components/affair/affair-permission-delete-button";
 import { buttonVariants } from "@/components/ui/button";
-import { canManageAffairSettings } from "@/lib/affair/permissions";
+import { canManageAffairStaffPermissions } from "@/lib/affair/permissions";
 import { listAffairPermissions } from "@/lib/affair/queries";
 import { requireAffairScope } from "@/lib/affair/scope";
 import { cn } from "@/lib/utils";
 
 export default async function AffairPermissionsPage() {
   const { user } = await requireAffairScope();
-  if (!canManageAffairSettings(user)) redirect("/modules/affair");
+  if (!canManageAffairStaffPermissions(user)) redirect("/modules/affair");
 
   const rows = await listAffairPermissions();
 

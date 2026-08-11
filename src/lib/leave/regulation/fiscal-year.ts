@@ -28,8 +28,8 @@ export function budgetYearMatchesDateColumn(
   return sql`(
     CASE
       WHEN EXTRACT(MONTH FROM ${column}) >= 10
-      THEN EXTRACT(YEAR FROM ${column})::int + 544
-      ELSE EXTRACT(YEAR FROM ${column})::int + 543
+      THEN EXTRACT(YEAR FROM ${column}) + 544
+      ELSE EXTRACT(YEAR FROM ${column}) + 543
     END
   ) = ${budgetYear}`;
 }

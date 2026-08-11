@@ -6,6 +6,7 @@ import { canWritePlan } from "@/lib/plan/permissions";
 import {
   getActivePlanYear,
   listPersonOptions,
+  listStrategyOptions,
   listWorkgroupOptions,
   suggestNextProjectCode,
 } from "@/lib/plan/queries";
@@ -18,9 +19,10 @@ export default async function PlanProjectNewPage() {
   const activeYear = await getActivePlanYear();
   if (!activeYear) redirect("/modules/plan/years");
 
-  const [workgroups, people, suggestedCodeProj] = await Promise.all([
+  const [workgroups, people, strategies, suggestedCodeProj] = await Promise.all([
     listWorkgroupOptions(),
     listPersonOptions(),
+    listStrategyOptions(activeYear.budgetYear),
     suggestNextProjectCode(activeYear.budgetYear),
   ]);
 
@@ -34,6 +36,7 @@ export default async function PlanProjectNewPage() {
         budgetYear={activeYear.budgetYear}
         workgroups={workgroups}
         people={people}
+        strategies={strategies}
         suggestedCodeProj={suggestedCodeProj}
         cancelHref="/modules/plan/projects"
       />

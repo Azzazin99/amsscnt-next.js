@@ -72,9 +72,13 @@ export function BookregisterListFilters({
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stateRef = useRef<FilterState>({ q, workgroup });
-  stateRef.current = { q, workgroup };
 
   useEffect(() => {
+    stateRef.current = { q, workgroup };
+  }, [q, workgroup]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sync local inputs when URL/props change
     setQ(qProp);
     setWorkgroup(workgroupIdProp != null ? String(workgroupIdProp) : "");
   }, [qProp, workgroupIdProp]);

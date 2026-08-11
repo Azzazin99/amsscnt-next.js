@@ -39,6 +39,12 @@ const personBaseFields = {
     .trim()
     .optional()
     .transform((v) => (v && v.length > 0 ? v : null)),
+  birthDate: z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => (v && v.length > 0 && v !== "0000-00-00" ? v : null)),
+  personOrder: z.coerce.number().int().optional().default(0),
 };
 
 function orgRefine(data: {

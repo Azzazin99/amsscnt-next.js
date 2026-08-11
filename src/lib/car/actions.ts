@@ -1,5 +1,7 @@
 "use server";
 
+import { insertAndGetId } from "../db/helpers";
+
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -87,9 +89,7 @@ export async function createCarRequest(formData: FormData) {
   const { data } = parsed;
   const dayTotal = computeDayTotal(data.carStart, data.carFinish);
 
-  const [inserted] = await db
-    .insert(carRequests)
-    .values({
+  const insertedId = await insertAndGetId(carRequests, {
       personId: user.personId,
       recDate: todayDateString(),
       carCode: data.carCode,
@@ -107,8 +107,8 @@ export async function createCarRequest(formData: FormData) {
       activity: data.activity,
       money: data.money,
       driverPersonId: data.driverPersonId,
-    })
-    .returning({ id: carRequests.id });
+    });
+  const inserted = { id: insertedId };
 
   revalidatePath(REQUESTS_PATH);
   redirect(`${REQUESTS_PATH}/${inserted.id}`);

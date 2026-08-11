@@ -2,10 +2,13 @@ import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { existsSync } from "node:fs";
 import { sql } from "drizzle-orm";
-import { db, queryClient } from "../src/lib/db";
+import postgres from "postgres";
+import { db } from "../src/lib/db";
+const queryClient = postgres("postgres://amss:amss@localhost:5432/amss");
 import { formatPersonName } from "../src/lib/auth/format-name";
 import { CHAINAT_WORKGROUPS } from "./data/workgroups-chainat";
 import { importBook } from "./import/import-book";
+import { importBookobec } from "./import/import-bookobec";
 import { importLeave } from "./import/import-leave";
 import { importMail } from "./import/import-mail";
 import {
@@ -99,7 +102,7 @@ async function assertLegacyLoaded(skip: boolean) {
 
 async function truncateAppTables(scopes: Set<Scope>) {
   try {
-    await db.execute(sql`SET session_replication_role = 'replica'`);
+    await db.execute(sql`SET FOREIGN_KEY_CHECKS = 0`);
   } catch {
     // Non-superuser local dev — TRUNCATE CASCADE is enough.
   }
@@ -149,6 +152,7 @@ async function truncateAppTables(scopes: Set<Scope>) {
   }
   if (scopes.has("core")) {
     tables.push(
+      "bookobec_permissions",
       "module_admins",
       "modules",
       "menu_groups",
@@ -162,10 +166,10 @@ async function truncateAppTables(scopes: Set<Scope>) {
     );
   }
   for (const table of tables) {
-    await db.execute(sql.raw(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`));
+    await db.execute(sql.raw(`TRUNCATE TABLE \`${table}\``));
   }
   try {
-    await db.execute(sql`SET session_replication_role = 'origin'`);
+    await db.execute(sql`SET FOREIGN_KEY_CHECKS = 1`);
   } catch {
     /* ignore */
   }
@@ -208,7 +212,7 @@ async function importCore(legacyMaster: boolean) {
   if (useChainatWorkgroups) {
     console.log("workgroups: ใช้ seed สพป.ชัยนาท");
     for (const row of CHAINAT_WORKGROUPS) {
-      const [inserted] = await db
+      const [res_inserted] = await db
         .insert(workgroups)
         .values({
           legacyCode: row.legacyCode,
@@ -216,7 +220,8 @@ async function importCore(legacyMaster: boolean) {
           sortOrder: row.sortOrder,
           active: true,
         })
-        .returning({ id: workgroups.id });
+        ;
+      const inserted = { id: res_inserted.insertId };
       workgroupMap.set(row.legacyCode, inserted.id);
     }
   } else {
@@ -226,7 +231,7 @@ async function importCore(legacyMaster: boolean) {
     >`SELECT * FROM system_workgroup ORDER BY workgroup`;
     for (const row of wgRows) {
       const legacyCode = Number(row.workgroup);
-      const [inserted] = await db
+      const [res_inserted] = await db
         .insert(workgroups)
         .values({
           legacyCode,
@@ -234,7 +239,8 @@ async function importCore(legacyMaster: boolean) {
           sortOrder: Number(row.workgroup_order ?? 0),
           active: true,
         })
-        .returning({ id: workgroups.id });
+        ;
+      const inserted = { id: res_inserted.insertId };
       workgroupMap.set(legacyCode, inserted.id);
     }
   }
@@ -248,14 +254,15 @@ async function importCore(legacyMaster: boolean) {
     console.log(`school_groups: ใช้ Excel ชัยนาท → ${masterXlsx}`);
     const { groups, assignments } = parseChainatMasterXlsx(masterXlsx);
     for (const group of groups) {
-      const [inserted] = await db
+      const [res_inserted] = await db
         .insert(schoolGroups)
         .values({
           name: group.name,
           sortOrder: group.sortOrder,
           legacyId: null,
         })
-        .returning({ id: schoolGroups.id });
+        ;
+      const inserted = { id: res_inserted.insertId };
       groupNameToId.set(group.name, inserted.id);
     }
     for (const row of assignments) {
@@ -268,14 +275,15 @@ async function importCore(legacyMaster: boolean) {
     >`SELECT * FROM system_school_group ORDER BY id`;
     for (const row of sgRows) {
       const legacyId = Number(row.id);
-      const [inserted] = await db
+      const [res_inserted] = await db
         .insert(schoolGroups)
         .values({
           legacyId,
           name: cleanText(row.name),
           sortOrder: Number(row.code ?? row.id ?? 0),
         })
-        .returning({ id: schoolGroups.id });
+        ;
+      const inserted = { id: res_inserted.insertId };
       schoolGroupMap.set(legacyId, inserted.id);
     }
   }
@@ -289,7 +297,7 @@ async function importCore(legacyMaster: boolean) {
       const schoolGroupId = groupName
         ? (groupNameToId.get(groupName) ?? null)
         : null;
-      const [inserted] = await db
+      const [res_inserted] = await db
         .insert(schools)
         .values({
           schoolCode: row.schoolCode,
@@ -298,7 +306,8 @@ async function importCore(legacyMaster: boolean) {
           schoolGroupId,
           active: true,
         })
-        .returning({ id: schools.id });
+        ;
+      const inserted = { id: res_inserted.insertId };
       schoolMap.set(row.schoolCode, inserted.id);
     }
   } else {
@@ -309,7 +318,7 @@ async function importCore(legacyMaster: boolean) {
     for (const row of schRows) {
       const code = String(row.school_code);
       const groupLegacy = Number(row.school_group ?? 0);
-      const [inserted] = await db
+      const [res_inserted] = await db
         .insert(schools)
         .values({
           schoolCode: code,
@@ -318,7 +327,8 @@ async function importCore(legacyMaster: boolean) {
           schoolGroupId: schoolGroupMap.get(groupLegacy) ?? null,
           active: true,
         })
-        .returning({ id: schools.id });
+        ;
+      const inserted = { id: res_inserted.insertId };
       schoolMap.set(code, inserted.id);
     }
   }
@@ -399,7 +409,7 @@ async function importCore(legacyMaster: boolean) {
           await db
             .insert(personSchoolAssignments)
             .values({ personId, schoolId: sid })
-            .onConflictDoNothing();
+            .onDuplicateKeyUpdate({ set: { personId } });
         }
       }
     }
@@ -411,14 +421,15 @@ async function importCore(legacyMaster: boolean) {
   const menuGroupMap = new Map<number, number>();
   for (const row of mgRows) {
     const legacyId = Number(row.id);
-    const [inserted] = await db
+    const [res_inserted] = await db
       .insert(menuGroups)
       .values({
         legacyId: Number(row.menugroup ?? row.id),
         name: cleanText(row.menugroup_desc),
         sortOrder: Number(row.menugroup_order ?? 0),
       })
-      .returning({ id: menuGroups.id });
+      ;
+      const inserted = { id: res_inserted.insertId };
     menuGroupMap.set(Number(row.menugroup ?? legacyId), inserted.id);
   }
 
@@ -451,7 +462,7 @@ async function importCore(legacyMaster: boolean) {
     const personId = String(row.person_id);
     const username = String(row.username);
     const isSchool = Number(row.school_user ?? 0) === 1;
-    const [inserted] = await db
+    const [res_inserted] = await db
       .insert(users)
       .values({
         username,
@@ -461,11 +472,12 @@ async function importCore(legacyMaster: boolean) {
         name: personNames.get(personId) ?? username,
         organizationType: isSchool ? "school" : "district",
         schoolId: null,
-        isSuperAdmin: username === "admin" || Number(row.smss_admin ?? 0) === 1,
+        isSuperAdmin: Number(row.smss_admin ?? 0) === 1,
         isAdmin: Number(row.smss_admin ?? 0) === 1,
         status: Number(row.status ?? 1),
       })
-      .returning({ id: users.id });
+      ;
+      const inserted = { id: res_inserted.insertId };
     userMap.set(personId, inserted.id);
   }
 
@@ -607,7 +619,7 @@ async function importBookregister(
       .from(registerReceives);
     const validRefIds = new Set(receiveRefRows.map((r) => r.refId));
 
-    const rows = await queryClient.unsafe(`SELECT * FROM "${table}"`);
+    const rows = ((await db.execute(sql.raw(`SELECT * FROM \`${table}\``)))[0] as Record<string, unknown>[]);
     let batch: (typeof registerReceiveFiles.$inferInsert)[] = [];
     for (const row of rows) {
       const refId = row.ref_id ? String(row.ref_id) : "";
@@ -637,7 +649,7 @@ async function importBookregister(
       ? await queryClient<
           Record<string, unknown>[]
         >`SELECT * FROM bookregister_send_sch WHERE school_code = ${filterCode}`
-      : await queryClient.unsafe(`SELECT * FROM "bookregister_send"`);
+      : ((await db.execute(sql.raw(`SELECT * FROM "bookregister_send"`)))[0] as Record<string, unknown>[]);
     let batch: (typeof registerSends.$inferInsert)[] = [];
     for (const row of rows) {
       batch.push({
@@ -689,7 +701,7 @@ async function importBookregister(
       .from(registerSends);
     const validRefIds = new Set(sendRefRows.map((r) => r.refId));
 
-    const rows = await queryClient.unsafe(`SELECT * FROM "${table}"`);
+    const rows = ((await db.execute(sql.raw(`SELECT * FROM \`${table}\``)))[0] as Record<string, unknown>[]);
     let batch: (typeof registerSendFiles.$inferInsert)[] = [];
     for (const row of rows) {
       const refId = row.ref_id ? String(row.ref_id) : "";
@@ -746,8 +758,8 @@ async function importBookregister(
       registerNumber: Number(row.register_number),
       bookNo: row.book_no ? String(row.book_no) : null,
       signdate: row.signdate ? String(row.signdate) : null,
-      subject: row.subject ? String(row.subject) : null,
-      comment: row.comment ? String(row.comment) : null,
+      subject: row.subject ? cleanText(row.subject) : null,
+      comment: row.comment ? cleanText(row.comment) : null,
       registerDate: row.register_date ? String(row.register_date) : null,
       refId: uniqueRefId(
         String(row.ref_id ?? row.id),
@@ -775,6 +787,8 @@ async function main() {
   if (scopes.has("core")) {
     console.log("Importing core...");
     maps = await importCore(legacyMaster);
+    console.log("Importing bookobec permissions...");
+    await importBookobec(maps);
     console.log("Core import done.");
   }
   if (scopes.has("bookregister")) {
@@ -822,7 +836,7 @@ async function main() {
   }
 
   console.log("Import complete.");
-  await queryClient.end();
+  // queryClient.end() not needed for mysql pool
   process.exit(0);
 }
 

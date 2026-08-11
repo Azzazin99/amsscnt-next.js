@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { CarPermissionForm } from "@/components/car/car-permission-form";
 import { updateCarPermission } from "@/lib/car/actions";
-import { canManageCarSettings } from "@/lib/car/permissions";
+import { canManageCarStaffPermissions } from "@/lib/car/permissions";
 import {
   getCarModulePermission,
   listDistrictStaffForCarPicker,
@@ -14,7 +14,7 @@ type Props = {
 
 export default async function CarPermissionEditPage({ params }: Props) {
   const { user, perms } = await requireCarScope();
-  if (!canManageCarSettings(user, perms)) {
+  if (!canManageCarStaffPermissions(user)) {
     redirect("/modules/car/requests");
   }
 

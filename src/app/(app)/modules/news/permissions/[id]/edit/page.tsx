@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { NewsPermissionForm } from "@/components/news/news-permission-form";
 import { updateNewsPermission } from "@/lib/news/actions";
-import { canManageNewsSettings } from "@/lib/news/permissions";
+import { canManageNewsStaffPermissions } from "@/lib/news/permissions";
 import {
   getNewsModulePermission,
   listStaffForNewsPermissionPicker,
@@ -14,7 +14,7 @@ type Props = {
 
 export default async function NewsPermissionEditPage({ params }: Props) {
   const { user } = await requireNewsScope();
-  if (!canManageNewsSettings(user)) redirect("/modules/news");
+  if (!canManageNewsStaffPermissions(user)) redirect("/modules/news");
 
   const { id: idParam } = await params;
   const id = Number(idParam);

@@ -19,7 +19,7 @@ export default function Home() {
             ระบบ AMSS/SMSS สำหรับ สพป.ชัยนาท
           </h1>
           <p className="mt-3 max-w-2xl text-muted-foreground">
-            Next.js + PostgreSQL — P010 Login · P011 App shell พร้อมแล้ว
+            Next.js + MySQL — P010 Login · P011 App shell พร้อมแล้ว
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href="/login" className={cn(buttonVariants())}>

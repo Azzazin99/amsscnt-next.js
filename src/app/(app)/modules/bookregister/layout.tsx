@@ -2,9 +2,10 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AppBreadcrumb } from "@/components/app-shell/app-breadcrumb";
 import { BookregisterNav } from "@/components/bookregister/bookregister-nav";
+import { getModuleSettingsNavMode } from "@/lib/core/permissions";
 import {
-  canManageDistrictYears,
   canViewRegisters,
+  canViewSchoolBookregisterSettings,
   getBookregisterPermissions,
 } from "@/lib/bookregister/permissions";
 import {
@@ -21,10 +22,14 @@ export default async function BookregisterLayout({
   if (!session?.user) redirect("/login");
 
   const perms = await getBookregisterPermissions(Number(session.user.id));
-  const showDistrictSettings = canManageDistrictYears(session.user, perms);
+  const settingsNavMode = getModuleSettingsNavMode(session.user, "bookregister");
   const showRegisters = canViewRegisters(session.user, perms);
   const scope = await resolveBookregisterScope(session.user, perms);
   const scopeKind = scope?.kind;
+  const canViewSchoolSettings = canViewSchoolBookregisterSettings(
+    session.user,
+    perms,
+  );
 
   return (
     <div className="px-4 py-6 lg:px-8">
@@ -44,8 +49,9 @@ export default async function BookregisterLayout({
       </div>
 
       <BookregisterNav
-        showDistrictSettings={showDistrictSettings}
+        settingsNavMode={settingsNavMode}
         scopeKind={showRegisters ? scopeKind : undefined}
+        canViewSchoolSettings={canViewSchoolSettings}
       />
 
       {children}

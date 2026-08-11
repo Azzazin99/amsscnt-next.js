@@ -6,7 +6,7 @@ import { PermissionDeleteButton } from "@/components/bookregister/permission-del
 import { formatPersonName } from "@/lib/auth/format-name";
 import { buttonVariants } from "@/components/ui/button";
 import {
-  canManageDistrictYears,
+  canManageBookregisterStaffPermissions,
   getBookregisterPermissions,
 } from "@/lib/bookregister/permissions";
 import { listDistrictRegisterPermissions } from "@/lib/bookregister/permissions/queries";
@@ -17,7 +17,7 @@ export default async function DistrictPermissionsPage() {
   if (!session?.user) redirect("/login");
 
   const perms = await getBookregisterPermissions(Number(session.user.id));
-  if (!canManageDistrictYears(session.user, perms)) {
+  if (!canManageBookregisterStaffPermissions(session.user)) {
     redirect("/modules/bookregister");
   }
 

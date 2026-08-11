@@ -37,7 +37,7 @@ export default async function PersonStaffEditPage({ params }: Props) {
   return (
     <PersonForm
       action={updatePerson.bind(null, id)}
-      title="แก้ไขบุคลากร"
+      title="แก้ไขข้อมูลครูและบุคลากร"
       cancelHref="/modules/person/staff"
       mode="edit"
       schools={schools}
@@ -56,6 +56,10 @@ export default async function PersonStaffEditPage({ params }: Props) {
         multiSchool: person.multiSchool,
         extraSchoolIds,
         serviceStartDate: person.serviceStartDate,
+        sex: person.sex,
+        birthDate: person.birthDate,
+        personOrder: person.personOrder,
+        pictureUrl: person.pictureUrl,
       }}
     />
   );

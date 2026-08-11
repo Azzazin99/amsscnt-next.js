@@ -2,12 +2,12 @@ import { redirect } from "next/navigation";
 import { BookGroupForm } from "@/components/book/book-group-form";
 import { createBookGroup } from "@/lib/book/groups/actions";
 import { listSchoolsForBookGroupForm } from "@/lib/book/groups/queries";
-import { canManageBookGroups } from "@/lib/book/permissions";
+import { canManageBookSettings } from "@/lib/book/permissions";
 import { requireBookScope } from "@/lib/book/scope";
 
 export default async function NewBookGroupPage() {
   const { user, perms } = await requireBookScope();
-  if (!canManageBookGroups(user, perms)) redirect("/modules/book/inbox");
+  if (!canManageBookSettings(user)) redirect("/modules/book/inbox");
 
   const schools = await listSchoolsForBookGroupForm();
 

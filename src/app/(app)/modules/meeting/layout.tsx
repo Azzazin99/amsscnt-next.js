@@ -2,9 +2,9 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AppBreadcrumb } from "@/components/app-shell/app-breadcrumb";
 import { MeetingNav } from "@/components/meeting/meeting-nav";
+import { getModuleSettingsNavMode } from "@/lib/core/permissions";
 import {
   canBookMeeting,
-  canManageMeetingSettings,
   canViewMeetingList,
   getMeetingPermissions,
 } from "@/lib/meeting/permissions";
@@ -23,7 +23,7 @@ export default async function MeetingLayout({
   }
 
   const canWrite = canBookMeeting(session.user, perms);
-  const showAdmin = canManageMeetingSettings(session.user);
+  const settingsNavMode = getModuleSettingsNavMode(session.user, "meeting");
 
   return (
     <div className="px-4 py-6 lg:px-8">
@@ -41,7 +41,7 @@ export default async function MeetingLayout({
         </p>
       </div>
 
-      <MeetingNav canWrite={canWrite} showAdmin={showAdmin} />
+      <MeetingNav canWrite={canWrite} settingsNavMode={settingsNavMode} />
 
       {children}
     </div>

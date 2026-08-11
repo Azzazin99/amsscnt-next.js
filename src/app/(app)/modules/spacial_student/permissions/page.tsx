@@ -3,11 +3,11 @@ import { Check, Pencil, X } from "lucide-react";
 import { SpacialStudentPermissionDeleteButton } from "@/components/spacial-student/spacial-student-permission-delete-button";
 import { buttonVariants } from "@/components/ui/button";
 import { listSpacialStudentPermissions } from "@/lib/spacial-student/queries";
-import { requireSpacialStudentSettingsAccess } from "@/lib/spacial-student/scope";
+import { requireSpacialStudentStaffPermissionsAccess } from "@/lib/spacial-student/scope";
 import { cn } from "@/lib/utils";
 
 export default async function SpacialStudentPermissionsPage() {
-  await requireSpacialStudentSettingsAccess();
+  await requireSpacialStudentStaffPermissionsAccess();
   const rows = await listSpacialStudentPermissions();
 
   return (

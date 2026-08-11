@@ -1,25 +1,25 @@
 "use client";
 
+import { buildModuleSettingsNavSection } from "@/components/app-shell/module-settings-nav-section";
 import {
   ModuleNav,
   type ModuleNavSectionDef,
 } from "@/components/app-shell/module-nav";
+import type { ModuleSettingsNavMode } from "@/lib/core/permissions";
 
 type MeetingNavProps = {
   canWrite: boolean;
-  showAdmin: boolean;
+  settingsNavMode: ModuleSettingsNavMode;
 };
 
-export function MeetingNav({ canWrite, showAdmin }: MeetingNavProps) {
+export function MeetingNav({ canWrite, settingsNavMode }: MeetingNavProps) {
+  const settingsSection = buildModuleSettingsNavSection(settingsNavMode, [
+    { href: "/modules/meeting/permissions", label: "สิทธิ์เจ้าหน้าที่" },
+    { href: "/modules/meeting/rooms", label: "กำหนดห้อง" },
+  ]);
+
   const sections: ModuleNavSectionDef[] = [
-    {
-      title: "ตั้งค่าระบบ",
-      visible: showAdmin,
-      links: [
-        { href: "/modules/meeting/permissions", label: "สิทธิ์เจ้าหน้าที่" },
-        { href: "/modules/meeting/rooms", label: "กำหนดห้อง" },
-      ],
-    },
+    ...(settingsSection ? [settingsSection] : []),
     {
       title: "จองห้องประชุม",
       links: [

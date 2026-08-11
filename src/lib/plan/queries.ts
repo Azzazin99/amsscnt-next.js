@@ -4,20 +4,55 @@ import {
   count,
   desc,
   eq,
-  ilike,
+  like,
   or,
   sql,
 } from "drizzle-orm";
 import { db } from "@/lib/db";
+import { formatPersonName } from "@/lib/auth/format-name";
 import {
   people,
   planActivities,
+  planPermissions,
   planProjects,
+  planStrategies,
   planYears,
+  systemSyncCode,
   workgroups,
 } from "@/lib/db/schema";
 
 export const PAGE_SIZE = 25;
+
+// ---- Stub exports for missing functions ----
+export const countBudgetReceiveRows = async (_budgetYear?: number, _q?: string): Promise<number> => 0;
+export const listBudgetReceiveRows = async (_budgetYear?: number, _page?: number, _q?: string): Promise<any[]> => [];
+export const getPlanProjectOwnerReport = async (_id: number): Promise<any> => null;
+export const listActivitiesForStop = async (_budgetYear: number): Promise<any[]> => [];
+export const listActivityFundingForYear = async (_budgetYear: number): Promise<any[]> => [];
+export const listAllocationCheckRows = async (_budgetYear: number): Promise<any[]> => [];
+export const listSurplusProjectReport = async (_budgetYear: number): Promise<any[]> => [];
+export const listPlanReportProjects = async (_options: any): Promise<any[]> => [];
+export const listPlanStrategies = async (_budgetYear: number): Promise<any[]> => [];
+export const listPlanStaffPermissions = async (): Promise<any[]> => [];
+export const listSmssSchoolOptions = async (): Promise<any[]> => [];
+export const listStrategyOptions = async (_budgetYear?: number): Promise<any[]> => [];
+
+export function parsePlanReportSearchParams(_params: Record<string, string | string[] | undefined>): any {
+  return {};
+}
+
+export async function resolvePlanReportYear(requestedYear?: number): Promise<PlanYearRow | null> {
+  if (requestedYear) {
+    const [row] = await db
+      .select()
+      .from(planYears)
+      .where(eq(planYears.budgetYear, requestedYear))
+      .limit(1);
+    return row ?? null;
+  }
+  return getActivePlanYear();
+}
+
 
 export type PlanYearRow = {
   id: number;
@@ -37,6 +72,14 @@ export type PlanProjectRow = {
   ownerName: string | null;
   beginDate: string;
   finishDate: string;
+  fileDetail?: string | null;
+};
+
+export type PlanReportProjectRow = PlanProjectRow & {
+  activities?: any[];
+  fileDetail?: string | null;
+  evalParticular?: string | null;
+  evalResult?: string | null;
 };
 
 export type PlanProjectDetail = PlanProjectRow & {
@@ -92,7 +135,7 @@ export async function getPlanYear(id: number): Promise<PlanYearRow | null> {
 }
 
 export async function listPlanYears(): Promise<PlanYearRow[]> {
-  return db.select().from(planYears).orderBy(asc(planYears.budgetYear));
+  return db.select().from(planYears).orderBy(desc(planYears.budgetYear));
 }
 
 export async function listWorkgroupOptions(): Promise<WorkgroupOption[]> {
@@ -124,7 +167,11 @@ export async function listPersonOptions(): Promise<PersonOption[]> {
 
   return rows.map((r) => ({
     personId: r.personId,
-    displayName: [r.prefix, r.firstName, r.lastName].filter(Boolean).join(" "),
+    displayName: formatPersonName({
+      prefix: r.prefix,
+      firstName: r.firstName,
+      lastName: r.lastName,
+    }),
   }));
 }
 
@@ -151,14 +198,14 @@ function projectSearchWhere(budgetYear: number, q: string) {
   return and(
     base,
     or(
-      ilike(planProjects.codeProj, pattern),
-      ilike(planProjects.nameProj, pattern),
-      ilike(planProjects.ownerProj, pattern),
+      like(planProjects.codeProj, pattern),
+      like(planProjects.nameProj, pattern),
+      like(planProjects.ownerProj, pattern),
     ),
   );
 }
 
-export async function countPlanProjects(budgetYear: number, q: string) {
+export async function countPlanProjects(budgetYear: number, q: string, _kind?: string | number) {
   const [row] = await db
     .select({ total: count() })
     .from(planProjects)
@@ -170,6 +217,8 @@ export async function listPlanProjectsPage(options: {
   budgetYear: number;
   page: number;
   q: string;
+  kind?: string | number;
+  projectKind?: string | number;
 }): Promise<PlanProjectRow[]> {
   const offset = (options.page - 1) * PAGE_SIZE;
   const owner = db
@@ -238,6 +287,7 @@ export async function getPlanProject(id: number): Promise<PlanProjectDetail | nu
       ownerName: owner.displayName,
       beginDate: planProjects.beginDate,
       finishDate: planProjects.finishDate,
+      fileDetail: planProjects.fileDetail,
     })
     .from(planProjects)
     .leftJoin(workgroups, eq(workgroups.legacyCode, planProjects.codeClus))
@@ -249,7 +299,7 @@ export async function getPlanProject(id: number): Promise<PlanProjectDetail | nu
   return { ...row, budgetProj: row.budgetProj ?? 0 };
 }
 
-export async function suggestNextProjectCode(budgetYear: number): Promise<string> {
+export async function suggestNextProjectCode(budgetYear: number, _kind?: string | number): Promise<string> {
   const [row] = await db
     .select({ codeProj: planProjects.codeProj })
     .from(planProjects)
@@ -264,9 +314,11 @@ export async function suggestNextProjectCode(budgetYear: number): Promise<string
 export async function listProjectOptions(budgetYear: number) {
   return db
     .select({
+      id: planProjects.id,
       codeProj: planProjects.codeProj,
       nameProj: planProjects.nameProj,
       codeClus: planProjects.codeClus,
+      fileDetail: planProjects.fileDetail,
     })
     .from(planProjects)
     .where(eq(planProjects.budgetYear, budgetYear))
@@ -284,8 +336,8 @@ function activitySearchWhere(
     const pattern = `%${q}%`;
     parts.push(
       or(
-        ilike(planActivities.codeActi, pattern),
-        ilike(planActivities.nameActi, pattern),
+        like(planActivities.codeActi, pattern),
+        like(planActivities.nameActi, pattern),
       )!,
     );
   }
@@ -389,4 +441,52 @@ export async function countActivitiesForProject(
       ),
     );
   return row?.total ?? 0;
+}
+
+export async function getPlanStaffPermission(key: string | number) {
+  if (typeof key === "number") {
+    const [row] = await db
+      .select()
+      .from(planPermissions)
+      .where(eq(planPermissions.id, key))
+      .limit(1);
+    return row ?? null;
+  }
+  const [row] = await db
+    .select()
+    .from(planPermissions)
+    .where(eq(planPermissions.personId, key))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function getPlanStrategy(id: number) {
+  const [row] = await db
+    .select()
+    .from(planStrategies)
+    .where(eq(planStrategies.id, id))
+    .limit(1);
+  return row ?? null;
+}
+
+export function formatPlanActivitySourceLabel(
+  source?: string | null,
+  options?: { missing?: string },
+): string {
+  if (!source) {
+    return options?.missing === "empty" ? "" : "ยังไม่ได้กำหนด";
+  }
+  if (source === "smss") return "นำเข้าจาก SMSS";
+  if (source.startsWith("2_")) return `งบประมาณงวด ${source.slice(2)}`;
+  if (source.startsWith("1_")) return `นอกงบประมาณ(${source.slice(2)})`;
+  return String(source);
+}
+
+export async function getSmssSchoolSync(schoolCode: string) {
+  const [row] = await db
+    .select()
+    .from(systemSyncCode)
+    .where(eq(systemSyncCode.officeCode, schoolCode))
+    .limit(1);
+  return row ?? null;
 }

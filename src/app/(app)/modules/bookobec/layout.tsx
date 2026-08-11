@@ -2,7 +2,11 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AppBreadcrumb } from "@/components/app-shell/app-breadcrumb";
 import { BookobecNav } from "@/components/bookobec/bookobec-nav";
-import { canViewBookobec } from "@/lib/bookobec/permissions";
+import { getModuleSettingsNavMode } from "@/lib/core/permissions";
+import {
+  canViewBookobec,
+  getBookobecPermissions,
+} from "@/lib/bookobec/permissions";
 
 export default async function BookobecLayout({
   children,
@@ -12,9 +16,12 @@ export default async function BookobecLayout({
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  if (!(await canViewBookobec(session.user))) {
+  const perms = await getBookobecPermissions(Number(session.user.id));
+  if (!(await canViewBookobec(session.user, perms))) {
     redirect("/home");
   }
+
+  const settingsNavMode = getModuleSettingsNavMode(session.user, "bookobec");
 
   return (
     <div className="px-4 py-6 lg:px-8">
@@ -32,7 +39,7 @@ export default async function BookobecLayout({
         </p>
       </div>
 
-      <BookobecNav />
+      <BookobecNav settingsNavMode={settingsNavMode} />
 
       {children}
     </div>

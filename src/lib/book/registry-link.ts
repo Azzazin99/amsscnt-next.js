@@ -1,3 +1,4 @@
+import { insertAndGetId } from "../db/helpers";
 import { and, eq, isNull, ne } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
@@ -133,9 +134,7 @@ export async function createRegisterReceiveFromBookAck(input: {
       ? DISTRICT_NAME
       : input.scope.schoolName;
 
-  const [inserted] = await db
-    .insert(registerReceives)
-    .values({
+  const insertedId = await insertAndGetId(registerReceives, {
       schoolId: input.scope.kind === "school" ? input.scope.schoolId : null,
       year: activeYear.year,
       registerNumber,
@@ -156,8 +155,8 @@ export async function createRegisterReceiveFromBookAck(input: {
       urgencyLevel: normalizeUrgencyLevel(doc.urgencyLevel),
       secretLevel,
       secret: booleanFromSecretLevel(secretLevel),
-    })
-    .returning({ id: registerReceives.id });
+    });
+  const inserted = { id: insertedId };
 
   if (!inserted) {
     return { ok: false, message: "ไม่สามารถสร้างทะเบียนรับได้" };
@@ -253,9 +252,7 @@ export async function forwardRegisterSendToBook(input: {
   if (!recipients.ok) return recipients;
 
   const refId = generateReceiveRefId();
-  const [inserted] = await db
-    .insert(bookDocuments)
-    .values({
+  const insertedId = await insertAndGetId(bookDocuments, {
       refId,
       bookType: 6,
       senderPersonId: input.user.personId,
@@ -269,8 +266,8 @@ export async function forwardRegisterSendToBook(input: {
       subject: send.subject,
       detail: send.comment,
       bookRegisLink: input.registerSendId,
-    })
-    .returning({ id: bookDocuments.id });
+    });
+  const inserted = { id: insertedId };
 
   if (!inserted) {
     return { ok: false, message: "ไม่สามารถสร้างหนังสือได้" };

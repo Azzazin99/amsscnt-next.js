@@ -1,29 +1,28 @@
 "use client";
 
+import { buildModuleSettingsNavSection } from "@/components/app-shell/module-settings-nav-section";
 import {
   ModuleNav,
   type ModuleNavSectionDef,
 } from "@/components/app-shell/module-nav";
+import type { ModuleSettingsNavMode } from "@/lib/core/permissions";
 
 type MailNavProps = {
   canWrite: boolean;
-  showAdmin: boolean;
+  settingsNavMode: ModuleSettingsNavMode;
 };
 
-export function MailNav({ canWrite, showAdmin }: MailNavProps) {
+export function MailNav({ canWrite, settingsNavMode }: MailNavProps) {
+  const settingsSection = buildModuleSettingsNavSection(settingsNavMode, [
+    { href: "/modules/mail/permissions", label: "สิทธิ์การใช้งาน" },
+    { href: "/modules/mail/groups", label: "กลุ่มบุคลากร" },
+  ]);
+
   const sections: ModuleNavSectionDef[] = [
-    {
-      title: "ตั้งค่าระบบ",
-      visible: showAdmin,
-      links: [
-        { href: "/modules/mail/permissions", label: "สิทธิ์การใช้งาน" },
-        { href: "/modules/mail/groups", label: "กลุ่มบุคลากร" },
-      ],
-    },
+    ...(settingsSection ? [settingsSection] : []),
     {
       title: "ไปรษณีย์",
       links: [
-        { href: "/modules/mail", label: "รายการหลัก", exact: true },
         {
           label: "ทะเบียนรับ",
           children: [

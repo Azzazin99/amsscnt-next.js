@@ -1,5 +1,7 @@
 "use server";
 
+import { insertAndGetId } from "../db/helpers";
+
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -285,16 +287,14 @@ export async function createNewsArticle(formData: FormData) {
     await saveNewsFileToStorage(storedFile, file);
   }
 
-  const [inserted] = await db
-    .insert(newsArticles)
-    .values({
+  const insertedId = await insertAndGetId(newsArticles, {
       news: parsed.data.news,
       sectionCode: parsed.data.sectionCode,
       mainitemCode: active.code,
       officerPersonId: user.personId,
       file: storedFile,
-    })
-    .returning({ id: newsArticles.id });
+    });
+  const inserted = { id: insertedId };
 
   if (!inserted) {
     return { ok: false as const, message: "ไม่สามารถบันทึกได้" };

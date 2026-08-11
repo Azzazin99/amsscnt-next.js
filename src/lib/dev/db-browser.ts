@@ -1,9 +1,9 @@
 import "server-only";
 
-import { getTableName, is } from "drizzle-orm";
-import { PgTable } from "drizzle-orm/pg-core";
+import { getTableName, is, sql } from "drizzle-orm";
+import { MySqlTable } from "drizzle-orm/mysql-core";
 import { notFound } from "next/navigation";
-import { queryClient } from "@/lib/db";
+import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
 import { requireSystemAdmin } from "@/lib/core/permissions";
 
@@ -12,14 +12,25 @@ export const DB_BROWSER_MAX_PAGE_SIZE = 100;
 
 const APP_TABLE_NAMES = new Set(
   Object.values(schema)
-    .filter((value): value is PgTable => is(value, PgTable))
-    .map((table) => getTableName(table)),
+    .filter((value) => is(value, MySqlTable))
+    .map((table) => getTableName(table as MySqlTable)),
 );
 
 export function isDbBrowserEnabled(): boolean {
   return (
     process.env.NODE_ENV === "development" ||
     process.env.AMSS_ENABLE_DB_BROWSER === "1"
+  );
+}
+
+export function isDevToolsNavEnabled(): boolean {
+  return isDbBrowserEnabled() || isLegacyDumpExportEnabled();
+}
+
+function isLegacyDumpExportEnabled(): boolean {
+  return (
+    process.env.NODE_ENV === "development" ||
+    process.env.AMSS_ENABLE_LEGACY_DUMP_EXPORT === "1"
   );
 }
 
@@ -44,39 +55,42 @@ export type DbTableSummary = {
 export async function listPublicTables(q?: string): Promise<DbTableSummary[]> {
   const needle = (q ?? "").trim().toLowerCase();
 
-  const rows = await queryClient<
-    { table_name: string; row_estimate: string }[]
-  >`
+  const [rows] = (await db.execute(sql`
     SELECT
-      t.table_name,
-      COALESCE(s.n_live_tup, 0)::text AS row_estimate
-    FROM information_schema.tables t
-    LEFT JOIN pg_stat_user_tables s
-      ON s.schemaname = 'public' AND s.relname = t.table_name
-    WHERE t.table_schema = 'public'
-      AND t.table_type = 'BASE TABLE'
-    ORDER BY t.table_name
-  `;
+      table_name AS table_name,
+      table_rows AS row_estimate
+    FROM information_schema.tables
+    WHERE table_schema = DATABASE()
+      AND table_type = 'BASE TABLE'
+    ORDER BY table_name
+  `)) as unknown as [{ table_name?: string; TABLE_NAME?: string; row_estimate?: number; TABLE_ROWS?: number }[], unknown];
 
-  return rows
-    .map((row) => ({
-      name: row.table_name,
-      kind: APP_TABLE_NAMES.has(row.table_name) ? ("app" as const) : ("legacy" as const),
-      rowEstimate: Number(row.row_estimate ?? 0),
-    }))
-    .filter((row) => !needle || row.name.toLowerCase().includes(needle));
+  const tableList = Array.isArray(rows) ? rows : [];
+
+  return tableList
+    .map((row) => {
+      const tableName = row.table_name ?? row.TABLE_NAME ?? "";
+      const rowEstimate = Number(row.row_estimate ?? row.TABLE_ROWS ?? 0);
+      return {
+        name: tableName,
+        kind: APP_TABLE_NAMES.has(tableName) ? ("app" as const) : ("legacy" as const),
+        rowEstimate,
+      };
+    })
+    .filter((row: DbTableSummary) => !needle || row.name.toLowerCase().includes(needle));
 }
 
 export async function tableExistsInPublic(name: string): Promise<boolean> {
   const safe = assertSafeTableName(name);
-  const rows = await queryClient<{ exists: boolean }[]>`
-    SELECT EXISTS (
-      SELECT 1 FROM information_schema.tables
-      WHERE table_schema = 'public'
-        AND table_name = ${safe}
-    ) AS exists
-  `;
-  return rows[0]?.exists ?? false;
+  const [rows] = (await db.execute(sql`
+    SELECT COUNT(*) AS count FROM information_schema.tables
+    WHERE table_schema = DATABASE()
+      AND table_name = ${safe}
+  `)) as unknown as [{ count?: number; COUNT?: number }[], unknown];
+
+  const list = Array.isArray(rows) ? rows : [];
+  const countVal = list[0]?.count ?? list[0]?.COUNT ?? 0;
+  return Number(countVal) > 0;
 }
 
 export type DbColumnInfo = {
@@ -87,28 +101,37 @@ export type DbColumnInfo = {
 
 export async function getTableColumns(table: string): Promise<DbColumnInfo[]> {
   const safe = assertSafeTableName(table);
-  const rows = await queryClient<
-    { column_name: string; data_type: string; is_nullable: string }[]
-  >`
-    SELECT column_name, data_type, is_nullable
+  const [rows] = (await db.execute(sql`
+    SELECT
+      COLUMN_NAME AS column_name,
+      DATA_TYPE AS data_type,
+      IS_NULLABLE AS is_nullable
     FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = ${safe}
+    WHERE table_schema = DATABASE() AND table_name = ${safe}
     ORDER BY ordinal_position
-  `;
-  return rows.map((row) => ({
-    name: row.column_name,
-    dataType: row.data_type,
-    isNullable: row.is_nullable === "YES",
-  }));
+  `)) as unknown as [Record<string, unknown>[], unknown];
+
+  const list = Array.isArray(rows) ? rows : [];
+
+  return list.map((row) => {
+    const name = String(row.column_name ?? row.COLUMN_NAME ?? "");
+    const dataType = String(row.data_type ?? row.DATA_TYPE ?? "");
+    const isNullableStr = String(row.is_nullable ?? row.IS_NULLABLE ?? "");
+    return {
+      name,
+      dataType,
+      isNullable: isNullableStr.toUpperCase() === "YES",
+    };
+  });
 }
 
 export async function countTableRows(table: string): Promise<number> {
   const safe = assertSafeTableName(table);
   if (!(await tableExistsInPublic(safe))) return 0;
-  const rows = await queryClient.unsafe(
-    `SELECT COUNT(*)::int AS total FROM "${safe}"`,
-  ) as { total: number }[];
-  return Number(rows[0]?.total ?? 0);
+  const [rows] = (await db.execute(sql.raw(`SELECT COUNT(*) AS total FROM \`${safe}\``))) as unknown as [Record<string, unknown>[], unknown];
+  const list = Array.isArray(rows) ? rows : [];
+  const totalVal = list[0]?.total ?? list[0]?.TOTAL ?? Object.values(list[0] ?? {})[0] ?? 0;
+  return Number(totalVal);
 }
 
 export function clampPageSize(size?: number): number {
@@ -127,10 +150,11 @@ export async function fetchTablePage(
   const page = Math.max(1, input.page);
   const offset = (page - 1) * pageSize;
 
-  return (await queryClient.unsafe(
-    `SELECT * FROM "${safe}" ORDER BY 1 LIMIT $1 OFFSET $2`,
-    [pageSize, offset],
-  )) as Record<string, unknown>[];
+  const [rows] = (await db.execute(sql.raw(
+    `SELECT * FROM \`${safe}\` LIMIT ${Number(pageSize)} OFFSET ${Number(offset)}`,
+  ))) as unknown as [Record<string, unknown>[], unknown];
+
+  return Array.isArray(rows) ? rows : [];
 }
 
 export function formatCellValue(value: unknown): string {

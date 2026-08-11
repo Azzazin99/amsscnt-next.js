@@ -16,7 +16,7 @@ PGPORT="${POSTGRES_PORT:-5432}"
 PGUSER="${POSTGRES_USER:-amss}"
 PGPASSWORD="${POSTGRES_PASSWORD:-amss}"
 PGDATABASE="${POSTGRES_DB:-amss}"
-DUMP="${LEGACY_DUMP_PATH:-smart_area_postgres.sql}"
+DUMP="${LEGACY_DUMP_PATH:-AMSS.sql}"
 
 export PGPASSWORD
 
@@ -28,18 +28,8 @@ fi
 echo "Loading legacy dump into PostgreSQL ($PGDATABASE @ $PGHOST:$PGPORT)..."
 echo "This may take 5–15 minutes for smart_area_postgres.sql"
 
-# Navicat/MySQL exports: strip superuser-only settings + invalid zero dates for PostgreSQL.
-# Also strip literal \r / \n escape artifacts (MySQL → PG dump stores them as two-char sequences).
-sed -E \
-  -e '/session_replication_role/d' \
-  -e "s/'0000-[0-9]{2}-[0-9]{2}( [0-9]{2}:[0-9]{2}:[0-9]{2})?'/'1970-01-01'/g" \
-  -e 's/ ON UPDATE CURRENT_TIMESTAMP//g' \
-  -e 's/ USING BTREE//g' \
-  -e 's/ USING HASH//g' \
-  -e "s/\\\\'/''/g" \
-  -e 's/\\r//g' \
-  -e 's/\\n//g' \
-  "$DUMP" | psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" \
+# Sanitize via scripts/pipe-legacy-dump-sanitize.ts (shared with web export).
+cat "$DUMP" | npx tsx "$ROOT/scripts/pipe-legacy-dump-sanitize.ts" | psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" \
   -v ON_ERROR_STOP=1 \
   -f -
 

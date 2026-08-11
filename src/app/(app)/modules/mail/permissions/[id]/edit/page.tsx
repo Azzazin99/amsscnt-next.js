@@ -5,14 +5,14 @@ import {
   getMailModulePermission,
   listStaffForMailPermissionPicker,
 } from "@/lib/mail/queries";
-import { requireMailSettingsAccess } from "@/lib/mail/scope";
+import { requireMailStaffPermissionsAccess } from "@/lib/mail/scope";
 
 type Props = {
   params: Promise<{ id: string }>;
 };
 
 export default async function MailPermissionEditPage({ params }: Props) {
-  await requireMailSettingsAccess();
+  await requireMailStaffPermissionsAccess();
   const { id: idParam } = await params;
   const id = Number(idParam);
   if (!Number.isFinite(id)) notFound();

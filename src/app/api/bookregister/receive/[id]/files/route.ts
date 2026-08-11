@@ -13,6 +13,7 @@ import {
   isAllowedReceiveFileName,
   saveReceiveFileToStorage,
 } from "@/lib/bookregister/receive/files";
+import { STANDARD_ATTACHMENT_TYPES_LABEL } from "@/lib/form/attachment-allowed-types";
 import {
   canWriteRegisters,
   resolveBookregisterScope,
@@ -136,7 +137,7 @@ export async function POST(req: Request, ctx: Ctx) {
 
   if (!isAllowedReceiveFileName(file.name)) {
     return NextResponse.json(
-      { ok: false, message: "ชนิดไฟล์ไม่รองรับ (pdf, doc, xls, ppt, รูปภาพ, zip)" },
+      { ok: false, message: `ชนิดไฟล์ไม่รองรับ (${STANDARD_ATTACHMENT_TYPES_LABEL})` },
       { status: 400 },
     );
   }
@@ -148,18 +149,18 @@ export async function POST(req: Request, ctx: Ctx) {
   const storedName = buildStoredReceiveFileName(required.row.refId, file.name);
   await saveReceiveFileToStorage(storedName, file);
 
-  const [inserted] = await db
+  const [res] = await db
     .insert(registerReceiveFiles)
     .values({
       refId: required.row.refId,
       fileName: storedName,
       fileDes: fileDes ?? file.name,
-    })
-    .returning({
-      id: registerReceiveFiles.id,
-      fileName: registerReceiveFiles.fileName,
-      fileDes: registerReceiveFiles.fileDes,
     });
+  const inserted = {
+    id: res.insertId,
+    fileName: storedName,
+    fileDes: fileDes ?? file.name,
+  };
 
   return NextResponse.json({
     ok: true,

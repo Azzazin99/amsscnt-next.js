@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { db, queryClient } from "../../src/lib/db";
+import { db } from "../../src/lib/db";
 import { syncQuotaBalance } from "../../src/lib/leave/quota";
 import { budgetYearFromIsoDate } from "../../src/lib/leave/regulation/fiscal-year";
 import type { LeaveTypeId } from "../../src/lib/leave/regulation/types";
@@ -16,6 +16,7 @@ import { ensureLeavePeopleFromLegacy } from "./backfill-leave-people";
 import {
   flushBatch,
   legacyPersonId,
+  legacyQuery,
   legacyReal,
   legacyTableExists,
   leaveRequestDedupKey,
@@ -166,9 +167,7 @@ function mapLeaveRequestRow(
 async function importLeaveYears(): Promise<number> {
   if (!(await legacyTableExists("la_year"))) return 0;
 
-  const rows = await queryClient<
-    Record<string, unknown>[]
-  >`SELECT * FROM la_year ORDER BY budget_year`;
+  const rows = await legacyQuery("SELECT * FROM la_year ORDER BY budget_year");
   let count = 0;
 
   for (const row of rows) {
@@ -181,9 +180,8 @@ async function importLeaveYears(): Promise<number> {
         budgetYear,
         yearActive: parseLegacyPermissionFlag(row.year_active) === 1,
       })
-      .onConflictDoUpdate({
-        target: leaveYears.budgetYear,
-        set: {
+      .onDuplicateKeyUpdate({
+      set: {
           yearActive: parseLegacyPermissionFlag(row.year_active) === 1,
         },
       });
@@ -196,9 +194,7 @@ async function importLeaveYears(): Promise<number> {
 async function importLeavePermissions(maps: ImportMaps): Promise<number> {
   if (!(await legacyTableExists("la_permission"))) return 0;
 
-  const rows = await queryClient<
-    Record<string, unknown>[]
-  >`SELECT * FROM la_permission ORDER BY id`;
+  const rows = await legacyQuery("SELECT * FROM la_permission ORDER BY id");
   const seenUsers = new Set<number>();
   let count = 0;
 
@@ -216,9 +212,8 @@ async function importLeavePermissions(maps: ImportMaps): Promise<number> {
         p2: parseLegacyPermissionFlag(row.p2),
         officerPersonId: legacyPersonId(row.officer),
       })
-      .onConflictDoUpdate({
-        target: leavePermissions.userId,
-        set: {
+      .onDuplicateKeyUpdate({
+      set: {
           p1: parseLegacyPermissionFlag(row.p1),
           p2: parseLegacyPermissionFlag(row.p2),
           officerPersonId: legacyPersonId(row.officer),
@@ -235,9 +230,7 @@ async function importLeavePersonSettings(
 ): Promise<number> {
   if (!(await legacyTableExists("la_person_set"))) return 0;
 
-  const rows = await queryClient<
-    Record<string, unknown>[]
-  >`SELECT * FROM la_person_set ORDER BY id`;
+  const rows = await legacyQuery("SELECT * FROM la_person_set ORDER BY id");
   let count = 0;
 
   for (const row of rows) {
@@ -256,9 +249,8 @@ async function importLeavePersonSettings(
         grantPersonId: legacyPersonId(row.grant_person),
         officerPersonId: legacyPersonId(row.officer),
       })
-      .onConflictDoUpdate({
-        target: leavePersonSettings.personId,
-        set: {
+      .onDuplicateKeyUpdate({
+      set: {
           commentPersonId,
           commentPerson2Id,
           grantPersonId: legacyPersonId(row.grant_person),
@@ -274,9 +266,7 @@ async function importLeavePersonSettings(
 async function importLeaveCollect(peopleIds: Set<string>): Promise<number> {
   if (!(await legacyTableExists("la_collect"))) return 0;
 
-  const rows = await queryClient<
-    Record<string, unknown>[]
-  >`SELECT * FROM la_collect ORDER BY id`;
+  const rows = await legacyQuery("SELECT * FROM la_collect ORDER BY id");
   let count = 0;
 
   for (const row of rows) {
@@ -295,9 +285,8 @@ async function importLeaveCollect(peopleIds: Set<string>): Promise<number> {
         thisYearDay: Number(row.this_year_day) || 0,
         officerPersonId: legacyPersonId(row.officer),
       })
-      .onConflictDoUpdate({
-        target: [leaveCollect.budgetYear, leaveCollect.personId],
-        set: {
+      .onDuplicateKeyUpdate({
+      set: {
           collectDay: legacyReal(row.collect_day) ?? 0,
           thisYearDay: Number(row.this_year_day) || 0,
           officerPersonId: legacyPersonId(row.officer),
@@ -323,9 +312,7 @@ async function importLeaveRequestsFromTable(
     return { inserted: 0, skippedExisting: 0, skippedNoPerson: 0 };
   }
 
-  const rows = await queryClient.unsafe(
-    `SELECT * FROM "${table}" ORDER BY la_start, id`,
-  );
+  const rows = await legacyQuery(`SELECT * FROM \`${table}\` ORDER BY la_start, id`);
 
   let batch: (typeof leaveRequests.$inferInsert)[] = [];
   let inserted = 0;
@@ -536,9 +523,7 @@ async function importLeaveCancellationsFromTable(
     };
   }
 
-  const rows = await queryClient.unsafe(
-    `SELECT * FROM "${table}" ORDER BY rec_date, id`,
-  );
+  const rows = await legacyQuery(`SELECT * FROM \`${table}\` ORDER BY rec_date, id`);
 
   let batch: (typeof leaveCancellations.$inferInsert)[] = [];
   let inserted = 0;

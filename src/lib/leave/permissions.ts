@@ -61,6 +61,8 @@ export function canManageLeaveSettings(
   return isLeaveModuleAdmin(user) || perms.p1 === 1;
 }
 
+export const canManageLeaveStaffPermissions = isLeaveModuleAdmin;
+
 export function canWriteLeaveRequest(
   user: AmssSessionUser,
   perms: LeavePermissionFlags,

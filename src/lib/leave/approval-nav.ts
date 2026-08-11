@@ -117,3 +117,12 @@ export async function canAccessCommanderCancellationApprovalInbox(
 ): Promise<boolean> {
   return canAccessCommanderApprovalInbox(user);
 }
+
+export async function resolveLeaveCancellationApprovalNavItems(
+  user: AmssSessionUser,
+  perms: LeavePermissionFlags,
+  scope: LeaveScope | null,
+): Promise<LeaveApprovalNavItem[]> {
+  return resolveLeaveApprovalNavItems(user, perms, scope);
+}
+

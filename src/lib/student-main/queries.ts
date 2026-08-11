@@ -4,7 +4,7 @@ import {
   count,
   desc,
   eq,
-  ilike,
+  like,
   isNull,
   notInArray,
   or,
@@ -93,11 +93,11 @@ function buildWhere(
   if (q.length >= 2) {
     conditions.push(
       or(
-        ilike(students.studentId, `%${q}%`),
-        ilike(students.personId, `%${q}%`),
-        ilike(students.name, `%${q}%`),
-        ilike(students.surname, `%${q}%`),
-        ilike(students.prename, `%${q}%`),
+        like(students.studentId, `%${q}%`),
+        like(students.personId, `%${q}%`),
+        like(students.name, `%${q}%`),
+        like(students.surname, `%${q}%`),
+        like(students.prename, `%${q}%`),
       ),
     );
   }
@@ -264,7 +264,7 @@ export async function listStudentEdYears(): Promise<StudentEdYearRow[]> {
       yearActive: studentEdYears.yearActive,
     })
     .from(studentEdYears)
-    .orderBy(asc(studentEdYears.edYear));
+    .orderBy(desc(studentEdYears.edYear));
 }
 
 export async function getStudentEdYear(id: number) {

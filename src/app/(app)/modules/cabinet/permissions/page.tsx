@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { Check, Pencil, X } from "lucide-react";
 import { CabinetPermissionDeleteButton } from "@/components/cabinet/cabinet-permission-delete-button";
 import { buttonVariants } from "@/components/ui/button";
-import { canManageCabinetSettings, getCabinetPermissions } from "@/lib/cabinet/permissions";
+import { canManageCabinetStaffPermissions, getCabinetPermissions } from "@/lib/cabinet/permissions";
 import { listCabinetPermissions } from "@/lib/cabinet/queries";
 import { requireCabinetScope } from "@/lib/cabinet/scope";
 import { cn } from "@/lib/utils";
@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 export default async function CabinetPermissionsPage() {
   const { user } = await requireCabinetScope();
   const perms = await getCabinetPermissions(Number(user.id));
-  if (!canManageCabinetSettings(user, perms)) redirect("/modules/cabinet");
+  if (!canManageCabinetStaffPermissions(user)) redirect("/modules/cabinet");
 
   const rows = await listCabinetPermissions();
 

@@ -1,26 +1,26 @@
 "use client";
 
+import { buildModuleSettingsNavSection } from "@/components/app-shell/module-settings-nav-section";
 import {
   ModuleNav,
   type ModuleNavSectionDef,
 } from "@/components/app-shell/module-nav";
+import type { ModuleSettingsNavMode } from "@/lib/core/permissions";
 
 type NewsNavProps = {
   canWrite: boolean;
-  showAdmin: boolean;
+  settingsNavMode: ModuleSettingsNavMode;
 };
 
-export function NewsNav({ canWrite, showAdmin }: NewsNavProps) {
+export function NewsNav({ canWrite, settingsNavMode }: NewsNavProps) {
+  const settingsSection = buildModuleSettingsNavSection(settingsNavMode, [
+    { href: "/modules/news/permissions", label: "สิทธิ์การใช้งาน" },
+    { href: "/modules/news/mainitems", label: "ชื่อเรื่อง" },
+    { href: "/modules/news/sections", label: "ประเภทข่าว" },
+  ]);
+
   const sections: ModuleNavSectionDef[] = [
-    {
-      title: "ตั้งค่าระบบ",
-      visible: showAdmin,
-      links: [
-        { href: "/modules/news/permissions", label: "สิทธิ์การใช้งาน" },
-        { href: "/modules/news/mainitems", label: "ชื่อเรื่อง" },
-        { href: "/modules/news/sections", label: "ประเภทข่าว" },
-      ],
-    },
+    ...(settingsSection ? [settingsSection] : []),
     {
       title: "ข่าว",
       links: [

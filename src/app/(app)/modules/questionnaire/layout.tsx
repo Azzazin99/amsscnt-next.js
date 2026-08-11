@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AppBreadcrumb } from "@/components/app-shell/app-breadcrumb";
 import { QuestionnaireNav } from "@/components/questionnaire/questionnaire-nav";
+import { getModuleSettingsNavMode } from "@/lib/core/permissions";
 import { canViewQuestionnaire } from "@/lib/questionnaire/permissions";
 
 export default async function QuestionnaireLayout({
@@ -32,7 +33,9 @@ export default async function QuestionnaireLayout({
         </p>
       </div>
 
-      <QuestionnaireNav />
+      <QuestionnaireNav
+        settingsNavMode={getModuleSettingsNavMode(session.user, "questionnaire")}
+      />
 
       {children}
     </div>

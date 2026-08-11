@@ -55,3 +55,5 @@ export function canWriteNews(
 export function canManageNewsSettings(user: AmssSessionUser): boolean {
   return isNewsModuleAdmin(user);
 }
+
+export const canManageNewsStaffPermissions = isNewsModuleAdmin;

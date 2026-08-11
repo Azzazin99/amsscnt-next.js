@@ -34,12 +34,12 @@ async function main() {
       ? updated.rowCount
       : null;
 
-  const [withDate] = await queryClient<{ count: string }[]>`
+  const [withDate] = ((await db.execute(sql`
     SELECT count(*)::text AS count FROM people WHERE service_start_date IS NOT NULL
-  `;
-  const [stillNull] = await queryClient<{ count: string }[]>`
+  `))[0] as Record<string, unknown>[]);
+  const [stillNull] = ((await db.execute(sql`
     SELECT count(*)::text AS count FROM people WHERE service_start_date IS NULL
-  `;
+  `))[0] as Record<string, unknown>[]);
 
   console.log(
     rowCount !== null

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { Pencil } from "lucide-react";
 import { CarDeleteButton } from "@/components/car/car-delete-button";
 import { deleteCarPermission } from "@/lib/car/actions";
-import { canManageCarSettings } from "@/lib/car/permissions";
+import { canManageCarStaffPermissions } from "@/lib/car/permissions";
 import { listCarPermissions } from "@/lib/car/queries";
 import { requireCarScope } from "@/lib/car/scope";
 import { buttonVariants } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 export default async function CarPermissionsPage() {
   const { user, perms } = await requireCarScope();
-  if (!canManageCarSettings(user, perms)) {
+  if (!canManageCarStaffPermissions(user)) {
     redirect("/modules/car/requests");
   }
 

@@ -1,7 +1,10 @@
 "use server";
 
+import { insertAndGetId } from "../../db/helpers";
+
 import { and, eq, isNull } from "drizzle-orm";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag as nextRevalidateTag } from "next/cache";
+const revalidateTag = nextRevalidateTag as any;
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { registerReceives } from "@/lib/db/schema";
@@ -156,35 +159,27 @@ export async function createDistrictReceive(formData: FormData) {
 
   let insertedId: number;
   try {
-    const [inserted] = await db
-      .insert(registerReceives)
-      .values({
-        schoolId: scope.kind === "school" ? scope.schoolId : null,
-        year: activeYear.year,
-        registerNumber,
-        bookNo: parsed.data.bookNo.trim(),
-        signdate: parsed.data.signdate,
-        bookFrom,
-        bookTo: parsed.data.bookTo.trim(),
-        subject: parsed.data.subject.trim(),
-        operation: parsed.data.operation?.trim() || null,
-        comment: parsed.data.comment?.trim() || "เอกสารกระดาษ",
-        registerDate,
-        refId,
-        officerId: Number(user.id),
-        workgroupId:
-          scope.kind === "school" ? null : parsed.data.workgroupId ?? null,
-        recordType: parsed.data.recordType,
-        bookLink: 0,
-        source: "external",
-        ...reg,
-      })
-      .returning({ id: registerReceives.id });
-
-    if (!inserted) {
-      return { ok: false, message: "ไม่สามารถบันทึกได้ — กรุณาลองใหม่" };
-    }
-    insertedId = inserted.id;
+    insertedId = await insertAndGetId(registerReceives, {
+      schoolId: scope.kind === "school" ? scope.schoolId : null,
+      year: activeYear.year,
+      registerNumber,
+      bookNo: parsed.data.bookNo.trim(),
+      signdate: parsed.data.signdate,
+      bookFrom,
+      bookTo: parsed.data.bookTo.trim(),
+      subject: parsed.data.subject.trim(),
+      operation: parsed.data.operation?.trim() || null,
+      comment: parsed.data.comment?.trim() || "เอกสารกระดาษ",
+      registerDate,
+      refId,
+      officerId: Number(user.id),
+      workgroupId:
+        scope.kind === "school" ? null : parsed.data.workgroupId ?? null,
+      recordType: parsed.data.recordType,
+      bookLink: 0,
+      source: "external",
+      ...reg,
+    });
   } catch {
     return { ok: false, message: "ไม่สามารถบันทึกได้ — กรุณาลองใหม่" };
   }

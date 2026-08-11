@@ -227,8 +227,7 @@ export async function upsertLeavePersonSettings(data: {
       commentPerson2Id: data.commentPerson2Id,
       grantPersonId: data.grantPersonId,
     })
-    .onConflictDoUpdate({
-      target: leavePersonSettings.personId,
+    .onDuplicateKeyUpdate({
       set: {
         commentPersonId: data.commentPersonId,
         commentPerson2Id: data.commentPerson2Id,

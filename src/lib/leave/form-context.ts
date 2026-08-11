@@ -152,22 +152,33 @@ export async function getLastApprovedLeaveSameType(
 export async function getLastApprovedLeavesByType(
   personId: string,
 ): Promise<Partial<Record<LeaveTypeId, LastLeaveInfo>>> {
-  const result = await db.execute<{
-    leaveType: number;
-    leaveStart: string;
-    leaveFinish: string;
-    leaveTotal: number;
-  }>(sql`
-    SELECT DISTINCT ON (leave_type)
-      leave_type AS "leaveType",
-      leave_start AS "leaveStart",
-      leave_finish AS "leaveFinish",
-      leave_total AS "leaveTotal"
-    FROM leave_requests
-    WHERE person_id = ${personId}
-      AND commander_grant = 1
-    ORDER BY leave_type, leave_start DESC, id DESC
-  `);
+  const [result] = (await db.execute(sql`
+    SELECT
+      leave_type AS leaveType,
+      leave_start AS leaveStart,
+      leave_finish AS leaveFinish,
+      leave_total AS leaveTotal
+    FROM (
+      SELECT
+        leave_type,
+        leave_start,
+        leave_finish,
+        leave_total,
+        ROW_NUMBER() OVER (PARTITION BY leave_type ORDER BY leave_start DESC, id DESC) as rn
+      FROM leave_requests
+      WHERE person_id = ${personId}
+        AND commander_grant = 1
+    ) t
+    WHERE rn = 1
+  `)) as unknown as [
+    {
+      leaveType: number;
+      leaveStart: string;
+      leaveFinish: string;
+      leaveTotal: number;
+    }[],
+    unknown
+  ];
 
   const rows = Array.isArray(result) ? result : [];
   const map: Partial<Record<LeaveTypeId, LastLeaveInfo>> = {};

@@ -10,7 +10,7 @@ import {
   parseBookGroupListParams,
   resolveBookGroupListPage,
 } from "@/lib/book/groups/queries";
-import { canManageBookGroups } from "@/lib/book/permissions";
+import { canManageBookSettings } from "@/lib/book/permissions";
 import { requireBookScope } from "@/lib/book/scope";
 import { cn } from "@/lib/utils";
 import { redirect } from "next/navigation";
@@ -21,7 +21,7 @@ type Props = {
 
 export default async function BookGroupsPage({ searchParams }: Props) {
   const { user, perms } = await requireBookScope();
-  if (!canManageBookGroups(user, perms)) redirect("/modules/book/inbox");
+  if (!canManageBookSettings(user)) redirect("/modules/book/inbox");
 
   const params = await searchParams;
   const parsed = parseBookGroupListParams(params);

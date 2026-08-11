@@ -89,3 +89,5 @@ export function canAccessBookSecretLevel(
   if (secretLevel <= 0) return true;
   return canViewSecretBook(user, perms);
 }
+
+export const canManageBookSettings = isBookModuleAdmin;

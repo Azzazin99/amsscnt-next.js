@@ -7,7 +7,9 @@ import {
 } from "@/lib/budget/permissions";
 import type { AmssSessionUser } from "@/types/next-auth";
 
-export async function requireBudgetAccess(): Promise<{
+export async function requireBudgetAccess(
+  _kind?: string,
+): Promise<{
   user: AmssSessionUser;
   perms: BudgetPermissionFlags;
 }> {
@@ -19,3 +21,13 @@ export async function requireBudgetAccess(): Promise<{
 
   return { user: session.user, perms };
 }
+
+export const requireBudgetAllocationAccess = requireBudgetAccess;
+export const requireBudgetDeegaAccess = requireBudgetAccess;
+export const requireBudgetPayAccess = requireBudgetAccess;
+export const requireBudgetPayCheckAccess = requireBudgetAccess;
+export const requireBudgetReceiveAccess = requireBudgetAccess;
+export const requireBudgetStatusChangeAccess = requireBudgetAccess;
+export const requireBudgetWithdrawAccess = requireBudgetAccess;
+export const requireBudgetSettingsData = requireBudgetAccess;
+export const requireBudgetStaffAccess = requireBudgetAccess;

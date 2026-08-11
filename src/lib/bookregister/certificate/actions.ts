@@ -1,5 +1,7 @@
 "use server";
 
+import { insertAndGetId } from "../../db/helpers";
+
 import { and, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -180,27 +182,22 @@ export async function createDistrictCertificate(formData: FormData) {
 
   let insertedId: number | null = null;
   try {
-    const [inserted] = await db
-      .insert(registerCertificates)
-      .values({
-        schoolId: null,
-        year: yearCheck.activeYear.year,
-        registerNumber,
-        bookNo,
-        signdate: parsed.data.signdate,
-        subject: parsed.data.subject.trim(),
-        comment: parsed.data.comment?.trim() || null,
-        registerDate,
-        refId,
-        officerId: Number(user.id),
-        urgencyLevel: reg.urgencyLevel,
-        secretLevel: reg.secretLevel,
-        secret: reg.secret,
-        fileName,
-      })
-      .returning({ id: registerCertificates.id });
-
-    insertedId = inserted?.id ?? null;
+    insertedId = await insertAndGetId(registerCertificates, {
+      schoolId: null,
+      year: yearCheck.activeYear.year,
+      registerNumber,
+      bookNo,
+      signdate: parsed.data.signdate,
+      subject: parsed.data.subject.trim(),
+      comment: parsed.data.comment?.trim() || null,
+      registerDate,
+      refId,
+      officerId: Number(user.id),
+      urgencyLevel: reg.urgencyLevel,
+      secretLevel: reg.secretLevel,
+      secret: reg.secret,
+      fileName,
+    });
   } catch {
     return { ok: false as const, message: "ไม่สามารถบันทึกได้ — กรุณาลองใหม่" };
   }

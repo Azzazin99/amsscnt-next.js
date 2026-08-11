@@ -33,7 +33,7 @@ export function PermissionApproveForm({ action }: PermissionApproveFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border bg-card p-4 shadow-sm">
-      <h3 className="font-semibold text-primary">พิจารณาอนุมัติ</h3>
+      <h3 className="font-semibold text-primary">อนุมัติขั้นสุดท้าย</h3>
 
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium">ผลการพิจารณา</legend>

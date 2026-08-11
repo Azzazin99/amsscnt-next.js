@@ -57,3 +57,5 @@ export function canManageCabinetSettings(
 ): boolean {
   return isCabinetModuleAdmin(user) || perms.p1 === 1;
 }
+
+export const canManageCabinetStaffPermissions = isCabinetModuleAdmin;

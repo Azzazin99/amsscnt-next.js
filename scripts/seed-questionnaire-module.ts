@@ -12,7 +12,7 @@ const GENERAL_GROUP_LEGACY_ID = 1;
 const QUESTIONNAIRE_SLUG = "questionnaire";
 
 async function main() {
-  const [group] = await db
+  const [res_group] = await db
     .select({ id: menuGroups.id })
     .from(menuGroups)
     .where(eq(menuGroups.legacyId, GENERAL_GROUP_LEGACY_ID))
@@ -49,7 +49,8 @@ async function main() {
     const [inserted] = await db
       .insert(modules)
       .values(values)
-      .returning({ id: modules.id });
+      ;
+      const group = { id: res_group.insertId };
     console.log(`เพิ่ม modules.slug = ${QUESTIONNAIRE_SLUG} (id ${inserted.id})`);
   }
 }

@@ -1,4 +1,4 @@
-import { asc, count, eq, ilike } from "drizzle-orm";
+import { asc, count, eq, like } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { schoolGroups, schools } from "@/lib/db/schema";
 
@@ -36,7 +36,7 @@ export async function countSchoolsInGroup(groupId: number): Promise<number> {
 
 function buildSchoolGroupListWhere(q: string) {
   if (q.length >= 2) {
-    return ilike(schoolGroups.name, `%${q}%`);
+    return like(schoolGroups.name, `%${q}%`);
   }
   return undefined;
 }

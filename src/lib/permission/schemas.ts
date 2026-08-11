@@ -80,3 +80,8 @@ export const permissionModulePermissionFormSchema = z.object({
       message: "เลขบัตรเจ้าหน้าที่ต้อง 13 หลัก",
     }),
 });
+
+export const permissionGrantPersonFormSchema = z.object({
+  groupPersonId: z.string().nullable().optional(),
+  personId: z.string().trim().min(1, "กรุณาเลือกบุคลากร"),
+});

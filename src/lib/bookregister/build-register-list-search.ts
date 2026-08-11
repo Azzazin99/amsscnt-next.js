@@ -1,4 +1,4 @@
-import { and, eq, ilike, or, sql, type SQL } from "drizzle-orm";
+import { and, eq, like, or, sql, type SQL } from "drizzle-orm";
 import type {
   registerCommands,
   registerReceives,
@@ -36,13 +36,13 @@ export function buildRegisterListSearchCondition(
   const pattern = `%${term}%`;
 
   const parts: SQL[] = [
-    ilike(table.subject, pattern),
-    ilike(table.bookNo, pattern),
-    ilike(table.bookFrom, pattern),
-    ilike(table.bookTo, pattern),
-    ilike(table.operation, pattern),
-    ilike(table.comment, pattern),
-    sql`CAST(${table.registerNumber} AS TEXT) LIKE ${pattern}`,
+    like(table.subject, pattern),
+    like(table.bookNo, pattern),
+    like(table.bookFrom, pattern),
+    like(table.bookTo, pattern),
+    like(table.operation, pattern),
+    like(table.comment, pattern),
+    sql`CAST(${table.registerNumber} AS CHAR) LIKE ${pattern}`,
   ];
 
   const slash = term.match(REGISTER_NUMBER_SLASH);
@@ -71,10 +71,10 @@ export function buildCommandListSearchCondition(
   const pattern = `%${term}%`;
 
   const parts: SQL[] = [
-    ilike(table.subject, pattern),
-    ilike(table.bookNo, pattern),
-    ilike(table.comment, pattern),
-    sql`CAST(${table.registerNumber} AS TEXT) LIKE ${pattern}`,
+    like(table.subject, pattern),
+    like(table.bookNo, pattern),
+    like(table.comment, pattern),
+    sql`CAST(${table.registerNumber} AS CHAR) LIKE ${pattern}`,
   ];
 
   const slash = term.match(REGISTER_NUMBER_SLASH);

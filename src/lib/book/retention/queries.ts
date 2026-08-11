@@ -86,8 +86,7 @@ export async function upsertRetentionSetting(
   await db
     .insert(bookRetentionSettings)
     .values({ bookType, retentionYears })
-    .onConflictDoUpdate({
-      target: bookRetentionSettings.bookType,
+    .onDuplicateKeyUpdate({
       set: { retentionYears },
     });
 }

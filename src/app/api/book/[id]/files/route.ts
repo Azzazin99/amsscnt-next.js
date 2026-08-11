@@ -146,18 +146,18 @@ export async function POST(req: Request, ctx: Ctx) {
   const storedName = buildStoredBookFileName(required.doc.refId, file.name);
   await saveBookFileToStorage(storedName, file);
 
-  const [inserted] = await db
+  const [res] = await db
     .insert(bookFiles)
     .values({
       refId: required.doc.refId,
       fileName: storedName,
       fileDes: fileDes ?? file.name,
-    })
-    .returning({
-      id: bookFiles.id,
-      fileName: bookFiles.fileName,
-      fileDes: bookFiles.fileDes,
     });
+  const inserted = {
+    id: res.insertId,
+    fileName: storedName,
+    fileDes: fileDes ?? file.name,
+  };
 
   return NextResponse.json({
     ok: true,

@@ -60,3 +60,5 @@ export function canWriteAffair(
 export function canManageAffairSettings(user: AmssSessionUser): boolean {
   return isAffairModuleAdmin(user);
 }
+
+export const canManageAffairStaffPermissions = isAffairModuleAdmin;

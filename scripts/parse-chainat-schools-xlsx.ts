@@ -48,7 +48,7 @@ print(json.dumps(rows, ensure_ascii=False))
 export function defaultChainatSchoolsXlsxPath(): string {
   return resolve(
     process.cwd(),
-    process.env.CHAINAT_SCHOOLS_XLSX ?? "โรงเรียนในสังกัด สพป.ชัยนาท.xlsx",
+    process.env.CHAINAT_SCHOOLS_XLSX ?? "_สพป.ชัยนาท.xlsx",
   );
 }
 

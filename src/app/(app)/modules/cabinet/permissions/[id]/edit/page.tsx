@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { CabinetPermissionForm } from "@/components/cabinet/cabinet-permission-form";
 import { updateCabinetPermission } from "@/lib/cabinet/actions";
-import { canManageCabinetSettings, getCabinetPermissions } from "@/lib/cabinet/permissions";
+import { canManageCabinetStaffPermissions, getCabinetPermissions } from "@/lib/cabinet/permissions";
 import {
   getCabinetModulePermission,
   listStaffForCabinetPermissionPicker,
@@ -15,7 +15,7 @@ type Props = {
 export default async function CabinetPermissionEditPage({ params }: Props) {
   const { user } = await requireCabinetScope();
   const perms = await getCabinetPermissions(Number(user.id));
-  if (!canManageCabinetSettings(user, perms)) redirect("/modules/cabinet");
+  if (!canManageCabinetStaffPermissions(user)) redirect("/modules/cabinet");
 
   const { id: idParam } = await params;
   const id = Number(idParam);

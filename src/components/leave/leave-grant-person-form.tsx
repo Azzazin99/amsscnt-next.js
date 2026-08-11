@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { FieldError } from "@/components/shared/field-error";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { zodFieldErrors } from "@/lib/form/zod-client";
 import { leaveGrantPersonFormSchema } from "@/lib/leave/schemas";
 import type { DistrictPersonOption } from "@/lib/leave/grant-persons-queries";
@@ -150,12 +150,12 @@ export function LeaveGrantPersonForm({
       ) : null}
 
       <div className="flex flex-wrap gap-3 pt-2">
-        <Button type="submit" disabled={loading} className="min-h-11">
+        <Button type="submit" disabled={loading} className="min-h-11 min-w-28 justify-center">
           {loading ? "กำลังบันทึก…" : "บันทึก"}
         </Button>
         <Link
           href={cancelHref}
-          className="inline-flex min-h-11 items-center rounded-lg border px-4 text-sm hover:bg-muted"
+          className={buttonVariants({ variant: "outline", className: "min-h-11 min-w-28 justify-center" })}
         >
           ยกเลิก
         </Link>

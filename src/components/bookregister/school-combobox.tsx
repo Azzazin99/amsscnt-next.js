@@ -72,6 +72,7 @@ export function SchoolCombobox({
   useEffect(() => {
     if (open) {
       const selectedIdx = optionCodes.indexOf(value);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset combobox UI when opened
       setActiveIndex(selectedIdx >= 0 ? selectedIdx : 0);
       const t = window.setTimeout(() => searchRef.current?.focus(), 0);
       return () => window.clearTimeout(t);

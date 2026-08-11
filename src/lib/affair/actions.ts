@@ -1,5 +1,7 @@
 "use server";
 
+import { insertAndGetId } from "../db/helpers";
+
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -63,9 +65,7 @@ export async function createAffairEntry(formData: FormData) {
     };
   }
 
-  const [inserted] = await db
-    .insert(affairEntries)
-    .values({
+  const insertedId = await insertAndGetId(affairEntries, {
       affairDate: parsed.data.affairDate,
       affairTime: parsed.data.affairTime,
       subject: parsed.data.subject,
@@ -74,8 +74,8 @@ export async function createAffairEntry(formData: FormData) {
       remark: parsed.data.remark,
       recDate: todayBangkokDateString(),
       officerPersonId: user.personId,
-    })
-    .returning({ id: affairEntries.id });
+    });
+  const inserted = { id: insertedId };
 
   if (!inserted) {
     return { ok: false as const, message: "ไม่สามารถบันทึกได้" };

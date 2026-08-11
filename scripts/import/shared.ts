@@ -1,4 +1,5 @@
-import { queryClient } from "../../src/lib/db";
+import { db } from "../../src/lib/db";
+import { sql } from "drizzle-orm";
 import { cleanLegacyText } from "../../src/lib/format/clean-text";
 
 export type ImportMaps = {
@@ -9,6 +10,11 @@ export type ImportMaps = {
 
 export function cleanText(value: unknown): string {
   return cleanLegacyText(value);
+}
+
+export async function legacyQuery<T = Record<string, unknown>>(queryStr: string): Promise<T[]> {
+  const [rows] = await db.execute(sql.raw(queryStr));
+  return (rows ?? []) as T[];
 }
 
 const INVALID_LEGACY_DATES = new Set(["0000-00-00", "0001-01-01"]);
@@ -23,13 +29,12 @@ export function normalizeLegacyDate(value: unknown): string | null {
 }
 
 export async function legacyTableExists(table: string): Promise<boolean> {
-  const rows = await queryClient<{ exists: boolean }[]>`
-    SELECT EXISTS (
-      SELECT 1 FROM information_schema.tables
-      WHERE table_schema = 'public' AND table_name = ${table}
-    ) AS exists
-  `;
-  return rows[0]?.exists ?? false;
+  const [rows] = (await db.execute(sql`
+    SELECT COUNT(*) AS count FROM information_schema.tables
+    WHERE table_schema = DATABASE() AND table_name = ${table}
+  `)) as unknown as [{ count: number }[], unknown];
+  const list = Array.isArray(rows) ? rows : [];
+  return Number(list[0]?.count ?? 0) > 0;
 }
 
 export function uniqueRefId(refId: string, msId: number, seen: Set<string>): string {
@@ -108,9 +113,9 @@ export async function flushBatch<T>(
 }
 
 export async function deriveOfficeCodeFromLegacySchools(): Promise<string> {
-  const rows = await queryClient<{ school_code: string }[]>`
+  const rows = ((await db.execute(sql`
     SELECT school_code FROM system_school ORDER BY school_code LIMIT 1
-  `;
+  `))[0] as Record<string, unknown>[]);
   const code = String(rows[0]?.school_code ?? "3501");
   return code.slice(0, 4);
 }

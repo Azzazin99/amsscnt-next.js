@@ -11,12 +11,14 @@ const inputClass =
 
 type WorkgroupOption = { legacyCode: number; name: string };
 type PersonOption = { personId: string; displayName: string };
+type StrategyOption = { idTegic: string; strategic: string };
 
 type PlanProjectFormProps = {
   action: (formData: FormData) => Promise<{ ok: boolean; message?: string } | void>;
   budgetYear: number;
   workgroups: WorkgroupOption[];
   people: PersonOption[];
+  strategies?: StrategyOption[];
   cancelHref: string;
   defaultValues?: {
     codeClus: number;
@@ -36,6 +38,7 @@ export function PlanProjectForm({
   budgetYear,
   workgroups,
   people,
+  strategies,
   cancelHref,
   defaultValues,
   suggestedCodeProj,
@@ -61,9 +64,33 @@ export function PlanProjectForm({
 
   return (
     <form onSubmit={handleSubmit} className="mx-auto max-w-2xl space-y-4">
-      <input type="hidden" name="codeTegy" value={defaultValues?.codeTegy ?? "1"} />
+      {strategies && strategies.length > 0 ? null : (
+        <input type="hidden" name="codeTegy" value={defaultValues?.codeTegy ?? "1"} />
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
+        {strategies && strategies.length > 0 ? (
+          <div className="space-y-1 sm:col-span-2">
+            <label htmlFor="codeTegy" className="text-sm font-medium">
+              ยุทธศาสตร์
+            </label>
+            <select
+              id="codeTegy"
+              name="codeTegy"
+              required
+              defaultValue={defaultValues?.codeTegy ?? ""}
+              className={inputClass}
+            >
+              <option value="">— เลือกยุทธศาสตร์ —</option>
+              {strategies.map((s) => (
+                <option key={s.idTegic} value={s.idTegic}>
+                  {s.idTegic} {s.strategic}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
+
         <div className="space-y-1 sm:col-span-2">
           <label htmlFor="codeClus" className="text-sm font-medium">
             กลุ่มงาน
@@ -92,7 +119,7 @@ export function PlanProjectForm({
             id="codeProj"
             name="codeProj"
             required
-            maxLength={3}
+            maxLength={4}
             defaultValue={defaultValues?.codeProj ?? suggestedCodeProj ?? ""}
             className={inputClass}
           />
@@ -188,10 +215,10 @@ export function PlanProjectForm({
       ) : null}
 
       <div className="flex flex-wrap gap-3">
-        <Button type="submit" disabled={loading} className="min-h-11">
+        <Button type="submit" disabled={loading} className="min-h-11 min-w-28 justify-center">
           {loading ? "กำลังบันทึก…" : "บันทึก"}
         </Button>
-        <Link href={cancelHref} className={buttonVariants({ variant: "outline" })}>
+        <Link href={cancelHref} className={buttonVariants({ variant: "outline", className: "min-h-11 min-w-28 justify-center" })}>
           ยกเลิก
         </Link>
       </div>

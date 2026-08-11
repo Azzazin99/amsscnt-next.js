@@ -4,7 +4,7 @@ import {
   count,
   desc,
   eq,
-  ilike,
+  like,
   inArray,
   isNull,
   notInArray,
@@ -157,11 +157,11 @@ function buildWhere(
   if (q.length >= 2) {
     conditions.push(
       or(
-        ilike(leaveRequests.personId, `%${q}%`),
-        ilike(people.firstName, `%${q}%`),
-        ilike(people.lastName, `%${q}%`),
-        ilike(people.prefix, `%${q}%`),
-        ilike(users.name, `%${q}%`),
+        like(leaveRequests.personId, `%${q}%`),
+        like(people.firstName, `%${q}%`),
+        like(people.lastName, `%${q}%`),
+        like(people.prefix, `%${q}%`),
+        like(users.name, `%${q}%`),
       ),
     );
   }
@@ -561,7 +561,7 @@ export async function listLeaveYears(): Promise<LeaveYearRow[]> {
       yearActive: leaveYears.yearActive,
     })
     .from(leaveYears)
-    .orderBy(asc(leaveYears.budgetYear));
+    .orderBy(desc(leaveYears.budgetYear));
 }
 
 export async function getLeaveYear(id: number) {
@@ -868,10 +868,10 @@ function buildCancellationWhere(
   if (q.length >= 2) {
     conditions.push(
       or(
-        ilike(leaveCancellations.personId, `%${q}%`),
-        ilike(people.firstName, `%${q}%`),
-        ilike(people.lastName, `%${q}%`),
-        ilike(people.prefix, `%${q}%`),
+        like(leaveCancellations.personId, `%${q}%`),
+        like(people.firstName, `%${q}%`),
+        like(people.lastName, `%${q}%`),
+        like(people.prefix, `%${q}%`),
       ),
     );
   }

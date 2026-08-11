@@ -1,5 +1,7 @@
 "use server";
 
+import { insertAndGetId } from "../db/helpers";
+
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
@@ -125,9 +127,7 @@ export async function createBookDocument(formData: FormData) {
   const officeCode =
     scope.kind === "school" ? scope.schoolCode : user.officeCode ?? "1701";
 
-  const [inserted] = await db
-    .insert(bookDocuments)
-    .values({
+  const insertedId = await insertAndGetId(bookDocuments, {
       refId,
       bookType,
       senderPersonId: user.personId,
@@ -140,8 +140,8 @@ export async function createBookDocument(formData: FormData) {
       signDate: parsed.data.signDate,
       subject: parsed.data.subject,
       detail: parsed.data.detail ?? null,
-    })
-    .returning({ id: bookDocuments.id });
+    });
+  const inserted = { id: insertedId };
 
   if (!inserted) {
     return { ok: false as const, message: "ไม่สามารถบันทึกได้" };
@@ -184,7 +184,7 @@ export async function acknowledgeBookDocument(formData: FormData) {
     return { ok: false as const, message: "ไม่พบหนังสือ" };
   }
 
-  const [updated] = await db
+  const result = await db
     .update(bookRecipients)
     .set({ answered: true, answeredAt: new Date() })
     .where(
@@ -193,10 +193,10 @@ export async function acknowledgeBookDocument(formData: FormData) {
         eq(bookRecipients.sendTo, sendTo),
         eq(bookRecipients.answered, false),
       ),
-    )
-    .returning({ id: bookRecipients.id });
+    );
 
-  if (!updated) {
+  const affected = (result as any)[0]?.affectedRows ?? 0;
+  if (affected === 0) {
     return { ok: false as const, message: "ตอบรับแล้วหรือไม่มีสิทธิ์" };
   }
 

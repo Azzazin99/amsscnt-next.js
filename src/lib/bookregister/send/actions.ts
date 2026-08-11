@@ -1,7 +1,10 @@
 "use server";
 
+import { insertAndGetId } from "../../db/helpers";
+
 import { and, eq, isNull } from "drizzle-orm";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag as nextRevalidateTag } from "next/cache";
+const revalidateTag = nextRevalidateTag as any;
 import { db } from "@/lib/db";
 import { registerSends } from "@/lib/db/schema";
 import { getSchoolOfficeNo } from "@/lib/bookregister/office-no/queries";
@@ -159,33 +162,25 @@ export async function createDistrictSend(formData: FormData) {
 
   let insertedId: number;
   try {
-    const [inserted] = await db
-      .insert(registerSends)
-      .values({
-        schoolId: scope.kind === "school" ? scope.schoolId : null,
-        year: activeYear.year,
-        registerNumber,
-        bookNo,
-        signdate: parsed.data.signdate,
-        bookFrom: parsed.data.bookFrom.trim(),
-        bookTo: parsed.data.bookTo.trim(),
-        subject: parsed.data.subject.trim(),
-        operation: parsed.data.operation?.trim() || null,
-        comment: parsed.data.comment?.trim() || null,
-        registerDate,
-        refId,
-        officerId: Number(user.id),
-        workgroupId,
-        officeType,
-        forwardedToSchools: false,
-        ...reg,
-      })
-      .returning({ id: registerSends.id });
-
-    if (!inserted) {
-      return { ok: false, message: "ไม่สามารถบันทึกได้ — กรุณาลองใหม่" };
-    }
-    insertedId = inserted.id;
+    insertedId = await insertAndGetId(registerSends, {
+      schoolId: scope.kind === "school" ? scope.schoolId : null,
+      year: activeYear.year,
+      registerNumber,
+      bookNo,
+      signdate: parsed.data.signdate,
+      bookFrom: parsed.data.bookFrom.trim(),
+      bookTo: parsed.data.bookTo.trim(),
+      subject: parsed.data.subject.trim(),
+      operation: parsed.data.operation?.trim() || null,
+      comment: parsed.data.comment?.trim() || null,
+      registerDate,
+      refId,
+      officerId: Number(user.id),
+      workgroupId,
+      officeType,
+      forwardedToSchools: false,
+      ...reg,
+    });
   } catch {
     return { ok: false, message: "ไม่สามารถบันทึกได้ — กรุณาลองใหม่" };
   }

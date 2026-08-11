@@ -1,6 +1,7 @@
 import "server-only";
 
-import archiver from "archiver";
+// @ts-ignore
+const archiver = require("archiver");
 import { access } from "node:fs/promises";
 import path from "node:path";
 import { PassThrough } from "node:stream";

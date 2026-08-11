@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { PermissionForm } from "@/components/bookregister/permission-form";
 import {
-  canManageDistrictYears,
+  canManageBookregisterStaffPermissions,
   getBookregisterPermissions,
 } from "@/lib/bookregister/permissions";
 import { createDistrictRegisterPermission } from "@/lib/bookregister/permissions/actions";
@@ -13,7 +13,7 @@ export default async function NewDistrictPermissionPage() {
   if (!session?.user) redirect("/login");
 
   const perms = await getBookregisterPermissions(Number(session.user.id));
-  if (!canManageDistrictYears(session.user, perms)) {
+  if (!canManageBookregisterStaffPermissions(session.user)) {
     redirect("/modules/bookregister");
   }
 

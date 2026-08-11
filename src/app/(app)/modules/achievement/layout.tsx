@@ -2,8 +2,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AppBreadcrumb } from "@/components/app-shell/app-breadcrumb";
 import { AchievementNav } from "@/components/achievement/achievement-nav";
+import { getModuleSettingsNavMode } from "@/lib/core/permissions";
 import {
-  canManageAchievementSettings,
   canViewAchievementList,
   canWriteAchievementScore,
   getAchievementPermissions,
@@ -25,7 +25,7 @@ export default async function AchievementLayout({
 
   const scope = await resolveAchievementScope(session.user, perms);
   const canWrite = canWriteAchievementScore(session.user, perms);
-  const showAdmin = canManageAchievementSettings(session.user, perms);
+  const settingsNavMode = getModuleSettingsNavMode(session.user, "achievement");
 
   return (
     <div className="px-4 py-6 lg:px-8">
@@ -42,7 +42,7 @@ export default async function AchievementLayout({
           {scope ? ` · ${scopeLabel(scope)}` : ""}
         </p>
       </div>
-      <AchievementNav canWrite={canWrite} showAdmin={showAdmin} />
+      <AchievementNav canWrite={canWrite} settingsNavMode={settingsNavMode} />
       {children}
     </div>
   );

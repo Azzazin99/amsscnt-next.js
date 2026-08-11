@@ -69,3 +69,18 @@ export const planActivityFormSchema = z
       });
     }
   });
+
+export const planPermissionFormSchema = z.object({
+  personId: z.string().trim().min(13, "เลขบัตรประชาชน 13 หลัก").max(13),
+  permAdd: z.preprocess((v) => v === "1" || v === "on" || v === true, z.boolean()),
+  permEdit: z.preprocess((v) => v === "1" || v === "on" || v === true, z.boolean()),
+  permDele: z.preprocess((v) => v === "1" || v === "on" || v === true, z.boolean()),
+});
+
+export const planStrategyFormSchema = z.object({
+  budgetYear: z.coerce.number().int().min(2500).max(2700),
+  codeTegy: z.string().trim().min(1).max(10),
+  nameTegy: z.string().trim().min(1).max(255),
+  idTegic: z.string().trim().max(10).optional(),
+  strategic: z.string().trim().max(255).optional(),
+});

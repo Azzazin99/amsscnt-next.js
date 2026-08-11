@@ -3,11 +3,11 @@ import { Check, Pencil, X } from "lucide-react";
 import { MailPermissionDeleteButton } from "@/components/mail/mail-permission-delete-button";
 import { buttonVariants } from "@/components/ui/button";
 import { listMailPermissions } from "@/lib/mail/queries";
-import { requireMailSettingsAccess } from "@/lib/mail/scope";
+import { requireMailStaffPermissionsAccess } from "@/lib/mail/scope";
 import { cn } from "@/lib/utils";
 
 export default async function MailPermissionsPage() {
-  await requireMailSettingsAccess();
+  await requireMailStaffPermissionsAccess();
   const rows = await listMailPermissions();
 
   return (

@@ -53,6 +53,8 @@ export function canManageCarSettings(
   return isCarModuleAdmin(user) || perms.p1 === 1;
 }
 
+export const canManageCarStaffPermissions = isCarModuleAdmin;
+
 export function canWriteCarRequest(
   user: AmssSessionUser,
   perms: CarPermissionFlags,

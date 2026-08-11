@@ -63,6 +63,8 @@ export function canManagePersonPermissions(
   return isPersonModuleAdmin(user) || perms.p1 === 1;
 }
 
+export const canManagePersonStaffPermissions = isPersonModuleAdmin;
+
 export function canWritePerson(
   user: AmssSessionUser,
   perms: PersonPermissionFlags,

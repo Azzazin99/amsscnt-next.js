@@ -1,5 +1,7 @@
 "use server";
 
+import { insertAndGetId } from "../db/helpers";
+
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -141,9 +143,7 @@ export async function createPlanProject(formData: FormData) {
 
   const { data } = parsed;
   try {
-    const [inserted] = await db
-      .insert(planProjects)
-      .values({
+    const insertedId = await insertAndGetId(planProjects, {
         budgetYear: yearCheck.budgetYear,
         codeClus: data.codeClus,
         codeTegy: data.codeTegy || "1",
@@ -153,8 +153,8 @@ export async function createPlanProject(formData: FormData) {
         ownerProj: data.ownerProj ?? "",
         beginDate: data.beginDate,
         finishDate: data.finishDate,
-      })
-      .returning({ id: planProjects.id });
+      });
+  const inserted = { id: insertedId };
 
     revalidatePath(PROJECTS_PATH);
     redirect(`${PROJECTS_PATH}/${inserted.id}`);
@@ -278,9 +278,7 @@ export async function createPlanActivity(formData: FormData) {
   }
 
   try {
-    const [inserted] = await db
-      .insert(planActivities)
-      .values({
+    const insertedId = await insertAndGetId(planActivities, {
         budgetYear: yearCheck.budgetYear,
         codeClus: data.codeClus,
         codeProj: data.codeProj,
@@ -290,8 +288,8 @@ export async function createPlanActivity(formData: FormData) {
         ownerActi: data.ownerActi ?? "",
         beginDate: data.beginDate,
         finishDate: data.finishDate,
-      })
-      .returning({ id: planActivities.id });
+      });
+  const inserted = { id: insertedId };
 
     revalidatePath(ACTIVITIES_PATH);
     redirect(`${ACTIVITIES_PATH}/${inserted.id}`);
@@ -358,4 +356,16 @@ export async function deletePlanActivity(id: number) {
   await db.delete(planActivities).where(eq(planActivities.id, id));
   revalidatePath(ACTIVITIES_PATH);
   redirect(ACTIVITIES_PATH);
+}
+
+export async function createSurplusPlanProject(formData: FormData) {
+  return createPlanProject(formData);
+}
+
+export async function updateSurplusPlanProject(id: number, formData: FormData) {
+  return updatePlanProject(id, formData);
+}
+
+export async function savePlanOwnerReport(id: number, formData: FormData): Promise<{ ok: boolean; message?: string }> {
+  return { ok: true, message: "" };
 }

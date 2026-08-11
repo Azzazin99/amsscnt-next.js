@@ -67,8 +67,8 @@ function NavLinkLabel({
         </span>
       ) : isManual ? (
         <ModuleStatusBadge
-          status={MODULE_MANUAL_STATUS}
-          label={MODULE_MANUAL_STATUS_LABEL}
+          status={status}
+          label={status === "planned" ? MODULE_MANUAL_STATUS_LABEL : undefined}
         />
       ) : (
         <ModuleStatusBadge status={status} />
@@ -132,7 +132,7 @@ function ModuleNavFlyout({
   if (children.length === 0) return null;
 
   return (
-    <div className="group relative">
+    <div className="group relative z-0 hover:z-40 focus-within:z-40">
       <span
         className={cn(
           "inline-flex cursor-default select-none items-center gap-1 rounded-lg px-3 py-2 text-sm transition-colors",
@@ -199,7 +199,7 @@ export function ModuleNavSection({
   if (visibleLinks.length === 0) return null;
 
   return (
-    <div className="inline-flex flex-wrap items-center gap-2">
+    <div className="relative z-0 inline-flex flex-wrap items-center gap-2 hover:z-30">
       {title ? (
         <span className="shrink-0 text-xs font-semibold uppercase text-muted-foreground">
           {title}
@@ -241,7 +241,7 @@ export function ModuleNav({
 
   return (
     <nav
-      className="mb-6 flex flex-row flex-wrap items-center gap-x-4 gap-y-2 border-b pb-4"
+      className="relative isolate z-30 mb-6 flex flex-row flex-wrap items-center gap-x-4 gap-y-2 border-b pb-4"
       aria-label={ariaLabel}
     >
       {visibleSections.map((section) => (

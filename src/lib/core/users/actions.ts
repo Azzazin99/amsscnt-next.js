@@ -1,5 +1,7 @@
 "use server";
 
+import { insertAndGetId } from "../../db/helpers";
+
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -48,29 +50,21 @@ export async function createUser(formData: FormData) {
 
   let insertedId: number;
   try {
-    const [inserted] = await db
-      .insert(users)
-      .values({
-        username: parsed.data.username,
-        personId: parsed.data.personId,
-        email: parsed.data.email,
-        passwordHash,
-        name: parsed.data.name,
-        organizationType: parsed.data.organizationType,
-        schoolId: schoolIdForOrg(
-          parsed.data.organizationType,
-          parsed.data.schoolId,
-        ),
-        isAdmin: parsed.data.isAdmin,
-        isSuperAdmin: parsed.data.isAdmin,
-        status: parsed.data.status,
-      })
-      .returning({ id: users.id });
-
-    if (!inserted) {
-      return { ok: false as const, message: "ไม่สามารถบันทึกได้" };
-    }
-    insertedId = inserted.id;
+    insertedId = await insertAndGetId(users, {
+      username: parsed.data.username,
+      personId: parsed.data.personId,
+      email: parsed.data.email,
+      passwordHash,
+      name: parsed.data.name,
+      organizationType: parsed.data.organizationType,
+      schoolId: schoolIdForOrg(
+        parsed.data.organizationType,
+        parsed.data.schoolId,
+      ),
+      isAdmin: parsed.data.isAdmin,
+      isSuperAdmin: parsed.data.isAdmin,
+      status: parsed.data.status,
+    });
   } catch {
     return { ok: false as const, message: "ไม่สามารถบันทึกได้" };
   }

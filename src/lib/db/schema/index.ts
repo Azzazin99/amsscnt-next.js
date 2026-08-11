@@ -1,76 +1,80 @@
 import {
   boolean,
   date,
+  double,
   index,
-  integer,
-  pgEnum,
-  pgTable,
-  real,
-  serial,
+  int,
+  mysqlEnum,
+  mysqlTable,
+  float,
   text,
   timestamp,
+  tinyint,
   uniqueIndex,
   varchar,
-} from "drizzle-orm/pg-core";
+} from "drizzle-orm/mysql-core";
 
-export const organizationTypeEnum = pgEnum("organization_type", [
+export const organizationTypeEnum = mysqlEnum("organization_type", [
   "district",
   "school",
 ]);
 
-export const districtSettings = pgTable("district_settings", {
-  id: serial("id").primaryKey(),
+export const districtSettings = mysqlTable("district_settings", {
+  id: int("id").autoincrement().primaryKey(),
   officeName: varchar("office_name", { length: 255 }).notNull(),
   officeCode: varchar("office_code", { length: 10 }).notNull().default("1701"),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const workgroups = pgTable("workgroups", {
-  id: serial("id").primaryKey(),
-  legacyCode: integer("legacy_code"),
+export const workgroups = mysqlTable("workgroups", {
+  id: int("id").autoincrement().primaryKey(),
+  legacyCode: int("legacy_code"),
   name: varchar("name", { length: 255 }).notNull(),
-  sortOrder: integer("sort_order").default(0).notNull(),
+  sortOrder: int("sort_order").default(0).notNull(),
   active: boolean("active").default(true).notNull(),
 });
 
-export const schoolGroups = pgTable("school_groups", {
-  id: serial("id").primaryKey(),
-  legacyId: integer("legacy_id"),
+export const schoolGroups = mysqlTable("school_groups", {
+  id: int("id").autoincrement().primaryKey(),
+  legacyId: int("legacy_id"),
   name: varchar("name", { length: 255 }).notNull(),
-  sortOrder: integer("sort_order").default(0).notNull(),
+  sortOrder: int("sort_order").default(0).notNull(),
 });
 
-export const schools = pgTable(
+export const schools = mysqlTable(
   "schools",
   {
-    id: serial("id").primaryKey(),
+    id: int("id").autoincrement().primaryKey(),
     schoolCode: varchar("school_code", { length: 12 }).notNull(),
     name: varchar("name", { length: 255 }).notNull(),
-    schoolType: integer("school_type").default(0).notNull(),
-    schoolGroupId: integer("school_group_id").references(() => schoolGroups.id),
+    schoolType: int("school_type").default(0).notNull(),
+    schoolGroupId: int("school_group_id").references(() => schoolGroups.id),
     active: boolean("active").default(true).notNull(),
   },
   (t) => [uniqueIndex("schools_school_code_idx").on(t.schoolCode)],
 );
 
-export const people = pgTable(
+export const people = mysqlTable(
   "people",
   {
-    id: serial("id").primaryKey(),
+    id: int("id").autoincrement().primaryKey(),
     personId: varchar("person_id", { length: 13 }).notNull(),
     prefix: varchar("prefix", { length: 50 }),
     firstName: varchar("first_name", { length: 100 }).notNull(),
     lastName: varchar("last_name", { length: 100 }).notNull(),
-    workgroupId: integer("workgroup_id").references(() => workgroups.id),
-    schoolId: integer("school_id").references(() => schools.id),
-    organizationType: organizationTypeEnum("organization_type")
+    workgroupId: int("workgroup_id").references(() => workgroups.id),
+    schoolId: int("school_id").references(() => schools.id),
+    organizationType: mysqlEnum("organization_type", ["district", "school"])
       .notNull()
       .default("district"),
-    positionCode: integer("position_code"),
-    status: integer("status").default(0).notNull(),
+    positionCode: int("position_code"),
+    status: int("status").default(0).notNull(),
     multiSchool: boolean("multi_school").default(false).notNull(),
-    serviceStartDate: date("service_start_date"),
+    serviceStartDate: date("service_start_date", { mode: "string" }),
     sex: varchar("sex", { length: 1 }),
+    birthDate: date("birth_date", { mode: "string" }),
+    personOrder: int("person_order").default(0),
+    pictureUrl: varchar("picture_url", { length: 255 }),
   },
   (t) => [
     uniqueIndex("people_person_id_idx").on(t.personId),
@@ -79,12 +83,12 @@ export const people = pgTable(
   ],
 );
 
-export const personSchoolAssignments = pgTable(
+export const personSchoolAssignments = mysqlTable(
   "person_school_assignments",
   {
-    id: serial("id").primaryKey(),
+    id: int("id").autoincrement().primaryKey(),
     personId: varchar("person_id", { length: 13 }).notNull(),
-    schoolId: integer("school_id")
+    schoolId: int("school_id")
       .notNull()
       .references(() => schools.id),
   },
@@ -94,33 +98,33 @@ export const personSchoolAssignments = pgTable(
 );
 
 /** legacy: รักษาการในตำแหน่ง ผอ.รร. */
-export const personDelegate = pgTable("person_delegate", {
-  id: serial("id").primaryKey(),
+export const personDelegate = mysqlTable("person_delegate", {
+  id: int("id").autoincrement().primaryKey(),
   schoolCode: varchar("school_code", { length: 11 }).notNull(),
   personId: varchar("person_id", { length: 13 }).notNull(),
-  start: date("start").notNull(),
-  finish: date("finish").notNull(),
+  start: date("start", { mode: "string" }).notNull(),
+  finish: date("finish", { mode: "string" }).notNull(),
   remark: varchar("remark", { length: 250 }).notNull(),
   officer: varchar("officer", { length: 13 }).notNull(),
-  recDate: date("rec_date").notNull(),
+  recDate: date("rec_date", { mode: "string" }).notNull(),
 });
 
-export const users = pgTable(
+export const users = mysqlTable(
   "users",
   {
-    id: serial("id").primaryKey(),
+    id: int("id").autoincrement().primaryKey(),
     username: varchar("username", { length: 100 }).notNull(),
     personId: varchar("person_id", { length: 13 }).notNull(),
     email: varchar("email", { length: 255 }).notNull(),
     passwordHash: text("password_hash").notNull(),
     name: varchar("name", { length: 255 }).notNull(),
-    organizationType: organizationTypeEnum("organization_type")
+    organizationType: mysqlEnum("organization_type", ["district", "school"])
       .notNull()
       .default("district"),
-    schoolId: integer("school_id").references(() => schools.id),
+    schoolId: int("school_id").references(() => schools.id),
     isSuperAdmin: boolean("is_super_admin").default(false).notNull(),
     isAdmin: boolean("is_admin").default(false).notNull(),
-    status: integer("status").default(1).notNull(),
+    status: int("status").default(1).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
@@ -130,74 +134,74 @@ export const users = pgTable(
   ],
 );
 
-export const menuGroups = pgTable("menu_groups", {
-  id: serial("id").primaryKey(),
-  legacyId: integer("legacy_id"),
+export const menuGroups = mysqlTable("menu_groups", {
+  id: int("id").autoincrement().primaryKey(),
+  legacyId: int("legacy_id"),
   name: varchar("name", { length: 255 }).notNull(),
-  sortOrder: integer("sort_order").default(0).notNull(),
+  sortOrder: int("sort_order").default(0).notNull(),
 });
 
-export const modules = pgTable("modules", {
-  id: serial("id").primaryKey(),
+export const modules = mysqlTable("modules", {
+  id: int("id").autoincrement().primaryKey(),
   slug: varchar("slug", { length: 64 }).notNull().unique(),
   name: varchar("name", { length: 255 }).notNull(),
-  menuGroupId: integer("menu_group_id").references(() => menuGroups.id),
-  whereWork: integer("where_work").default(0).notNull(),
+  menuGroupId: int("menu_group_id").references(() => menuGroups.id),
+  whereWork: int("where_work").default(0).notNull(),
   active: boolean("active").default(true).notNull(),
-  sortOrder: integer("sort_order").default(0).notNull(),
+  sortOrder: int("sort_order").default(0).notNull(),
 });
 
-export const moduleAdmins = pgTable(
+export const moduleAdmins = mysqlTable(
   "module_admins",
   {
-    id: serial("id").primaryKey(),
-    userId: integer("user_id")
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     moduleSlug: varchar("module_slug", { length: 64 }).notNull(),
-    assignedAt: date("assigned_at"),
-    assignedBy: integer("assigned_by").references(() => users.id),
+    assignedAt: date("assigned_at", { mode: "string" }),
+    assignedBy: int("assigned_by").references(() => users.id),
   },
   (t) => [
     uniqueIndex("module_admins_user_module_idx").on(t.userId, t.moduleSlug),
   ],
 );
 
-export const registerPermissions = pgTable("register_permissions", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id")
+export const registerPermissions = mysqlTable("register_permissions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" })
     .unique(),
-  p1: integer("p1").default(0).notNull(),
-  p2: integer("p2").default(0).notNull(),
-  p3: integer("p3").default(0).notNull(),
+  p1: int("p1").default(0).notNull(),
+  p2: int("p2").default(0).notNull(),
+  p3: int("p3").default(0).notNull(),
   canViewSecret: boolean("can_view_secret").default(false).notNull(),
 });
 
 /** legacy: person_permission — สิทธิ์โมดูลบุคลากร p1/p2/p3 */
-export const personPermissions = pgTable("person_permissions", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id")
+export const personPermissions = mysqlTable("person_permissions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" })
     .unique(),
-  p1: integer("p1").default(0).notNull(),
-  p2: integer("p2").default(0).notNull(),
-  p3: integer("p3").default(0).notNull(),
+  p1: int("p1").default(0).notNull(),
+  p2: int("p2").default(0).notNull(),
+  p3: int("p3").default(0).notNull(),
 });
 
-export const registerYears = pgTable(
+export const registerYears = mysqlTable(
   "register_years",
   {
-    id: serial("id").primaryKey(),
-    year: integer("year").notNull(),
-    schoolId: integer("school_id").references(() => schools.id),
+    id: int("id").autoincrement().primaryKey(),
+    year: int("year").notNull(),
+    schoolId: int("school_id").references(() => schools.id),
     yearActive: boolean("year_active").default(false).notNull(),
-    startReceiveNum: integer("start_receive_num").default(1).notNull(),
-    startSendNum: integer("start_send_num").default(1).notNull(),
-    startCommandNum: integer("start_command_num").default(1).notNull(),
-    startCertificateNum: integer("start_certificate_num").default(1).notNull(),
+    startReceiveNum: int("start_receive_num").default(1).notNull(),
+    startSendNum: int("start_send_num").default(1).notNull(),
+    startCommandNum: int("start_command_num").default(1).notNull(),
+    startCertificateNum: int("start_certificate_num").default(1).notNull(),
   },
   (t) => [
     uniqueIndex("register_years_year_school_idx").on(t.year, t.schoolId),
@@ -205,35 +209,35 @@ export const registerYears = pgTable(
 );
 
 const registerBase = {
-  id: serial("id").primaryKey(),
-  schoolId: integer("school_id").references(() => schools.id),
-  year: integer("year").notNull(),
-  registerNumber: integer("register_number").notNull(),
+  id: int("id").autoincrement().primaryKey(),
+  schoolId: int("school_id").references(() => schools.id),
+  year: int("year").notNull(),
+  registerNumber: int("register_number").notNull(),
   bookNo: varchar("book_no", { length: 100 }),
-  signdate: date("signdate"),
+  signdate: date("signdate", { mode: "string" }),
   subject: text("subject"),
   comment: text("comment"),
-  registerDate: date("register_date"),
+  registerDate: date("register_date", { mode: "string" }),
   refId: varchar("ref_id", { length: 64 }).notNull(),
-  officerId: integer("officer_id").references(() => users.id),
+  officerId: int("officer_id").references(() => users.id),
   secret: boolean("secret").default(false).notNull(),
-  urgencyLevel: integer("urgency_level").default(1).notNull(),
-  secretLevel: integer("secret_level").default(0).notNull(),
+  urgencyLevel: int("urgency_level").default(1).notNull(),
+  secretLevel: int("secret_level").default(0).notNull(),
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 };
 
-export const registerReceives = pgTable(
+export const registerReceives = mysqlTable(
   "register_receives",
   {
     ...registerBase,
     bookFrom: text("book_from"),
     bookTo: text("book_to"),
     operation: varchar("operation", { length: 255 }),
-    workgroupId: integer("workgroup_id").references(() => workgroups.id),
-    recordType: integer("record_type").default(1).notNull(),
-    bookLink: integer("book_link").default(0).notNull(),
+    workgroupId: int("workgroup_id").references(() => workgroups.id),
+    recordType: int("record_type").default(1).notNull(),
+    bookLink: int("book_link").default(0).notNull(),
     source: varchar("source", { length: 32 }).default("external").notNull(),
   },
   (t) => [
@@ -251,15 +255,15 @@ export const registerReceives = pgTable(
   ],
 );
 
-export const registerSends = pgTable(
+export const registerSends = mysqlTable(
   "register_sends",
   {
     ...registerBase,
     bookFrom: text("book_from"),
     bookTo: text("book_to"),
     operation: varchar("operation", { length: 255 }),
-    workgroupId: integer("workgroup_id").references(() => workgroups.id),
-    officeType: integer("office_type").default(1).notNull(),
+    workgroupId: int("workgroup_id").references(() => workgroups.id),
+    officeType: int("office_type").default(1).notNull(),
     forwardedToSchools: boolean("forwarded_to_schools").default(false).notNull(),
   },
   (t) => [
@@ -277,7 +281,7 @@ export const registerSends = pgTable(
   ],
 );
 
-export const registerCommands = pgTable(
+export const registerCommands = mysqlTable(
   "register_commands",
   {
     ...registerBase,
@@ -294,7 +298,7 @@ export const registerCommands = pgTable(
   ],
 );
 
-export const registerCertificates = pgTable(
+export const registerCertificates = mysqlTable(
   "register_certificates",
   {
     ...registerBase,
@@ -310,45 +314,45 @@ export const registerCertificates = pgTable(
   ],
 );
 
-export const registerReceiveFiles = pgTable("register_receive_files", {
-  id: serial("id").primaryKey(),
+export const registerReceiveFiles = mysqlTable("register_receive_files", {
+  id: int("id").autoincrement().primaryKey(),
   refId: varchar("ref_id", { length: 64 }).notNull(),
   fileName: varchar("file_name", { length: 255 }).notNull(),
   fileDes: varchar("file_des", { length: 255 }),
 });
 
-export const registerSendFiles = pgTable("register_send_files", {
-  id: serial("id").primaryKey(),
+export const registerSendFiles = mysqlTable("register_send_files", {
+  id: int("id").autoincrement().primaryKey(),
   refId: varchar("ref_id", { length: 64 }).notNull(),
   fileName: varchar("file_name", { length: 255 }).notNull(),
   fileDes: varchar("file_des", { length: 255 }),
 });
 
 /** legacy: bookregister_office_no — prefix เลขที่หนังสือออก เช่น "ที่ ศธ 04146/" */
-export const registerOfficeNumbers = pgTable("bookregister_office_no", {
-  id: serial("id").primaryKey(),
+export const registerOfficeNumbers = mysqlTable("bookregister_office_no", {
+  id: int("id").autoincrement().primaryKey(),
   officeNo: text("office_no").notNull(),
   schoolCode: varchar("school_code", { length: 12 }),
   officer: varchar("officer", { length: 13 }),
-  recDate: date("rec_date"),
+  recDate: date("rec_date", { mode: "string" }),
 });
 
 /** legacy: book_group — กลุ่มหนังสือ (ส่งถึงหลายโรงเรียน) */
-export const bookGroups = pgTable("book_groups", {
-  id: serial("id").primaryKey(),
-  legacyId: integer("legacy_id"),
+export const bookGroups = mysqlTable("book_groups", {
+  id: int("id").autoincrement().primaryKey(),
+  legacyId: int("legacy_id"),
   name: varchar("name", { length: 255 }).notNull(),
-  sortOrder: integer("sort_order").default(0).notNull(),
+  sortOrder: int("sort_order").default(0).notNull(),
 });
 
-export const bookGroupMembers = pgTable(
+export const bookGroupMembers = mysqlTable(
   "book_group_members",
   {
-    id: serial("id").primaryKey(),
-    groupId: integer("group_id")
+    id: int("id").autoincrement().primaryKey(),
+    groupId: int("group_id")
       .notNull()
       .references(() => bookGroups.id, { onDelete: "cascade" }),
-    schoolId: integer("school_id")
+    schoolId: int("school_id")
       .notNull()
       .references(() => schools.id),
   },
@@ -358,27 +362,27 @@ export const bookGroupMembers = pgTable(
 );
 
 /** legacy: book_main — หนังสือรับส่งอิเล็กทรอนิกส์ */
-export const bookDocuments = pgTable(
+export const bookDocuments = mysqlTable(
   "book_documents",
   {
-    id: serial("id").primaryKey(),
+    id: int("id").autoincrement().primaryKey(),
     refId: varchar("ref_id", { length: 64 }).notNull(),
-    bookType: integer("book_type").notNull(),
+    bookType: int("book_type").notNull(),
     senderPersonId: varchar("sender_person_id", { length: 13 }).notNull(),
     officeCode: varchar("office_code", { length: 13 }).notNull(),
-    senderSchoolId: integer("sender_school_id").references(() => schools.id),
-    senderWorkgroupId: integer("sender_workgroup_id").references(
+    senderSchoolId: int("sender_school_id").references(() => schools.id),
+    senderWorkgroupId: int("sender_workgroup_id").references(
       () => workgroups.id,
     ),
-    senderUserId: integer("sender_user_id").references(() => users.id),
-    urgencyLevel: integer("urgency_level").default(1).notNull(),
-    secretLevel: integer("secret_level").default(0).notNull(),
+    senderUserId: int("sender_user_id").references(() => users.id),
+    urgencyLevel: int("urgency_level").default(1).notNull(),
+    secretLevel: int("secret_level").default(0).notNull(),
     bookNo: varchar("book_no", { length: 100 }).notNull(),
-    signDate: date("sign_date").notNull(),
+    signDate: date("sign_date", { mode: "string" }).notNull(),
     subject: varchar("subject", { length: 500 }).notNull(),
     detail: text("detail"),
     sendDate: timestamp("send_date").defaultNow().notNull(),
-    bookRegisLink: integer("book_regis_link").default(0).notNull(),
+    bookRegisLink: int("book_regis_link").default(0).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (t) => [
@@ -389,15 +393,15 @@ export const bookDocuments = pgTable(
 );
 
 /** legacy: book_sendto_answer — ผู้รับ/สถานะตอบรับ */
-export const bookRecipients = pgTable(
+export const bookRecipients = mysqlTable(
   "book_recipients",
   {
-    id: serial("id").primaryKey(),
+    id: int("id").autoincrement().primaryKey(),
     refId: varchar("ref_id", { length: 64 }).notNull(),
-    sendLevel: integer("send_level"),
+    sendLevel: int("send_level"),
     sendTo: varchar("send_to", { length: 32 }).notNull(),
     schoolScope: varchar("school_scope", { length: 32 }),
-    status: integer("status"),
+    status: int("status"),
     answered: boolean("answered").default(false).notNull(),
     answeredAt: timestamp("answered_at"),
     forwardFrom: varchar("forward_from", { length: 32 }),
@@ -410,50 +414,50 @@ export const bookRecipients = pgTable(
 );
 
 /** legacy: book_filebook */
-export const bookFiles = pgTable("book_files", {
-  id: serial("id").primaryKey(),
+export const bookFiles = mysqlTable("book_files", {
+  id: int("id").autoincrement().primaryKey(),
   refId: varchar("ref_id", { length: 64 }).notNull(),
   fileName: varchar("file_name", { length: 255 }).notNull(),
   fileDes: varchar("file_des", { length: 255 }),
 });
 
 /** นโยบายอายุเก็บหนังสือตามประเภท (book_type) — ค่าเริ่มต้น 2 ปี */
-export const bookRetentionSettings = pgTable(
+export const bookRetentionSettings = mysqlTable(
   "book_retention_settings",
   {
-    id: serial("id").primaryKey(),
-    bookType: integer("book_type").notNull(),
-    retentionYears: integer("retention_years").default(2).notNull(),
+    id: int("id").autoincrement().primaryKey(),
+    bookType: int("book_type").notNull(),
+    retentionYears: int("retention_years").default(2).notNull(),
   },
   (t) => [uniqueIndex("book_retention_settings_book_type_unique").on(t.bookType)],
 );
 
 /** legacy: book_permission — สิทธิ์โมดูลรับส่งหนังสือ */
-export const bookPermissions = pgTable("book_permissions", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id")
+export const bookPermissions = mysqlTable("book_permissions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" })
     .unique(),
-  p1: integer("p1").default(0).notNull(),
-  p2: integer("p2").default(0).notNull(),
-  p3: integer("p3").default(0).notNull(),
+  p1: int("p1").default(0).notNull(),
+  p2: int("p2").default(0).notNull(),
+  p3: int("p3").default(0).notNull(),
   canViewSecret: boolean("can_view_secret").default(false).notNull(),
 });
 
 /** legacy: mail_group — กลุ่มบุคลากร (หนังสือเวียน) */
-export const mailGroups = pgTable("mail_groups", {
-  id: serial("id").primaryKey(),
-  legacyId: integer("legacy_id"),
+export const mailGroups = mysqlTable("mail_groups", {
+  id: int("id").autoincrement().primaryKey(),
+  legacyId: int("legacy_id"),
   name: varchar("name", { length: 255 }).notNull(),
-  sortOrder: integer("sort_order").default(0).notNull(),
+  sortOrder: int("sort_order").default(0).notNull(),
 });
 
-export const mailGroupMembers = pgTable(
+export const mailGroupMembers = mysqlTable(
   "mail_group_members",
   {
-    id: serial("id").primaryKey(),
-    groupId: integer("group_id")
+    id: int("id").autoincrement().primaryKey(),
+    groupId: int("group_id")
       .notNull()
       .references(() => mailGroups.id, { onDelete: "cascade" }),
     personId: varchar("person_id", { length: 13 }).notNull(),
@@ -465,13 +469,13 @@ export const mailGroupMembers = pgTable(
 );
 
 /** legacy: mail_main — หนังสือเวียน */
-export const mailDocuments = pgTable(
+export const mailDocuments = mysqlTable(
   "mail_documents",
   {
-    id: serial("id").primaryKey(),
+    id: int("id").autoincrement().primaryKey(),
     refId: varchar("ref_id", { length: 64 }).notNull(),
     senderPersonId: varchar("sender_person_id", { length: 13 }).notNull(),
-    senderUserId: integer("sender_user_id").references(() => users.id),
+    senderUserId: int("sender_user_id").references(() => users.id),
     subject: varchar("subject", { length: 150 }).notNull(),
     detail: text("detail"),
     sendDate: timestamp("send_date").defaultNow().notNull(),
@@ -485,10 +489,10 @@ export const mailDocuments = pgTable(
 );
 
 /** legacy: mail_sendto_answer — ผู้รับหนังสือเวียน */
-export const mailRecipients = pgTable(
+export const mailRecipients = mysqlTable(
   "mail_recipients",
   {
-    id: serial("id").primaryKey(),
+    id: int("id").autoincrement().primaryKey(),
     refId: varchar("ref_id", { length: 64 }).notNull(),
     sendTo: varchar("send_to", { length: 13 }).notNull(),
     answered: boolean("answered").default(false).notNull(),
@@ -501,31 +505,31 @@ export const mailRecipients = pgTable(
 );
 
 /** legacy: mail_filebook */
-export const mailFiles = pgTable("mail_files", {
-  id: serial("id").primaryKey(),
+export const mailFiles = mysqlTable("mail_files", {
+  id: int("id").autoincrement().primaryKey(),
   refId: varchar("ref_id", { length: 64 }).notNull(),
   fileName: varchar("file_name", { length: 255 }).notNull(),
   fileDes: varchar("file_des", { length: 255 }),
 });
 
 /** legacy: mail_permission — เจ้าหน้าที่หนังสือเวียน */
-export const mailPermissions = pgTable("mail_permissions", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id")
+export const mailPermissions = mysqlTable("mail_permissions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" })
     .unique(),
-  p1: integer("p1").default(0).notNull(),
+  p1: int("p1").default(0).notNull(),
   officerPersonId: varchar("officer_person_id", { length: 13 }),
-  recDate: date("rec_date"),
+  recDate: date("rec_date", { mode: "string" }),
 });
 
 /** legacy: la_year → leave_years */
-export const leaveYears = pgTable(
+export const leaveYears = mysqlTable(
   "leave_years",
   {
-    id: serial("id").primaryKey(),
-    budgetYear: integer("budget_year").notNull(),
+    id: int("id").autoincrement().primaryKey(),
+    budgetYear: int("budget_year").notNull(),
     yearActive: boolean("year_active").default(false).notNull(),
   },
   (t) => [
@@ -535,22 +539,22 @@ export const leaveYears = pgTable(
 );
 
 /** legacy: la_permission → leave_permissions */
-export const leavePermissions = pgTable("leave_permissions", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id")
+export const leavePermissions = mysqlTable("leave_permissions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" })
     .unique(),
-  p1: integer("p1").default(0).notNull(),
-  p2: integer("p2").default(0).notNull(),
+  p1: int("p1").default(0).notNull(),
+  p2: int("p2").default(0).notNull(),
   officerPersonId: varchar("officer_person_id", { length: 13 }),
 });
 
 /** legacy: la_person_set → leave_person_settings */
-export const leavePersonSettings = pgTable(
+export const leavePersonSettings = mysqlTable(
   "leave_person_settings",
   {
-    id: serial("id").primaryKey(),
+    id: int("id").autoincrement().primaryKey(),
     personId: varchar("person_id", { length: 13 }).notNull(),
     commentPersonId: varchar("comment_person_id", { length: 13 }),
     commentPerson2Id: varchar("comment_person2_id", { length: 13 }),
@@ -566,16 +570,16 @@ export const leavePersonSettings = pgTable(
 );
 
 /** legacy: la_collect → leave_collect */
-export const leaveCollect = pgTable(
+export const leaveCollect = mysqlTable(
   "leave_collect",
   {
-    id: serial("id").primaryKey(),
-    budgetYear: integer("budget_year").notNull(),
+    id: int("id").autoincrement().primaryKey(),
+    budgetYear: int("budget_year").notNull(),
     personId: varchar("person_id", { length: 13 }).notNull(),
-    collectDay: real("collect_day").default(0).notNull(),
-    thisYearDay: integer("this_year_day").default(0).notNull(),
+    collectDay: float("collect_day").default(0).notNull(),
+    thisYearDay: int("this_year_day").default(0).notNull(),
     officerPersonId: varchar("officer_person_id", { length: 13 }),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (t) => [
     uniqueIndex("leave_collect_budget_year_person_id_idx").on(
@@ -586,36 +590,36 @@ export const leaveCollect = pgTable(
 );
 
 /** legacy: la_main → leave_requests */
-export const leaveRequests = pgTable(
+export const leaveRequests = mysqlTable(
   "leave_requests",
   {
-    id: serial("id").primaryKey(),
+    id: int("id").autoincrement().primaryKey(),
     personId: varchar("person_id", { length: 13 }).notNull(),
-    schoolId: integer("school_id").references(() => schools.id),
-    leaveType: integer("leave_type").notNull(),
+    schoolId: int("school_id").references(() => schools.id),
+    leaveType: int("leave_type").notNull(),
     writeAt: varchar("write_at", { length: 100 }),
     because: varchar("because", { length: 250 }),
-    leaveStart: date("leave_start").notNull(),
-    leaveFinish: date("leave_finish").notNull(),
+    leaveStart: date("leave_start", { mode: "string" }).notNull(),
+    leaveFinish: date("leave_finish", { mode: "string" }).notNull(),
     halfDayPeriod: varchar("half_day_period", { length: 10 }),
-    leaveTotal: real("leave_total").notNull(),
-    lastLeaveStart: date("last_leave_start"),
-    lastLeaveFinish: date("last_leave_finish"),
-    lastLeaveTotal: real("last_leave_total"),
-    sickAgo: real("sick_ago"),
-    sickThis: real("sick_this"),
-    sickTotal: real("sick_total"),
-    privacyAgo: real("privacy_ago"),
-    privacyThis: real("privacy_this"),
-    privacyTotal: real("privacy_total"),
-    birthAgo: real("birth_ago"),
-    birthThis: real("birth_this"),
-    birthTotal: real("birth_total"),
-    relaxAgo: real("relax_ago"),
-    relaxThis: real("relax_this"),
-    relaxTotal: real("relax_total"),
-    relaxCollect: real("relax_collect"),
-    relaxThisYear: real("relax_this_year"),
+    leaveTotal: float("leave_total").notNull(),
+    lastLeaveStart: date("last_leave_start", { mode: "string" }),
+    lastLeaveFinish: date("last_leave_finish", { mode: "string" }),
+    lastLeaveTotal: float("last_leave_total"),
+    sickAgo: float("sick_ago"),
+    sickThis: float("sick_this"),
+    sickTotal: float("sick_total"),
+    privacyAgo: float("privacy_ago"),
+    privacyThis: float("privacy_this"),
+    privacyTotal: float("privacy_total"),
+    birthAgo: float("birth_ago"),
+    birthThis: float("birth_this"),
+    birthTotal: float("birth_total"),
+    relaxAgo: float("relax_ago"),
+    relaxThis: float("relax_this"),
+    relaxTotal: float("relax_total"),
+    relaxCollect: float("relax_collect"),
+    relaxThisYear: float("relax_this_year"),
     contact: varchar("contact", { length: 150 }),
     contactTel: varchar("contact_tel", { length: 20 }),
     documentName: varchar("document_name", { length: 100 }),
@@ -632,7 +636,7 @@ export const leaveRequests = pgTable(
     groupComment2: varchar("group_comment2", { length: 100 }),
     groupSign2PersonId: varchar("group_sign2_person_id", { length: 13 }),
     groupDate2: timestamp("group_date2"),
-    commanderGrant: integer("commander_grant"),
+    commanderGrant: int("commander_grant"),
     commanderComment: varchar("commander_comment", { length: 100 }),
     commanderSignPersonId: varchar("commander_sign_person_id", { length: 13 }),
     grantDate: timestamp("grant_date"),
@@ -653,16 +657,16 @@ export const leaveRequests = pgTable(
   ],
 );
 
-export const leaveQuotaBalances = pgTable(
+export const leaveQuotaBalances = mysqlTable(
   "leave_quota_balances",
   {
-    id: serial("id").primaryKey(),
+    id: int("id").autoincrement().primaryKey(),
     personId: varchar("person_id", { length: 13 }).notNull(),
-    budgetYear: integer("budget_year").notNull(),
-    leaveType: integer("leave_type").notNull(),
-    entitled: real("entitled").default(0).notNull(),
-    used: real("used").default(0).notNull(),
-    carried: real("carried").default(0).notNull(),
+    budgetYear: int("budget_year").notNull(),
+    leaveType: int("leave_type").notNull(),
+    entitled: float("entitled").default(0).notNull(),
+    used: float("used").default(0).notNull(),
+    carried: float("carried").default(0).notNull(),
   },
   (t) => [
     uniqueIndex("leave_quota_balances_person_year_type_idx").on(
@@ -673,39 +677,39 @@ export const leaveQuotaBalances = pgTable(
   ],
 );
 
-export const leaveRequestFiles = pgTable(
+export const leaveRequestFiles = mysqlTable(
   "leave_request_files",
   {
-    id: serial("id").primaryKey(),
-    requestId: integer("request_id")
+    id: int("id").autoincrement().primaryKey(),
+    requestId: int("request_id")
       .notNull()
       .references(() => leaveRequests.id, { onDelete: "cascade" }),
     fileName: varchar("file_name", { length: 255 }).notNull(),
     fileDes: varchar("file_des", { length: 255 }),
-    fileSize: integer("file_size"),
+    fileSize: int("file_size"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (t) => [index("leave_request_files_request_id_idx").on(t.requestId)],
 );
 
 /** legacy: la_cancel → leave_cancellations */
-export const leaveCancellations = pgTable(
+export const leaveCancellations = mysqlTable(
   "leave_cancellations",
   {
-    id: serial("id").primaryKey(),
+    id: int("id").autoincrement().primaryKey(),
     personId: varchar("person_id", { length: 13 }).notNull(),
-    sourceRequestId: integer("source_request_id")
+    sourceRequestId: int("source_request_id")
       .notNull()
       .references(() => leaveRequests.id, { onDelete: "cascade" }),
-    leaveType: integer("leave_type").notNull(),
+    leaveType: int("leave_type").notNull(),
     writeAt: varchar("write_at", { length: 100 }),
-    permissionStart: date("permission_start").notNull(),
-    permissionFinish: date("permission_finish").notNull(),
-    permissionTotal: real("permission_total").notNull(),
+    permissionStart: date("permission_start", { mode: "string" }).notNull(),
+    permissionFinish: date("permission_finish", { mode: "string" }).notNull(),
+    permissionTotal: float("permission_total").notNull(),
     because: varchar("because", { length: 200 }).notNull(),
-    cancelStart: date("cancel_start").notNull(),
-    cancelFinish: date("cancel_finish").notNull(),
-    cancelTotal: real("cancel_total").notNull(),
+    cancelStart: date("cancel_start", { mode: "string" }).notNull(),
+    cancelFinish: date("cancel_finish", { mode: "string" }).notNull(),
+    cancelTotal: float("cancel_total").notNull(),
     noComment: boolean("no_comment").default(false).notNull(),
     grantPersonSelected: varchar("grant_person_selected", { length: 13 }),
     officerComment: varchar("officer_comment", { length: 200 }),
@@ -714,7 +718,7 @@ export const leaveCancellations = pgTable(
     groupComment: varchar("group_comment", { length: 100 }),
     groupSignPersonId: varchar("group_sign_person_id", { length: 13 }),
     groupDate: timestamp("group_date"),
-    commanderGrant: integer("commander_grant"),
+    commanderGrant: int("commander_grant"),
     commanderComment: varchar("commander_comment", { length: 100 }),
     commanderSignPersonId: varchar("commander_sign_person_id", { length: 13 }),
     grantDate: timestamp("grant_date"),
@@ -739,34 +743,34 @@ export const leaveCancellations = pgTable(
 );
 
 /** legacy: permission_year */
-export const permissionYears = pgTable(
+export const permissionYears = mysqlTable(
   "permission_years",
   {
-    id: serial("id").primaryKey(),
-    budgetYear: integer("budget_year").notNull(),
+    id: int("id").autoincrement().primaryKey(),
+    budgetYear: int("budget_year").notNull(),
     yearActive: boolean("year_active").default(false).notNull(),
   },
   (t) => [uniqueIndex("permission_years_budget_year_idx").on(t.budgetYear)],
 );
 
 /** legacy: permission_permission */
-export const permissionPermissions = pgTable("permission_permissions", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id")
+export const permissionPermissions = mysqlTable("permission_permissions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" })
     .unique(),
-  p1: integer("p1").default(0).notNull(),
-  p2: integer("p2").default(0).notNull(),
+  p1: int("p1").default(0).notNull(),
+  p2: int("p2").default(0).notNull(),
   officerPersonId: varchar("officer_person_id", { length: 13 }),
 });
 
 /** legacy: meeting_room */
-export const meetingRooms = pgTable(
+export const meetingRooms = mysqlTable(
   "meeting_rooms",
   {
-    id: serial("id").primaryKey(),
-    roomCode: integer("room_code").notNull(),
+    id: int("id").autoincrement().primaryKey(),
+    roomCode: int("room_code").notNull(),
     roomName: varchar("room_name", { length: 100 }).notNull(),
     active: boolean("active").default(false).notNull(),
   },
@@ -774,32 +778,32 @@ export const meetingRooms = pgTable(
 );
 
 /** legacy: meeting_permission */
-export const meetingPermissions = pgTable("meeting_permissions", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id")
+export const meetingPermissions = mysqlTable("meeting_permissions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" })
     .unique(),
-  p1: integer("p1").default(0).notNull(),
+  p1: int("p1").default(0).notNull(),
   officerPersonId: varchar("officer_person_id", { length: 13 }),
 });
 
 /** legacy: meeting_main */
-export const meetingBookings = pgTable(
+export const meetingBookings = mysqlTable(
   "meeting_bookings",
   {
-    id: serial("id").primaryKey(),
-    roomCode: integer("room_code").notNull(),
-    bookDate: date("book_date").notNull(),
-    bookDateEnd: date("book_date_end").notNull(),
-    startTime: integer("start_time").notNull(),
-    finishTime: integer("finish_time").notNull(),
+    id: int("id").autoincrement().primaryKey(),
+    roomCode: int("room_code").notNull(),
+    bookDate: date("book_date", { mode: "string" }).notNull(),
+    bookDateEnd: date("book_date_end", { mode: "string" }).notNull(),
+    startTime: int("start_time").notNull(),
+    finishTime: int("finish_time").notNull(),
     objective: varchar("objective", { length: 200 }).notNull(),
-    personNum: integer("person_num"),
+    personNum: int("person_num"),
     other: varchar("other", { length: 200 }),
     bookPersonId: varchar("book_person_id", { length: 13 }).notNull(),
     recDate: timestamp("rec_date").defaultNow().notNull(),
-    approve: integer("approve"),
+    approve: int("approve"),
     reason: varchar("reason", { length: 200 }),
     officerPersonId: varchar("officer_person_id", { length: 13 }),
     officerDate: timestamp("officer_date"),
@@ -812,23 +816,29 @@ export const meetingBookings = pgTable(
 );
 
 /** legacy: permission_main */
-export const permissionRequests = pgTable(
+export const permissionRequests = mysqlTable(
   "permission_requests",
   {
-    id: serial("id").primaryKey(),
+    id: int("id").autoincrement().primaryKey(),
     personId: varchar("person_id", { length: 13 }).notNull(),
     refId: varchar("ref_id", { length: 50 }).notNull(),
-    schoolId: integer("school_id").references(() => schools.id),
+    schoolId: int("school_id").references(() => schools.id),
     subject: varchar("subject", { length: 150 }).notNull(),
     place: varchar("place", { length: 150 }).notNull(),
-    travelStart: date("travel_start").notNull(),
-    travelFinish: date("travel_finish").notNull(),
+    travelStart: date("travel_start", { mode: "string" }).notNull(),
+    travelFinish: date("travel_finish", { mode: "string" }).notNull(),
     vehicle: varchar("vehicle", { length: 150 }),
     document: varchar("document", { length: 150 }),
-    grantStatus: integer("grant_status"),
+    grantStatus: int("grant_status"),
     grantComment: varchar("grant_comment", { length: 200 }),
     grantPersonId: varchar("grant_person_id", { length: 13 }),
     grantDate: timestamp("grant_date"),
+    groupGrant: int("group_grant"),
+    groupComment: varchar("group_comment", { length: 200 }),
+    groupDate: timestamp("group_date"),
+    basicGrant: int("basic_grant"),
+    basicComment: varchar("basic_comment", { length: 200 }),
+    basicDate: timestamp("basic_date"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (t) => [
@@ -839,68 +849,84 @@ export const permissionRequests = pgTable(
   ],
 );
 
+/** permission request attached files */
+export const permissionRequestFiles = mysqlTable(
+  "permission_request_files",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    requestId: int("request_id")
+      .notNull()
+      .references(() => permissionRequests.id),
+    fileName: varchar("file_name", { length: 255 }).notNull(),
+    fileDes: varchar("file_des", { length: 255 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [index("permission_request_files_request_id_idx").on(t.requestId)],
+);
+
 /** legacy: car_type */
-export const carTypes = pgTable(
+
+export const carTypes = mysqlTable(
   "car_types",
   {
-    id: serial("id").primaryKey(),
-    code: integer("code").notNull(),
+    id: int("id").autoincrement().primaryKey(),
+    code: int("code").notNull(),
     name: varchar("name", { length: 250 }).notNull(),
   },
   (t) => [uniqueIndex("car_types_code_idx").on(t.code)],
 );
 
 /** legacy: car_car */
-export const carVehicles = pgTable(
+export const carVehicles = mysqlTable(
   "car_vehicles",
   {
-    id: serial("id").primaryKey(),
-    carCode: integer("car_code").notNull(),
-    carTypeCode: integer("car_type_code").notNull(),
+    id: int("id").autoincrement().primaryKey(),
+    carCode: int("car_code").notNull(),
+    carTypeCode: int("car_type_code").notNull(),
     carNumber: varchar("car_number", { length: 100 }).notNull(),
     name: varchar("name", { length: 150 }).notNull(),
     pic: varchar("pic", { length: 150 }),
-    status: integer("status").default(2).notNull(),
+    status: int("status").default(2).notNull(),
   },
   (t) => [uniqueIndex("car_vehicles_car_code_idx").on(t.carCode)],
 );
 
 /** legacy: car_driver */
-export const carDrivers = pgTable(
+export const carDrivers = mysqlTable(
   "car_drivers",
   {
-    id: serial("id").primaryKey(),
+    id: int("id").autoincrement().primaryKey(),
     personId: varchar("person_id", { length: 13 }).notNull(),
-    status: integer("status").default(0).notNull(),
+    status: int("status").default(0).notNull(),
     officerPersonId: varchar("officer_person_id", { length: 13 }),
-    recDate: date("rec_date"),
+    recDate: date("rec_date", { mode: "string" }),
   },
   (t) => [index("car_drivers_person_id_idx").on(t.personId)],
 );
 
 /** legacy: car_permission */
-export const carPermissions = pgTable("car_permissions", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id")
+export const carPermissions = mysqlTable("car_permissions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" })
     .unique(),
-  p1: integer("p1").default(0).notNull(),
+  p1: int("p1").default(0).notNull(),
   officerPersonId: varchar("officer_person_id", { length: 13 }),
 });
 
 /** legacy: affair_main */
-export const affairEntries = pgTable(
+export const affairEntries = mysqlTable(
   "affair_entries",
   {
-    id: serial("id").primaryKey(),
-    affairDate: date("affair_date").notNull(),
+    id: int("id").autoincrement().primaryKey(),
+    affairDate: date("affair_date", { mode: "string" }).notNull(),
     affairTime: varchar("affair_time", { length: 50 }).notNull(),
     subject: varchar("subject", { length: 150 }).notNull(),
     location: varchar("location", { length: 150 }).notNull(),
     operationPersonId: varchar("operation_person_id", { length: 13 }).notNull(),
     remark: varchar("remark", { length: 150 }),
-    recDate: date("rec_date").notNull(),
+    recDate: date("rec_date", { mode: "string" }).notNull(),
     officerPersonId: varchar("officer_person_id", { length: 13 }).notNull(),
   },
   (t) => [
@@ -910,31 +936,31 @@ export const affairEntries = pgTable(
 );
 
 /** legacy: affair_permission */
-export const affairPermissions = pgTable("affair_permissions", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id")
+export const affairPermissions = mysqlTable("affair_permissions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" })
     .unique(),
-  p1: integer("p1").default(0).notNull(),
+  p1: int("p1").default(0).notNull(),
   officerPersonId: varchar("officer_person_id", { length: 13 }),
-  recDate: date("rec_date"),
+  recDate: date("rec_date", { mode: "string" }),
 });
 
 /** legacy: cabinet_main (v1 flat document store) */
-export const cabinetDocuments = pgTable(
+export const cabinetDocuments = mysqlTable(
   "cabinet_documents",
   {
-    id: serial("id").primaryKey(),
-    fileId: integer("file_id").default(1).notNull(),
-    trayId: integer("tray_id").default(1).notNull(),
-    cabinetId: integer("cabinet_id").default(1).notNull(),
-    cabinetType: integer("cabinet_type").default(1).notNull(),
+    id: int("id").autoincrement().primaryKey(),
+    fileId: int("file_id").default(1).notNull(),
+    trayId: int("tray_id").default(1).notNull(),
+    cabinetId: int("cabinet_id").default(1).notNull(),
+    cabinetType: int("cabinet_type").default(1).notNull(),
     docSubject: varchar("doc_subject", { length: 150 }).notNull(),
-    docSize: real("doc_size").notNull(),
+    docSize: float("doc_size").notNull(),
     docName: varchar("doc_name", { length: 255 }).notNull(),
     docType: varchar("doc_type", { length: 10 }).notNull(),
-    status: integer("status").default(0).notNull(),
+    status: int("status").default(0).notNull(),
     personId: varchar("person_id", { length: 13 }).notNull(),
     recDate: timestamp("rec_date").defaultNow().notNull(),
   },
@@ -946,23 +972,23 @@ export const cabinetDocuments = pgTable(
 );
 
 /** legacy: cabinet_permission */
-export const cabinetPermissions = pgTable("cabinet_permissions", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id")
+export const cabinetPermissions = mysqlTable("cabinet_permissions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" })
     .unique(),
-  p1: integer("p1").default(0).notNull(),
+  p1: int("p1").default(0).notNull(),
   officerPersonId: varchar("officer_person_id", { length: 13 }),
-  recDate: date("rec_date"),
+  recDate: date("rec_date", { mode: "string" }),
 });
 
 /** legacy: news_mainitem */
-export const newsMainitems = pgTable(
+export const newsMainitems = mysqlTable(
   "news_mainitems",
   {
-    id: serial("id").primaryKey(),
-    code: integer("code").notNull(),
+    id: int("id").autoincrement().primaryKey(),
+    code: int("code").notNull(),
     mainitem: varchar("mainitem", { length: 150 }).notNull(),
     itemActive: boolean("item_active").default(false).notNull(),
   },
@@ -970,13 +996,13 @@ export const newsMainitems = pgTable(
 );
 
 /** legacy: news_section */
-export const newsSections = pgTable(
+export const newsSections = mysqlTable(
   "news_sections",
   {
-    id: serial("id").primaryKey(),
-    code: integer("code").notNull(),
+    id: int("id").autoincrement().primaryKey(),
+    code: int("code").notNull(),
     name: varchar("name", { length: 100 }).notNull(),
-    mainitemCode: integer("mainitem_code").notNull(),
+    mainitemCode: int("mainitem_code").notNull(),
   },
   (t) => [
     uniqueIndex("news_sections_mainitem_code_idx").on(t.mainitemCode, t.code),
@@ -984,15 +1010,15 @@ export const newsSections = pgTable(
 );
 
 /** legacy: news_news */
-export const newsArticles = pgTable(
+export const newsArticles = mysqlTable(
   "news_articles",
   {
-    id: serial("id").primaryKey(),
+    id: int("id").autoincrement().primaryKey(),
     reportDate: timestamp("report_date").defaultNow().notNull(),
     news: varchar("news", { length: 250 }).notNull(),
     file: varchar("file", { length: 255 }),
-    sectionCode: integer("section_code").notNull(),
-    mainitemCode: integer("mainitem_code").notNull(),
+    sectionCode: int("section_code").notNull(),
+    mainitemCode: int("mainitem_code").notNull(),
     officerPersonId: varchar("officer_person_id", { length: 13 }).notNull(),
   },
   (t) => [
@@ -1003,40 +1029,40 @@ export const newsArticles = pgTable(
 );
 
 /** legacy: news_permission */
-export const newsPermissions = pgTable("news_permissions", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id")
+export const newsPermissions = mysqlTable("news_permissions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" })
     .unique(),
-  p1: integer("p1").default(0).notNull(),
+  p1: int("p1").default(0).notNull(),
   officerPersonId: varchar("officer_person_id", { length: 13 }),
-  recDate: date("rec_date"),
+  recDate: date("rec_date", { mode: "string" }),
 });
 
 /** legacy: car_main */
-export const carRequests = pgTable(
+export const carRequests = mysqlTable(
   "car_requests",
   {
-    id: serial("id").primaryKey(),
+    id: int("id").autoincrement().primaryKey(),
     personId: varchar("person_id", { length: 13 }).notNull(),
-    recDate: date("rec_date").notNull(),
-    carCode: integer("car_code").notNull(),
+    recDate: date("rec_date", { mode: "string" }).notNull(),
+    carCode: int("car_code").notNull(),
     place: varchar("place", { length: 200 }).notNull(),
     because: varchar("because", { length: 200 }).notNull(),
-    carStart: date("car_start").notNull(),
-    timeStart: real("time_start"),
-    carFinish: date("car_finish").notNull(),
-    timeFinish: real("time_finish"),
-    dayTotal: integer("day_total"),
-    personNum: integer("person_num"),
+    carStart: date("car_start", { mode: "string" }).notNull(),
+    timeStart: float("time_start"),
+    carFinish: date("car_finish", { mode: "string" }).notNull(),
+    timeFinish: float("time_finish"),
+    dayTotal: int("day_total"),
+    personNum: int("person_num"),
     controlPerson: varchar("control_person", { length: 100 }),
-    fuel: integer("fuel").notNull(),
+    fuel: int("fuel").notNull(),
     project: varchar("project", { length: 100 }),
     activity: varchar("activity", { length: 100 }),
-    money: real("money"),
-    selfDriver: integer("self_driver"),
-    privateCar: integer("private_car"),
+    money: float("money"),
+    selfDriver: int("self_driver"),
+    privateCar: int("private_car"),
     carOwner: varchar("car_owner", { length: 100 }),
     privateCarNumber: varchar("private_car_number", { length: 100 }),
     privateDriver: varchar("private_driver", { length: 100 }),
@@ -1048,7 +1074,7 @@ export const carRequests = pgTable(
     groupSignPersonId: varchar("group_sign_person_id", { length: 13 }),
     groupDate: timestamp("group_date"),
     grantComment: varchar("grant_comment", { length: 150 }),
-    commanderGrant: integer("commander_grant"),
+    commanderGrant: int("commander_grant"),
     commanderSignPersonId: varchar("commander_sign_person_id", { length: 13 }),
     commanderDate: timestamp("commander_date"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -1060,38 +1086,38 @@ export const carRequests = pgTable(
 );
 
 /** legacy: achievement_permission */
-export const achievementPermissions = pgTable("achievement_permissions", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id")
+export const achievementPermissions = mysqlTable("achievement_permissions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" })
     .unique(),
-  p1: integer("p1").default(0).notNull(),
-  p2: integer("p2").default(0).notNull(),
-  p3: integer("p3").default(0).notNull(),
+  p1: int("p1").default(0).notNull(),
+  p2: int("p2").default(0).notNull(),
+  p3: int("p3").default(0).notNull(),
   officerPersonId: varchar("officer_person_id", { length: 13 }),
 });
 
 /** legacy: achievement_main */
-export const achievementScores = pgTable(
+export const achievementScores = mysqlTable(
   "achievement_scores",
   {
-    id: serial("id").primaryKey(),
-    testType: integer("test_type").notNull(),
-    testClass: integer("test_class").notNull(),
-    edYear: integer("ed_year").notNull(),
+    id: int("id").autoincrement().primaryKey(),
+    testType: int("test_type").notNull(),
+    testClass: int("test_class").notNull(),
+    edYear: int("ed_year").notNull(),
     schoolCode: varchar("school_code", { length: 12 }).notNull(),
-    thai: real("thai").default(0).notNull(),
-    math: real("math").default(0).notNull(),
-    science: real("science").default(0).notNull(),
-    social: real("social").default(0).notNull(),
-    english: real("english").default(0).notNull(),
-    health: real("health").default(0).notNull(),
-    art: real("art").default(0).notNull(),
-    vocation: real("vocation").default(0).notNull(),
-    scoreAvg: real("score_avg").default(0).notNull(),
+    thai: float("thai").default(0).notNull(),
+    math: float("math").default(0).notNull(),
+    science: float("science").default(0).notNull(),
+    social: float("social").default(0).notNull(),
+    english: float("english").default(0).notNull(),
+    health: float("health").default(0).notNull(),
+    art: float("art").default(0).notNull(),
+    vocation: float("vocation").default(0).notNull(),
+    scoreAvg: float("score_avg").default(0).notNull(),
     officerPersonId: varchar("officer_person_id", { length: 13 }),
-    recDate: date("rec_date"),
+    recDate: date("rec_date", { mode: "string" }),
   },
   (t) => [
     index("achievement_scores_ed_year_idx").on(t.edYear),
@@ -1106,27 +1132,27 @@ export const achievementScores = pgTable(
 );
 
 /** legacy: student_main_edyear */
-export const studentEdYears = pgTable(
+export const studentEdYears = mysqlTable(
   "student_ed_years",
   {
-    id: serial("id").primaryKey(),
-    edYear: integer("ed_year").notNull(),
+    id: int("id").autoincrement().primaryKey(),
+    edYear: int("ed_year").notNull(),
     yearActive: boolean("year_active").default(false).notNull(),
   },
   (t) => [uniqueIndex("student_ed_years_ed_year_idx").on(t.edYear)],
 );
 
 /** legacy: student_main_permission */
-export const studentPermissions = pgTable(
+export const studentPermissions = mysqlTable(
   "student_permissions",
   {
-    id: serial("id").primaryKey(),
-    userId: integer("user_id")
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    schoolId: integer("school_id").references(() => schools.id),
-    p1: integer("p1").default(0).notNull(),
-    p2: integer("p2").default(0).notNull(),
+    schoolId: int("school_id").references(() => schools.id),
+    p1: int("p1").default(0).notNull(),
+    p2: int("p2").default(0).notNull(),
     officerPersonId: varchar("officer_person_id", { length: 13 }),
   },
   (t) => [
@@ -1135,11 +1161,11 @@ export const studentPermissions = pgTable(
 );
 
 /** legacy: student_main_main */
-export const students = pgTable(
+export const students = mysqlTable(
   "students",
   {
-    id: serial("id").primaryKey(),
-    edYear: integer("ed_year").notNull(),
+    id: int("id").autoincrement().primaryKey(),
+    edYear: int("ed_year").notNull(),
     refId: varchar("ref_id", { length: 20 }).notNull(),
     schoolCode: varchar("school_code", { length: 15 }).notNull(),
     studentId: varchar("student_id", { length: 15 }).notNull(),
@@ -1149,11 +1175,11 @@ export const students = pgTable(
     surname: varchar("surname", { length: 50 }).notNull(),
     sex: varchar("sex", { length: 5 }).notNull(),
     schoolName: varchar("school_name", { length: 150 }).notNull(),
-    classLevel: integer("class_level").notNull(),
-    classroom: integer("classroom").default(1).notNull(),
-    disable: integer("disable").default(0).notNull(),
-    status: integer("status").default(0).notNull(),
-    recDate: date("rec_date").notNull(),
+    classLevel: int("class_level").notNull(),
+    classroom: int("classroom").default(1).notNull(),
+    disable: int("disable").default(0).notNull(),
+    status: int("status").default(0).notNull(),
+    recDate: date("rec_date", { mode: "string" }).notNull(),
     officerPersonId: varchar("officer_person_id", { length: 13 }).notNull(),
   },
   (t) => [
@@ -1169,17 +1195,17 @@ export const students = pgTable(
 );
 
 /** legacy: spacial_student_permission */
-export const spacialStudentPermissions = pgTable(
+export const spacialStudentPermissions = mysqlTable(
   "spacial_student_permissions",
   {
-    id: serial("id").primaryKey(),
-    userId: integer("user_id")
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    schoolId: integer("school_id").references(() => schools.id),
-    p1: integer("p1").default(0).notNull(),
-    p2: integer("p2").default(0).notNull(),
-    p3: integer("p3").default(0).notNull(),
+    schoolId: int("school_id").references(() => schools.id),
+    p1: int("p1").default(0).notNull(),
+    p2: int("p2").default(0).notNull(),
+    p3: int("p3").default(0).notNull(),
     classLevel: varchar("class_level", { length: 2 }),
     officerPersonId: varchar("officer_person_id", { length: 13 }),
   },
@@ -1192,19 +1218,19 @@ export const spacialStudentPermissions = pgTable(
 );
 
 /** legacy: spacial_student_disabled */
-export const spacialStudentDisabled = pgTable(
+export const spacialStudentDisabled = mysqlTable(
   "spacial_student_disabled",
   {
-    id: serial("id").primaryKey(),
+    id: int("id").autoincrement().primaryKey(),
     personId: varchar("person_id", { length: 13 }).notNull(),
     schoolCode: varchar("school_code", { length: 15 }).notNull(),
-    disableType: integer("disable_type").default(0).notNull(),
+    disableType: int("disable_type").default(0).notNull(),
     disableDetail: text("disable_detail").default("").notNull(),
     other: text("other").default("").notNull(),
     pic: varchar("pic", { length: 150 }).default("").notNull(),
-    status: integer("status").default(0).notNull(),
+    status: int("status").default(0).notNull(),
     officerPersonId: varchar("officer_person_id", { length: 13 }).notNull(),
-    recDate: date("rec_date").notNull(),
+    recDate: date("rec_date", { mode: "string" }).notNull(),
   },
   (t) => [
     index("spacial_student_disabled_school_code_idx").on(t.schoolCode),
@@ -1217,30 +1243,32 @@ export const spacialStudentDisabled = pgTable(
 );
 
 /** legacy: plan_year */
-export const planYears = pgTable(
+export const planYears = mysqlTable(
   "plan_years",
   {
-    id: serial("id").primaryKey(),
-    budgetYear: integer("budget_year").notNull(),
+    id: int("id").autoincrement().primaryKey(),
+    budgetYear: int("budget_year").notNull(),
     yearActive: boolean("year_active").default(false).notNull(),
   },
   (t) => [uniqueIndex("plan_years_budget_year_idx").on(t.budgetYear)],
 );
 
 /** legacy: plan_proj */
-export const planProjects = pgTable(
+export const planProjects = mysqlTable(
   "plan_projects",
   {
-    id: serial("id").primaryKey(),
-    budgetYear: integer("budget_year").notNull(),
-    codeClus: integer("code_clus").notNull(),
+    id: int("id").autoincrement().primaryKey(),
+    budgetYear: int("budget_year").notNull(),
+    codeClus: int("code_clus").notNull(),
     codeTegy: varchar("code_tegy", { length: 1 }).default("1").notNull(),
     codeProj: varchar("code_proj", { length: 3 }).notNull(),
-    budgetProj: real("budget_proj").default(0).notNull(),
+    budgetProj: float("budget_proj").default(0).notNull(),
     nameProj: varchar("name_proj", { length: 100 }).notNull(),
     ownerProj: varchar("owner_proj", { length: 13 }).default("").notNull(),
-    beginDate: date("begin_date").notNull(),
-    finishDate: date("finish_date").notNull(),
+    beginDate: date("begin_date", { mode: "string" }).notNull(),
+    finishDate: date("finish_date", { mode: "string" }).notNull(),
+    fileDetail: varchar("file_detail", { length: 255 }),
+    dayrec: timestamp("dayrec"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (t) => [
@@ -1251,21 +1279,21 @@ export const planProjects = pgTable(
 );
 
 /** legacy: plan_acti */
-export const planActivities = pgTable(
+export const planActivities = mysqlTable(
   "plan_activities",
   {
-    id: serial("id").primaryKey(),
-    budgetYear: integer("budget_year").notNull(),
-    codeClus: integer("code_clus").notNull(),
+    id: int("id").autoincrement().primaryKey(),
+    budgetYear: int("budget_year").notNull(),
+    codeClus: int("code_clus").notNull(),
     codeProj: varchar("code_proj", { length: 3 }).notNull(),
     codeActi: varchar("code_acti", { length: 6 }).notNull(),
     codeApprove: varchar("code_approve", { length: 6 }).default("").notNull(),
-    budgetActi: real("budget_acti").default(0).notNull(),
+    budgetActi: float("budget_acti").default(0).notNull(),
     nameActi: varchar("name_acti", { length: 100 }).notNull(),
     ownerActi: varchar("owner_acti", { length: 13 }).default("").notNull(),
-    beginDate: date("begin_date").notNull(),
-    finishDate: date("finish_date").notNull(),
-    stop: integer("stop"),
+    beginDate: date("begin_date", { mode: "string" }).notNull(),
+    finishDate: date("finish_date", { mode: "string" }).notNull(),
+    stop: int("stop"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (t) => [
@@ -1275,73 +1303,165 @@ export const planActivities = pgTable(
 );
 
 /** legacy: budget_year */
-export const budgetYears = pgTable(
+export const budgetYears = mysqlTable(
   "budget_years",
   {
-    id: serial("id").primaryKey(),
-    budgetYear: integer("budget_year").notNull(),
+    id: int("id").autoincrement().primaryKey(),
+    budgetYear: int("budget_year").notNull(),
     yearActive: boolean("year_active").default(false).notNull(),
   },
   (t) => [uniqueIndex("budget_years_budget_year_idx").on(t.budgetYear)],
 );
 
 /** legacy: budget_permission */
-export const budgetPermissions = pgTable(
+export const budgetPermissions = mysqlTable(
   "budget_permissions",
   {
-    id: serial("id").primaryKey(),
+    id: int("id").autoincrement().primaryKey(),
     personId: varchar("person_id", { length: 13 }).notNull(),
-    p1: integer("p1").default(0).notNull(),
-    p2: integer("p2").default(0).notNull(),
-    p3: integer("p3").default(0).notNull(),
-    p4: integer("p4").default(0).notNull(),
-    p5: integer("p5").default(0).notNull(),
-    p6: integer("p6").default(0).notNull(),
-    p7: integer("p7").default(0).notNull(),
-    p8: integer("p8").default(0).notNull(),
-    p9: integer("p9").default(0).notNull(),
-    p10: integer("p10").default(0).notNull(),
+    p1: int("p1").default(0).notNull(),
+    p2: int("p2").default(0).notNull(),
+    p3: int("p3").default(0).notNull(),
+    p4: int("p4").default(0).notNull(),
+    p5: int("p5").default(0).notNull(),
+    p6: int("p6").default(0).notNull(),
+    p7: int("p7").default(0).notNull(),
+    p8: int("p8").default(0).notNull(),
+    p9: int("p9").default(0).notNull(),
+    p10: int("p10").default(0).notNull(),
     officer: varchar("officer", { length: 13 }).notNull(),
-    recDate: date("rec_date").notNull(),
+    recDate: date("rec_date", { mode: "string" }).notNull(),
   },
   (t) => [uniqueIndex("budget_permissions_person_id_idx").on(t.personId)],
 );
 
+/** legacy: budget_plan */
+export const budgetPlans = mysqlTable(
+  "budget_plans",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    budgetYear: int("budget_year").notNull(),
+    code: varchar("code", { length: 10 }).notNull(),
+    name: varchar("name", { length: 255 }).notNull(),
+  },
+  (t) => [index("budget_plans_budget_year_idx").on(t.budgetYear)],
+);
+
+/** legacy: budget_project */
+export const budgetProjectProducts = mysqlTable(
+  "budget_project_products",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    budgetYear: int("budget_year").notNull(),
+    code: varchar("code", { length: 40 }).notNull(),
+    name: varchar("name", { length: 255 }).notNull(),
+  },
+  (t) => [index("budget_project_products_budget_year_idx").on(t.budgetYear)],
+);
+
+/** legacy: budget_key_activity */
+export const budgetKeyActivities = mysqlTable(
+  "budget_key_activities",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    budgetYear: int("budget_year").notNull(),
+    code: varchar("code", { length: 40 }).notNull(),
+    name: varchar("name", { length: 255 }).notNull(),
+  },
+  (t) => [index("budget_key_activities_budget_year_idx").on(t.budgetYear)],
+);
+
+/** legacy: budget_money_source */
+export const budgetMoneySources = mysqlTable(
+  "budget_money_sources",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    budgetYear: int("budget_year").notNull(),
+    code: varchar("code", { length: 40 }).notNull(),
+    name: varchar("name", { length: 255 }).notNull(),
+  },
+  (t) => [index("budget_money_sources_budget_year_idx").on(t.budgetYear)],
+);
+
+/** legacy: budget_receive */
+export const budgetReceives = mysqlTable(
+  "budget_receives",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    budgetYear: int("budget_year").notNull(),
+    num: double("num").notNull().default(0),
+    bookNumber: varchar("book_number", { length: 100 }).default(""),
+    outDate: varchar("out_date", { length: 100 }).default(""),
+    bookRef: varchar("book_ref", { length: 100 }).default(""),
+    plan: varchar("plan", { length: 20 }).default(""),
+    project: varchar("project", { length: 50 }).default(""),
+    activity: varchar("activity", { length: 100 }).default(""),
+    activity2: varchar("activity2", { length: 255 }).default(""),
+    mSource: varchar("m_source", { length: 20 }).default(""),
+    account: varchar("account", { length: 50 }).default(""),
+    mPay: varchar("m_pay", { length: 20 }).default(""),
+    item: varchar("item", { length: 255 }).notNull().default(""),
+    detail: text("detail"),
+    money: double("money").notNull().default(0),
+    file: varchar("file", { length: 255 }).default(""),
+    recDate: date("rec_date", { mode: "string" }),
+    officer: varchar("officer", { length: 20 }).default(""),
+  },
+  (t) => [index("budget_receives_year_idx").on(t.budgetYear)],
+);
+
+/** legacy: budget_category */
+export const budgetCategories = mysqlTable("budget_categories", {
+  id: int("id").autoincrement().primaryKey(),
+  categoryId: int("category_id").notNull(),
+  categoryName: varchar("category_name", { length: 100 }).notNull(),
+});
+
 /** legacy: budget_pay_type */
-export const budgetPayTypes = pgTable("budget_pay_types", {
-  id: serial("id").primaryKey(),
-  payTypeId: integer("pay_type_id").notNull(),
-  payGroupId: integer("pay_group_id").notNull(),
+export const budgetPayTypes = mysqlTable("budget_pay_types", {
+  id: int("id").autoincrement().primaryKey(),
+  payTypeId: int("pay_type_id").notNull(),
+  payGroupId: int("pay_group_id").notNull(),
   payTypeName: varchar("pay_type_name", { length: 100 }).notNull(),
 });
 
 /** legacy: budget_main — ทะเบียนรับ/จ่ายหลัก */
-export const budgetMain = pgTable(
+export const budgetMain = mysqlTable(
   "budget_main",
   {
-    id: serial("id").primaryKey(),
-    budgetYear: integer("budget_year").notNull(),
+    id: int("id").autoincrement().primaryKey(),
+    budgetYear: int("budget_year").notNull(),
     doc: varchar("doc", { length: 30 }).notNull(),
-    referWdId: integer("refer_wd_id"),
-    referDeegaId: integer("refer_deega_id"),
-    typeId: integer("type_id").notNull(),
+    referWdId: int("refer_wd_id"),
+    referDeegaId: int("refer_deega_id"),
+    typeId: int("type_id").notNull(),
     item: varchar("item", { length: 100 }).notNull(),
-    receiveAmount: real("receive_amount"),
-    payAmount: real("pay_amount"),
+    receiveAmount: float("receive_amount"),
+    payAmount: float("pay_amount"),
     payedPerson: varchar("payed_person", { length: 50 }),
-    changeAmount: real("change_amount"),
-    payGroup: integer("pay_group"),
-    status: integer("status"),
-    recDate: date("rec_date").notNull(),
+    changeAmount: float("change_amount"),
+    payGroup: int("pay_group"),
+    status: int("status"),
+    recDate: date("rec_date", { mode: "string" }).notNull(),
     officer: varchar("officer", { length: 13 }),
-    approveDate: date("approve_date"),
-    approve: integer("approve"),
+    approveDate: date("approve_date", { mode: "string" }),
+    approve: int("approve"),
     approveName: varchar("approve_name", { length: 13 }),
-    payDate: date("pay_date"),
+    payDate: date("pay_date", { mode: "string" }),
     checkNumber: varchar("check_number", { length: 30 }),
     payee: varchar("payee", { length: 50 }),
     payer: varchar("payer", { length: 13 }),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
+    plan: varchar("plan", { length: 100 }),
+    project: varchar("project", { length: 100 }),
+    activity: varchar("activity", { length: 100 }),
+    money: float("money"),
+    deegaNum: varchar("deega_num", { length: 30 }),
+    receiveNum: varchar("receive_num", { length: 30 }),
+    withdraw: float("withdraw"),
+    tax: float("tax"),
+    pay: float("pay"),
+    directPay: int("direct_pay"),
+    directPayName: varchar("direct_pay_name", { length: 100 }),
   },
   (t) => [
     index("budget_main_budget_year_idx").on(t.budgetYear),
@@ -1350,17 +1470,33 @@ export const budgetMain = pgTable(
   ],
 );
 
+/** legacy: budget_types */
+export const budgetType = mysqlTable(
+  "budget_types",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    budgetYear: int("budget_year").notNull(),
+    typeId: int("type_id").notNull(),
+    typeName: varchar("type_name", { length: 100 }).notNull(),
+    categoryId: int("category_id").notNull(),
+  },
+  (t) => [
+    index("budget_types_budget_year_idx").on(t.budgetYear),
+    index("budget_types_category_id_idx").on(t.categoryId),
+  ],
+);
+
 /** legacy: idocument_main */
-export const idocumentMain = pgTable(
+export const idocumentMain = mysqlTable(
   "idocument_main",
   {
-    id: serial("id").primaryKey(),
-    workgroup: integer("workgroup").notNull(),
+    id: int("id").autoincrement().primaryKey(),
+    workgroup: int("workgroup").notNull(),
     workgroupTxt: text("workgroup_txt").notNull(),
-    bookYear: integer("book_year").notNull(),
-    bookNumber: integer("book_number").notNull(),
+    bookYear: int("book_year").notNull(),
+    bookNumber: int("book_number").notNull(),
     bookNo: varchar("book_no", { length: 50 }).notNull(),
-    bookDate: date("book_date").notNull(),
+    bookDate: date("book_date", { mode: "string" }).notNull(),
     subject: text("subject").notNull(),
     preDocId: varchar("pre_doc_id", { length: 100 }).notNull(),
     bookTo: varchar("book_to", { length: 255 }).notNull(),
@@ -1370,8 +1506,8 @@ export const idocumentMain = pgTable(
     officer: varchar("officer", { length: 20 }).notNull(),
     officerName: varchar("officer_name", { length: 255 }).notNull(),
     officerPosition: varchar("officer_position", { length: 255 }).notNull(),
-    bookStatus: integer("book_status").notNull(),
-    bookType: integer("book_type").notNull(),
+    bookStatus: int("book_status").notNull(),
+    bookType: int("book_type").notNull(),
   },
   (t) => [
     index("idocument_main_officer_idx").on(t.officer),
@@ -1381,18 +1517,18 @@ export const idocumentMain = pgTable(
 );
 
 /** legacy: idocument_sendto */
-export const idocumentSendto = pgTable(
+export const idocumentSendto = mysqlTable(
   "idocument_sendto",
   {
-    id: serial("id").primaryKey(),
-    documentId: integer("document_id").notNull(),
+    id: int("id").autoincrement().primaryKey(),
+    documentId: int("document_id").notNull(),
     recId: varchar("rec_id", { length: 50 }).notNull(),
     recFrom: varchar("rec_from", { length: 25 }),
     personId: varchar("person_id", { length: 20 }).notNull(),
     sendTime: timestamp("send_time").defaultNow().notNull(),
     openTime: timestamp("open_time"),
     documentFrom: varchar("document_from", { length: 50 }),
-    status: integer("status"),
+    status: int("status"),
   },
   (t) => [
     index("idocument_sendto_person_status_idx").on(t.personId, t.status),
@@ -1401,11 +1537,11 @@ export const idocumentSendto = pgTable(
 );
 
 /** legacy: idocument_comment */
-export const idocumentComment = pgTable(
+export const idocumentComment = mysqlTable(
   "idocument_comment",
   {
-    id: serial("id").primaryKey(),
-    documentId: integer("document_id").notNull(),
+    id: int("id").autoincrement().primaryKey(),
+    documentId: int("document_id").notNull(),
     recId: varchar("rec_id", { length: 100 }).notNull(),
     personCommentsId: varchar("person_comments_id", { length: 20 }).notNull(),
     personCommentsName: varchar("person_comments_name", { length: 255 }).notNull(),
@@ -1416,18 +1552,18 @@ export const idocumentComment = pgTable(
     commentsTxt: varchar("comments_txt", { length: 255 }),
     commentsEtctxt: varchar("comments_etctxt", { length: 255 }),
     commentsDate: timestamp("comments_date").defaultNow().notNull(),
-    commentsType: integer("comments_type"),
-    commentsStatus: integer("comments_status"),
+    commentsType: int("comments_type"),
+    commentsStatus: int("comments_status"),
   },
   (t) => [index("idocument_comment_document_id_idx").on(t.documentId)],
 );
 
 /** legacy: idocument_files */
-export const idocumentFiles = pgTable(
+export const idocumentFiles = mysqlTable(
   "idocument_files",
   {
-    id: serial("id").primaryKey(),
-    documentId: integer("document_id"),
+    id: int("id").autoincrement().primaryKey(),
+    documentId: int("document_id"),
     fileName: varchar("file_name", { length: 255 }),
     fileDes: varchar("file_des", { length: 255 }),
     filetype: varchar("filetype", { length: 5 }),
@@ -1435,3 +1571,227 @@ export const idocumentFiles = pgTable(
   },
   (t) => [index("idocument_files_document_id_idx").on(t.documentId)],
 );
+
+/** legacy: permission_person_settings */
+export const permissionPersonSettings = mysqlTable(
+  "permission_person_settings",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    personId: varchar("person_id", { length: 13 }).notNull(),
+    groupPersonId: varchar("group_person_id", { length: 13 }),
+    grantPersonId: varchar("grant_person_id", { length: 13 }),
+  },
+  (t) => [uniqueIndex("permission_person_settings_person_id_idx").on(t.personId)],
+);
+
+/** legacy: plan_permissions */
+export const planPermissions = mysqlTable(
+  "plan_permissions",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    personId: varchar("person_id", { length: 13 }).notNull(),
+    permAdd: int("perm_add").default(0).notNull(),
+    permEdit: int("perm_edit").default(0).notNull(),
+    permDele: int("perm_dele").default(0).notNull(),
+    officer: varchar("officer", { length: 13 }).default("").notNull(),
+    recDate: date("rec_date", { mode: "string" }).notNull(),
+  },
+  (t) => [uniqueIndex("plan_permissions_person_id_idx").on(t.personId)],
+);
+
+/** legacy: plan_strategies */
+export const planStrategies = mysqlTable(
+  "plan_strategies",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    budgetYear: int("budget_year").notNull(),
+    codeTegy: varchar("code_tegy", { length: 10 }).notNull(),
+    nameTegy: varchar("name_tegy", { length: 255 }).notNull(),
+    idTegic: varchar("id_tegic", { length: 10 }),
+    strategic: varchar("strategic", { length: 255 }),
+  },
+  (t) => [uniqueIndex("plan_strategies_year_code_idx").on(t.budgetYear, t.codeTegy)],
+);
+
+export const PLAN_PROJECT_KIND = {
+  annual: "annual",
+  surplus: "surplus",
+} as const;
+
+/** legacy: system_sync_code */
+export const systemSyncCode = mysqlTable(
+  "system_sync_code",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    officeCode: varchar("office_code", { length: 10 }).notNull(),
+    syncCode: varchar("sync_code", { length: 100 }).notNull(),
+    smssUrl: varchar("smss_url", { length: 255 }),
+  },
+  (t) => [uniqueIndex("system_sync_code_office_code_idx").on(t.officeCode)],
+);
+
+/** legacy: bookobec_permissions */
+export const bookobecPermissions = mysqlTable(
+  "bookobec_permissions",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    personId: varchar("person_id", { length: 13 }).notNull(),
+    userId: int("user_id").notNull().default(0),
+    p1: int("p1").default(0).notNull(),
+    p2: int("p2").default(0).notNull(),
+    officerPersonId: varchar("officer_person_id", { length: 13 }),
+    permAdd: int("perm_add").default(0).notNull(),
+    permEdit: int("perm_edit").default(0).notNull(),
+    permDele: int("perm_dele").default(0).notNull(),
+  },
+  (t) => [
+    uniqueIndex("bookobec_permissions_person_id_idx").on(t.personId),
+    index("bookobec_permissions_user_id_idx").on(t.userId),
+  ],
+);
+
+export const budgetWithdraw = mysqlTable(
+  "budget_withdraw",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    budgetYear: int("budget_year"),
+    document: varchar("document", { length: 30 }).notNull(),
+    item: varchar("item", { length: 100 }).notNull(),
+    pjActivity: varchar("pj_activity", { length: 20 }).notNull(),
+    money: double("money").notNull(),
+    payType: varchar("pay_type", { length: 10 }).notNull(),
+    pRequest: varchar("p_request", { length: 50 }).notNull(),
+    borrowStatus: tinyint("borrow_status").default(0),
+    withdrawStatus: tinyint("withdraw_status").notNull().default(0),
+    deega: float("deega"),
+    officer: varchar("officer", { length: 13 }).notNull(),
+    recDate: date("rec_date", { mode: "string" }).notNull(),
+    borrowedRecDate: date("borrowed_rec_date", { mode: "string" }).notNull(),
+    withdrawRecDate: date("withdraw_rec_date", { mode: "string" }).notNull(),
+    status: tinyint("status").notNull().default(0),
+  },
+  (t) => [
+    index("budget_withdraw_budget_year_idx").on(t.budgetYear),
+    index("budget_withdraw_rec_date_idx").on(t.recDate),
+  ],
+);
+export const budgetDeegaTable = mysqlTable(
+  "budget_deega",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    budgetYear: int("budget_year").notNull(),
+    deegaNum: float("deega_num"),
+    doc: varchar("doc", { length: 20 }).notNull().default(""),
+    receiveNum: varchar("receive_num", { length: 5 }).notNull().default(""),
+    plan: varchar("plan", { length: 5 }).notNull().default(""),
+    project: varchar("project", { length: 20 }).notNull().default(""),
+    activity: varchar("activity", { length: 20 }).notNull().default(""),
+    payGroup: int("pay_group"),
+    item: varchar("item", { length: 50 }).notNull().default(""),
+    withdraw: double("withdraw").notNull().default(0),
+    tax: double("tax").notNull().default(0),
+    pay: double("pay").notNull().default(0),
+    officer: varchar("officer", { length: 13 }),
+    recDate: date("rec_date"),
+    status: tinyint("status").notNull().default(0),
+    directPay: int("direct_pay").notNull().default(0),
+    directPayName: varchar("direct_pay_name", { length: 200 }).notNull().default(""),
+  },
+  (t) => [
+    index("budget_deega_budget_year_idx").on(t.budgetYear),
+    index("budget_deega_rec_date_idx").on(t.recDate),
+  ],
+);
+/** legacy alias kept for workflow-actions compatibility */
+export const budgetDeega = budgetDeegaTable;
+export const budgetReceive = budgetMain;
+export const budgetCancelDeega = budgetMain;
+export const budgetMoneyReturn = mysqlTable(
+  "budget_money_return",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    budgetYear: int("budget_year"),
+    document: varchar("document", { length: 30 }).notNull().default(""),
+    item: varchar("item", { length: 100 }).notNull().default(""),
+    pjActivity: varchar("pj_activity", { length: 20 }).notNull().default(""),
+    money: double("money").notNull().default(0),
+    payType: varchar("pay_type", { length: 10 }).notNull(),
+    pRequest: varchar("p_request", { length: 13 }).notNull(),
+    officer: varchar("officer", { length: 13 }).notNull().default(""),
+    recDate: date("rec_date", { mode: "string" }).notNull(),
+  },
+  (t) => [
+    index("budget_money_return_budget_year_idx").on(t.budgetYear),
+    index("budget_money_return_rec_date_idx").on(t.recDate),
+  ],
+);
+
+export const budgetReturnDeega = mysqlTable(
+  "budget_return_deega",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    budgetYear: int("budget_year").notNull(),
+    document: varchar("document", { length: 50 }),
+    receiveNum: varchar("receive_num", { length: 50 }),
+    plan: varchar("plan", { length: 50 }),
+    project: varchar("project", { length: 50 }),
+    activity: varchar("activity", { length: 50 }),
+    payGroup: int("pay_group"),
+    item: varchar("item", { length: 255 }),
+    money: double("money").notNull().default(0),
+    officer: varchar("officer", { length: 20 }),
+    recDate: date("rec_date", { mode: "string" }),
+  },
+  (t) => [
+    index("budget_return_deega_budget_year_idx").on(t.budgetYear),
+  ],
+);
+export const budgetReserveMoneyTable = mysqlTable(
+  "budget_reserve_money",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    budgetYear: int("budget_year").notNull(),
+    item: varchar("item", { length: 250 }),
+    payAmount: float("pay_amount").default(0),
+    receiveAmount: float("receive_amount").default(0),
+    payRecDate: date("pay_rec_date", { mode: "string" }),
+    borrowedPerson: varchar("borrowed_person", { length: 150 }),
+  },
+  (t) => [
+    index("budget_reserve_money_year_idx").on(t.budgetYear),
+  ],
+);
+export const budgetPo = budgetMain;
+export const budgetReserveMoney = budgetReserveMoneyTable;
+
+export const budgetProject = mysqlTable("budget_project", {
+  id: int("id").autoincrement().primaryKey(),
+  budgetYear: int("budget_year").notNull(),
+  code: varchar("code", { length: 20 }).notNull().default(""),
+  name: varchar("name", { length: 80 }).notNull(),
+});
+
+export const budgetKeyActivity = mysqlTable("budget_key_activity", {
+  id: int("id").autoincrement().primaryKey(),
+  budgetYear: int("budget_year").notNull(),
+  code: varchar("code", { length: 20 }).notNull().default(""),
+  name: varchar("name", { length: 100 }).notNull().default(""),
+});
+
+export const systemWorkgroups = mysqlTable("system_workgroup", {
+  id: int("id").autoincrement().primaryKey(),
+  workgroup: int("workgroup").notNull(),
+  workgroupDesc: varchar("workgroup_desc", { length: 100 }).notNull(),
+});
+
+export const allowedIps = mysqlTable("allowed_ips", {
+  id: int("id").autoincrement().primaryKey(),
+  ipAddress: varchar("ip_address", { length: 45 }).notNull(),
+  description: varchar("description", { length: 255 }),
+  isEnabled: boolean("is_enabled").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+}, (t) => [
+  uniqueIndex("allowed_ips_ip_address_idx").on(t.ipAddress),
+]);
+

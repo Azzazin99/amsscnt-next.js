@@ -75,9 +75,17 @@ const ROUTE_STATUS: { prefix: string; status: ImplementationStatus }[] = [
   { prefix: "/modules/questionnaire", status: "in_progress" },
   { prefix: "/modules/alert", status: "in_progress" },
   { prefix: "/api/person/export", status: "ready" }, // P052 CSV
+  { prefix: "/modules/person/settings/sys-admin", status: "ready" },
+  { prefix: "/modules/person/settings/district-positions", status: "ready" },
+  { prefix: "/modules/person/settings/school-positions", status: "ready" },
+  { prefix: "/modules/person/settings/import-district-text", status: "ready" },
+  { prefix: "/modules/person/settings/import-school-text", status: "ready" },
+  { prefix: "/modules/person/settings/import-birthdate-text", status: "ready" },
+  { prefix: "/modules/person/settings/district-signatures", status: "ready" },
   { prefix: "/modules/person/permissions", status: "ready" }, // P052
   { prefix: "/modules/person/staff", status: "ready" }, // P050–P051
   { prefix: "/modules/person", status: "ready" },
+  { prefix: "/admin/sql-console", status: "ready" },
   { prefix: "/admin/permissions", status: "ready" }, // P019
   { prefix: "/admin/users", status: "ready" }, // P018
   { prefix: "/admin/module-admins", status: "ready" }, // P017

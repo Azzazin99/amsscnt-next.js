@@ -51,7 +51,7 @@ export function ThemeSwitcher() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => setMounted(true), []); // eslint-disable-line react-hooks/set-state-in-effect -- hydration guard for next-themes
 
   useEffect(() => {
     if (theme === "sepia") setTheme("light");

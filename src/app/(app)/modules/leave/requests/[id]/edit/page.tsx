@@ -73,6 +73,7 @@ export default async function LeaveRequestEditPage({ params }: Props) {
       lastLeaveByType={formContext.lastLeaveByType}
       quotaHints={formContext.quotaHints}
       personSex={formContext.personSex}
+      personId={user.personId}
       initialValues={{
         leaveType: request.leaveType,
         writeAt: request.writeAt,

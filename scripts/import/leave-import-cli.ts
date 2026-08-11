@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { db, queryClient } from "../../src/lib/db";
+import { db } from "../../src/lib/db";
 import { schools, users } from "../../src/lib/db/schema";
 import type { ImportMaps } from "./shared";
 
@@ -19,11 +19,7 @@ export async function buildLeaveImportMapsFromDb(): Promise<ImportMaps> {
 }
 
 export async function truncateLeaveTables() {
-  try {
-    await db.execute(sql`SET session_replication_role = 'replica'`);
-  } catch {
-    /* non-superuser local dev */
-  }
+  await db.execute(sql`SET FOREIGN_KEY_CHECKS = 0`);
 
   const tables = [
     "leave_cancellations",
@@ -36,16 +32,14 @@ export async function truncateLeaveTables() {
   ];
 
   for (const table of tables) {
-    await db.execute(
-      sql.raw(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`),
-    );
+    try {
+      await db.execute(sql.raw(`TRUNCATE TABLE \`${table}\``));
+    } catch {
+      /* ignore if table not found */
+    }
   }
 
-  try {
-    await db.execute(sql`SET session_replication_role = 'origin'`);
-  } catch {
-    /* ignore */
-  }
+  await db.execute(sql`SET FOREIGN_KEY_CHECKS = 1`);
 }
 
 export async function countLegacyLeaveRows(): Promise<{
@@ -56,17 +50,15 @@ export async function countLegacyLeaveRows(): Promise<{
   laCancelBk01: number;
 }> {
   const countIfExists = async (table: string) => {
-    const exists = await queryClient<{ exists: boolean }[]>`
-      SELECT EXISTS (
-        SELECT 1 FROM information_schema.tables
-        WHERE table_schema = 'public' AND table_name = ${table}
-      ) AS exists
-    `;
-    if (!exists[0]?.exists) return 0;
-    const result = await queryClient.unsafe(
-      `SELECT COUNT(*)::text AS count FROM "${table}"`,
-    );
-    return Number((result[0] as { count: string })?.count ?? 0);
+    try {
+      const result = (await db.execute(
+        sql.raw(`SELECT COUNT(*) AS count FROM \`${table}\``),
+      )) as unknown as [Record<string, unknown>[]];
+      const rows = (result[0] ?? []) as Record<string, unknown>[];
+      return Number(rows[0]?.count ?? 0);
+    } catch {
+      return 0;
+    }
   };
 
   const [laMain, laMainBk, laCancel, laCancelBk, laCancelBk01] =
@@ -87,25 +79,32 @@ export async function countLeaveAppRows(): Promise<{
   leaveCancellations: number;
   people: number;
 }> {
-  const [req, approved, cancel, peopleRows] = await Promise.all([
-    queryClient<{ count: string }[]>`
-      SELECT COUNT(*)::text AS count FROM leave_requests
-    `,
-    queryClient<{ count: string }[]>`
-      SELECT COUNT(*)::text AS count FROM leave_requests WHERE commander_grant = 1
-    `,
-    queryClient<{ count: string }[]>`
-      SELECT COUNT(*)::text AS count FROM leave_cancellations
-    `,
-    queryClient<{ count: string }[]>`
-      SELECT COUNT(*)::text AS count FROM people
-    `,
-  ]);
+  const countTable = async (queryStr: string) => {
+    try {
+      const res = (await db.execute(sql.raw(queryStr))) as unknown as [
+        Record<string, unknown>[],
+      ];
+      const rows = (res[0] ?? []) as Record<string, unknown>[];
+      return Number(rows[0]?.count ?? 0);
+    } catch {
+      return 0;
+    }
+  };
+
+  const [leaveRequests, leaveRequestsApproved, leaveCancellations, people] =
+    await Promise.all([
+      countTable("SELECT COUNT(*) AS count FROM `leave_requests`"),
+      countTable(
+        "SELECT COUNT(*) AS count FROM `leave_requests` WHERE `commander_grant` = 1",
+      ),
+      countTable("SELECT COUNT(*) AS count FROM `leave_cancellations`"),
+      countTable("SELECT COUNT(*) AS count FROM `people`"),
+    ]);
 
   return {
-    leaveRequests: Number(req[0]?.count ?? 0),
-    leaveRequestsApproved: Number(approved[0]?.count ?? 0),
-    leaveCancellations: Number(cancel[0]?.count ?? 0),
-    people: Number(peopleRows[0]?.count ?? 0),
+    leaveRequests,
+    leaveRequestsApproved,
+    leaveCancellations,
+    people,
   };
 }

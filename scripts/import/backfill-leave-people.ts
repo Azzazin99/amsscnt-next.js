@@ -1,10 +1,11 @@
 import { eq } from "drizzle-orm";
-import { db, queryClient } from "../../src/lib/db";
+import { db } from "../../src/lib/db";
 import { people } from "../../src/lib/db/schema";
 import { sexFromPrefix } from "../../src/lib/person/constants";
 import {
   cleanText,
   legacyPersonId,
+  legacyQuery,
   legacyTableExists,
   normalizeLegacyDate,
   type ImportMaps,
@@ -40,11 +41,9 @@ async function collectLeavePersonIds(): Promise<Set<string>> {
 
   for (const table of LEAVE_PERSON_TABLES) {
     if (!(await legacyTableExists(table))) continue;
-    const rows = await queryClient.unsafe(
-      `SELECT DISTINCT person_id FROM "${table}"`,
-    );
+    const rows = await legacyQuery(`SELECT DISTINCT person_id FROM \`${table}\``);
     for (const row of rows) {
-      const id = legacyPersonId((row as { person_id: unknown }).person_id);
+      const id = legacyPersonId(row.person_id);
       if (id) ids.add(id);
     }
   }
@@ -65,9 +64,9 @@ async function loadPersonDetail(
     return { sex: null, serviceStartDate: null };
   }
 
-  const rows = await queryClient<
-    Record<string, unknown>[]
-  >`SELECT sex, start_day FROM person_detail WHERE person_id = ${personId} LIMIT 1`;
+  const rows = await legacyQuery(
+    `SELECT sex, start_day FROM person_detail WHERE person_id = '${personId}' LIMIT 1`,
+  );
   const row = rows[0];
   if (!row) return { sex: null, serviceStartDate: null };
 
@@ -102,9 +101,9 @@ export async function resolveLegacyPersonIdentity(
   const detail = await loadPersonDetail(personId);
 
   if (await legacyTableExists("person_main")) {
-    const rows = await queryClient<
-      Record<string, unknown>[]
-    >`SELECT * FROM person_main WHERE person_id = ${personId} LIMIT 1`;
+    const rows = await legacyQuery(
+      `SELECT * FROM person_main WHERE person_id = '${personId}' LIMIT 1`,
+    );
     const row = rows[0];
     if (row) {
       const prefix = cleanText(row.prename) || null;
@@ -133,9 +132,9 @@ export async function resolveLegacyPersonIdentity(
   }
 
   if (await legacyTableExists("person_sch_main")) {
-    const rows = await queryClient<
-      Record<string, unknown>[]
-    >`SELECT * FROM person_sch_main WHERE person_id = ${personId} LIMIT 1`;
+    const rows = await legacyQuery(
+      `SELECT * FROM person_sch_main WHERE person_id = '${personId}' LIMIT 1`,
+    );
     const row = rows[0];
     if (row) {
       const prefix = cleanText(row.prename) || null;
@@ -198,60 +197,37 @@ export async function ensureLeavePeopleFromLegacy(
     return { inserted: 0, skippedExisting: 0, namesRefreshed: 0 };
   }
 
-  const existingRows = await db
+  const existingPeople = await db
     .select({
       personId: people.personId,
       firstName: people.firstName,
       lastName: people.lastName,
     })
     .from(people);
-  const existingById = new Map(
-    existingRows.map((r) => [r.personId, r] as const),
-  );
+  const existingMap = new Map(existingPeople.map((p) => [p.personId, p]));
 
   let inserted = 0;
   let skippedExisting = 0;
   let namesRefreshed = 0;
 
-  for (const personId of leavePersonIds) {
-    const identity = await resolveLegacyPersonIdentity(personId, maps);
-    const current = existingById.get(personId);
+  for (const pid of leavePersonIds) {
+    const identity = await resolveLegacyPersonIdentity(pid, maps);
+    const existing = existingMap.get(pid);
 
-    if (current) {
-      if (
-        !identity.isStub &&
-        isLegacyLeaveStubPerson({
-          personId: current.personId,
-          firstName: current.firstName,
-          lastName: current.lastName,
-        })
-      ) {
-        await db
-          .update(people)
-          .set(personUpdateFields(identity))
-          .where(eq(people.personId, personId));
-        namesRefreshed += 1;
-      } else {
-        skippedExisting += 1;
-      }
+    if (!existing) {
+      await db.insert(people).ignore().values(identity.row);
+      inserted++;
       continue;
     }
 
-    const result = await db
-      .insert(people)
-      .values(identity.row)
-      .onConflictDoNothing()
-      .returning({ personId: people.personId });
+    skippedExisting++;
 
-    if (result.length > 0) {
-      inserted += 1;
-      existingById.set(personId, {
-        personId,
-        firstName: identity.row.firstName,
-        lastName: identity.row.lastName,
-      });
-    } else {
-      skippedExisting += 1;
+    if (isLegacyLeaveStubPerson(existing) && !identity.isStub) {
+      await db
+        .update(people)
+        .set(personUpdateFields(identity))
+        .where(eq(people.personId, pid));
+      namesRefreshed++;
     }
   }
 

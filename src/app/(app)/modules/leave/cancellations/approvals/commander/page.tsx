@@ -1,5 +1,7 @@
+import { redirect } from "next/navigation";
 import { ListPagination } from "@/components/core/list-pagination";
 import { LeaveRequestQueueTable } from "@/components/leave/leave-request-queue-table";
+import { canAccessCommanderCancellationApprovalInbox } from "@/lib/leave/approval-nav";
 import {
   countCommanderCancellationApproval,
   listCommanderCancellationApprovalPage,
@@ -14,7 +16,13 @@ type Props = {
 export default async function LeaveCancellationCommanderApprovalPage({
   searchParams,
 }: Props) {
-  const { user } = await requireLeaveScope();
+  const { user, scope } = await requireLeaveScope();
+  if (scope.kind !== "district") {
+    redirect("/modules/leave/cancellations");
+  }
+  if (!(await canAccessCommanderCancellationApprovalInbox(user))) {
+    redirect("/modules/leave/cancellations");
+  }
 
   const params = await searchParams;
   const page = Math.max(1, Number(params.page) || 1);

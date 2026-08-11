@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { DistrictStaffOption } from "@/lib/bookregister/permissions/queries";
 
@@ -156,13 +156,13 @@ export function PermissionForm({
         </p>
       ) : null}
 
-      <div className="flex flex-wrap gap-2 pt-2">
-        <Button type="submit" disabled={loading}>
+      <div className="flex flex-wrap gap-3 pt-2">
+        <Button type="submit" disabled={loading} className="min-h-11 min-w-28 justify-center">
           {loading ? "กำลังบันทึก..." : "ตกลง"}
         </Button>
         <Link
           href={cancelHref}
-          className="inline-flex h-8 items-center justify-center rounded-lg border border-border px-2.5 text-sm hover:bg-muted"
+          className={buttonVariants({ variant: "outline", className: "min-h-11 min-w-28 justify-center" })}
         >
           ย้อนกลับ
         </Link>

@@ -1,5 +1,5 @@
-/** Legacy `person_position` (สพป.) — static map, codes 1–22 */
-const POSITION_LABELS: Record<number, string> = {
+/** Legacy `person_position` (สพป.) — static map, codes 0–22 */
+export const DISTRICT_POSITION_LABELS: Record<number, string> = {
   0: "บุคลากรทั่วไป",
   1: "ผู้อำนวยการสำนักงานเขตพื้นที่การศึกษา",
   2: "รองผู้อำนวยการสำนักงานเขตพื้นที่การศึกษา",
@@ -25,21 +25,73 @@ const POSITION_LABELS: Record<number, string> = {
   22: "พนักงานราชการ",
 };
 
-export const VALID_POSITION_CODES = Object.keys(POSITION_LABELS)
+/** Legacy `person_sch_position` (โรงเรียน/สถานศึกษา) — static map */
+export const SCHOOL_POSITION_LABELS: Record<number, string> = {
+  0: "บุคลากรทั่วไป",
+  1: "ผู้อำนวยการโรงเรียน",
+  2: "รองผู้อำนวยการโรงเรียน",
+  3: "ครู",
+  4: "ครูผู้ช่วย",
+  5: "เจ้าหน้าที่งานสารบรรณโรงเรียน",
+  11: "พนักงานราชการ",
+  12: "พนักงานราชการ(ครูพี่เลี้ยง)",
+  13: "พนักงานราชการ(อื่น ๆ)",
+  21: "ลูกจ้างประจำ(พนักงานธุรการ)",
+  22: "ลูกจ้างประจำ(พนักงานขับรถยนต์)",
+  23: "ลูกจ้างประจำ(ช่างครุภัณฑ์)",
+  24: "ลูกจ้างประจำ(อื่น ๆ)",
+  31: "ลูกจ้างชั่วคราว(ครู)",
+  32: "เจ้าหน้าที่ธุรการโรงเรียน",
+  33: "ลูกจ้าง",
+  34: "ครูพี่เลี้ยงฯ",
+  35: "ลูกจ้างชั่วคราว(ครูผู้ทรงคุณค่า)",
+  41: "ผู้จัดการโรงเรียนเอกชน",
+  42: "เจ้าหน้าที่บริหารทั่วไปโรงเรียนเอกชน",
+  43: "เจ้าหน้าที่อื่น ๆ โรงเรียนเอกชน",
+};
+
+export const VALID_DISTRICT_POSITION_CODES = Object.keys(DISTRICT_POSITION_LABELS)
   .map(Number)
   .sort((a, b) => a - b);
 
-export function isValidPositionCode(code: number): boolean {
-  return code in POSITION_LABELS;
+export const VALID_SCHOOL_POSITION_CODES = Object.keys(SCHOOL_POSITION_LABELS)
+  .map(Number)
+  .sort((a, b) => a - b);
+
+export function isValidPositionCode(code: number, orgType: string = "district"): boolean {
+  return orgType === "school"
+    ? code in SCHOOL_POSITION_LABELS
+    : code in DISTRICT_POSITION_LABELS;
 }
 
-/** Display name only — no "ตำแหน่ง" prefix (call sites add it where needed). */
-export function positionLabel(code: number | null | undefined): string {
+/** Display position name based on organization type (district vs school). */
+export function positionLabel(
+  code: number | null | undefined,
+  orgType: string | null | undefined = "district",
+): string {
   if (code == null) return "—";
-  return POSITION_LABELS[code] ?? `ไม่ระบุ (รหัส ${code})`;
+  
+  if (orgType === "school") {
+    return (
+      SCHOOL_POSITION_LABELS[code] ??
+      DISTRICT_POSITION_LABELS[code] ??
+      `ไม่ระบุ (รหัส ${code})`
+    );
+  }
+
+  return (
+    DISTRICT_POSITION_LABELS[code] ??
+    SCHOOL_POSITION_LABELS[code] ??
+    `ไม่ระบุ (รหัส ${code})`
+  );
 }
 
-export const POSITION_OPTIONS = VALID_POSITION_CODES.map((value) => ({
+export const POSITION_OPTIONS = VALID_DISTRICT_POSITION_CODES.map((value) => ({
   value,
-  label: POSITION_LABELS[value],
+  label: DISTRICT_POSITION_LABELS[value],
+}));
+
+export const SCHOOL_POSITION_OPTIONS = VALID_SCHOOL_POSITION_CODES.map((value) => ({
+  value,
+  label: SCHOOL_POSITION_LABELS[value],
 }));

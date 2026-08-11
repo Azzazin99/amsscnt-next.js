@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type StaffOption = { userId: number; personId: string; label: string };
@@ -76,8 +76,8 @@ export function SpacialStudentPermissionForm({ action, staffOptions, title, canc
       </div>
       {error ? <p className="text-sm text-destructive" role="alert">{error}</p> : null}
       <div className="flex flex-wrap gap-3 pt-2">
-        <Button type="submit" disabled={loading} className="min-h-11">{loading ? "กำลังบันทึก…" : "บันทึก"}</Button>
-        <Link href={cancelHref} className={cn("inline-flex min-h-11 items-center rounded-lg border px-4 text-sm hover:bg-muted")}>ยกเลิก</Link>
+        <Button type="submit" disabled={loading} className="min-h-11 min-w-28 justify-center">{loading ? "กำลังบันทึก…" : "บันทึก"}</Button>
+        <Link href={cancelHref} className={buttonVariants({ variant: "outline", className: "min-h-11 min-w-28 justify-center" })}>ยกเลิก</Link>
       </div>
     </form>
   );

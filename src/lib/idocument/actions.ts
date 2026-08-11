@@ -1,5 +1,7 @@
 "use server";
 
+import { insertAndGetId } from "../db/helpers";
+
 import { eq } from "drizzle-orm";
 import { createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
@@ -94,9 +96,7 @@ export async function createIdocument(formData: FormData) {
   const bookNo = formatBookNo(bookNumber, bookYear);
   const submitMode = formData.get("submitMode") === "submit";
 
-  const [inserted] = await db
-    .insert(idocumentMain)
-    .values({
+  const insertedId = await insertAndGetId(idocumentMain, {
       workgroup: parsed.data.workgroup,
       workgroupTxt: parsed.data.workgroupTxt,
       bookYear,
@@ -114,8 +114,8 @@ export async function createIdocument(formData: FormData) {
       officerPosition: officer.position,
       bookStatus: submitMode ? 1 : 0,
       bookType: parsed.data.bookType,
-    })
-    .returning({ id: idocumentMain.id });
+    });
+  const inserted = { id: insertedId };
 
   if (!inserted) {
     return { ok: false as const, message: "ไม่สามารถบันทึกได้" };

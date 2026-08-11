@@ -2,12 +2,12 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AppBreadcrumb } from "@/components/app-shell/app-breadcrumb";
 import { BookNav } from "@/components/book/book-nav";
+import { getModuleSettingsNavMode } from "@/lib/core/permissions";
 import {
-  canManageBookGroups,
+  canManageBookSettings,
   canViewBookList,
   canWriteBook,
   getBookPermissions,
-  isBookModuleAdmin,
 } from "@/lib/book/permissions";
 import { resolveBookScope, scopeLabel } from "@/lib/book/scope";
 
@@ -25,10 +25,10 @@ export default async function BookLayout({
   }
 
   const scope = await resolveBookScope(session.user, perms);
-  const showGroups = canManageBookGroups(session.user, perms);
   const canWrite = canWriteBook(session.user, perms);
+  const settingsNavMode = getModuleSettingsNavMode(session.user, "book");
   const showRetention =
-    scope?.kind === "district" && isBookModuleAdmin(session.user);
+    scope?.kind === "district" && canManageBookSettings(session.user);
 
   return (
     <div className="px-4 py-6 lg:px-8">
@@ -48,8 +48,8 @@ export default async function BookLayout({
       </div>
 
       <BookNav
-        showGroups={showGroups}
         canWrite={canWrite}
+        settingsNavMode={settingsNavMode}
         showRetention={showRetention}
       />
 

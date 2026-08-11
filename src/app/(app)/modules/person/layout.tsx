@@ -2,8 +2,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AppBreadcrumb } from "@/components/app-shell/app-breadcrumb";
 import { PersonNav } from "@/components/person/person-nav";
+import { getModuleSettingsNavMode } from "@/lib/core/permissions";
 import {
-  canManagePersonPermissions,
   canViewPersonList,
   getPersonPermissions,
 } from "@/lib/person/permissions";
@@ -23,7 +23,7 @@ export default async function PersonLayout({
   }
 
   const scope = await resolvePersonScope(session.user, perms);
-  const showPermissions = canManagePersonPermissions(session.user, perms);
+  const settingsNavMode = getModuleSettingsNavMode(session.user, "person");
 
   return (
     <div className="px-4 py-6 lg:px-8">
@@ -42,7 +42,7 @@ export default async function PersonLayout({
         </p>
       </div>
 
-      <PersonNav showPermissions={showPermissions} />
+      <PersonNav settingsNavMode={settingsNavMode} />
 
       {children}
     </div>

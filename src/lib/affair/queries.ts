@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, ilike, inArray, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, like, inArray, or } from "drizzle-orm";
 import { formatPersonName } from "@/lib/auth/format-name";
 import { db } from "@/lib/db";
 import {
@@ -38,9 +38,9 @@ function searchCondition(q: string) {
   if (q.length < 2) return undefined;
   const pattern = `%${q}%`;
   return or(
-    ilike(affairEntries.subject, pattern),
-    ilike(affairEntries.location, pattern),
-    ilike(affairEntries.remark, pattern),
+    like(affairEntries.subject, pattern),
+    like(affairEntries.location, pattern),
+    like(affairEntries.remark, pattern),
   );
 }
 

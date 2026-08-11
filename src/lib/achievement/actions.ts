@@ -1,5 +1,7 @@
 "use server";
 
+import { insertAndGetId } from "../db/helpers";
+
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -75,9 +77,7 @@ export async function createAchievementScore(formData: FormData) {
   const scoreAvg = computeScoreAvg(data);
 
   try {
-    const [inserted] = await db
-      .insert(achievementScores)
-      .values({
+    const insertedId = await insertAndGetId(achievementScores, {
         testType: data.testType,
         testClass: data.testClass,
         edYear: data.edYear,
@@ -93,8 +93,8 @@ export async function createAchievementScore(formData: FormData) {
         scoreAvg,
         officerPersonId: user.personId,
         recDate: todayBangkokDate(),
-      })
-      .returning({ id: achievementScores.id });
+      });
+  const inserted = { id: insertedId };
 
     revalidatePath(SCORES_PATH);
     redirect(`${SCORES_PATH}/${inserted.id}/edit`);

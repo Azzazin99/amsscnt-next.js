@@ -3,6 +3,7 @@
 import { Paperclip } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { STANDARD_ATTACHMENT_ACCEPT, STANDARD_ATTACHMENT_TYPES_LABEL } from "@/lib/form/attachment-allowed-types";
 import { cn } from "@/lib/utils";
 
 type SendFileRow = {
@@ -17,8 +18,7 @@ type Props = {
   className?: string;
 };
 
-const ACCEPT =
-  ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.zip,.rar";
+const ACCEPT = STANDARD_ATTACHMENT_ACCEPT;
 
 export function SendAttachments({ sendId, className }: Props) {
   const [files, setFiles] = useState<SendFileRow[]>([]);
@@ -56,6 +56,7 @@ export function SendAttachments({ sendId, className }: Props) {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch attachment list on mount / URL change
     void refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baseUrl]);
@@ -186,7 +187,7 @@ export function SendAttachments({ sendId, className }: Props) {
       </div>
 
       <p className="mt-2 text-xs text-muted-foreground">
-        เลือกได้หลายไฟล์พร้อมกัน · รองรับ pdf, doc, xls, ppt, รูปภาพ, zip (สูงสุด 20MB/ไฟล์)
+        เลือกได้หลายไฟล์พร้อมกัน · รองรับ {STANDARD_ATTACHMENT_TYPES_LABEL} (สูงสุด 20MB/ไฟล์)
       </p>
 
       <div className="mt-4">

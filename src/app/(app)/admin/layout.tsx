@@ -2,14 +2,15 @@ import { AppBreadcrumb } from "@/components/app-shell/app-breadcrumb";
 import { AdminDevNav } from "@/components/core/admin-dev-nav";
 import { AdminNav } from "@/components/core/admin-nav";
 import { requireSystemAdmin } from "@/lib/core/permissions";
-import { isDbBrowserEnabled } from "@/lib/dev/db-browser";
+import { isDbBrowserEnabled, isDevToolsNavEnabled } from "@/lib/dev/db-browser";
+import { isLegacyDumpExportEnabled } from "@/lib/dev/legacy-dump-export";
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  await requireSystemAdmin();
+  const user = await requireSystemAdmin();
 
   return (
     <div className="px-4 py-6 lg:px-8">
@@ -28,7 +29,14 @@ export default async function AdminLayout({
       </div>
 
       <AdminNav />
-      <AdminDevNav enabled={isDbBrowserEnabled()} />
+      {isDevToolsNavEnabled() ? (
+        <AdminDevNav
+          dbBrowserEnabled={isDbBrowserEnabled()}
+          legacyExportEnabled={
+            isLegacyDumpExportEnabled() && user.isSuperAdmin
+          }
+        />
+      ) : null}
 
       {children}
     </div>

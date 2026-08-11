@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { AffairPermissionForm } from "@/components/affair/affair-permission-form";
 import { updateAffairPermission } from "@/lib/affair/actions";
-import { canManageAffairSettings } from "@/lib/affair/permissions";
+import { canManageAffairStaffPermissions } from "@/lib/affair/permissions";
 import {
   getAffairModulePermission,
   listStaffForAffairPermissionPicker,
@@ -14,7 +14,7 @@ type Props = {
 
 export default async function AffairPermissionEditPage({ params }: Props) {
   const { user } = await requireAffairScope();
-  if (!canManageAffairSettings(user)) redirect("/modules/affair");
+  if (!canManageAffairStaffPermissions(user)) redirect("/modules/affair");
 
   const { id: idParam } = await params;
   const id = Number(idParam);

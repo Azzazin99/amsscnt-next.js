@@ -39,6 +39,13 @@
 2. **ความหนาแน่นที่ใช้งานได้** — ตารางหนาแน่นได้ แต่ touch target และ contrast ต้องผ่าน
 3. **Deterministic วันที่** — ไม่พึ่ง locale/timezone ของ browser สำหรับค่าจาก DB
 
+## Agent scope (impeccable / UI tasks)
+
+- โค้ดเท่าที่จำเป็นตามคำสั่งเท่านั้น — ไม่ refactor / ไม่เพิ่ม feature / ไม่แตะไฟล์นอก scope
+- งาน copy/hint/label เดียว → ใช้ `clarify` หรือ `craft` + compact shape; ไม่สร้าง component ใหม่
+- ก่อนแก้: ระบุรายการไฟล์ที่จะแตะ; หลังแก้: สรุป diff สั้น ๆ
+- เทียบ legacy (amsscnt.com) เมื่อเป็นโมดูล migration — ไม่ redesign ทั้งหน้า
+
 ## References
 
 - Legacy production: https://amsscnt.com (สพป.ชัยนาท)

@@ -5,6 +5,7 @@ import { canWritePlan } from "@/lib/plan/permissions";
 import {
   getPlanProject,
   listPersonOptions,
+  listStrategyOptions,
   listWorkgroupOptions,
 } from "@/lib/plan/queries";
 import { requirePlanAccess } from "@/lib/plan/scope";
@@ -22,9 +23,10 @@ export default async function PlanProjectEditPage({ params }: Props) {
   const project = await getPlanProject(id);
   if (!project) notFound();
 
-  const [workgroups, people] = await Promise.all([
+  const [workgroups, people, strategies] = await Promise.all([
     listWorkgroupOptions(),
     listPersonOptions(),
+    listStrategyOptions(project.budgetYear),
   ]);
 
   return (
@@ -37,6 +39,7 @@ export default async function PlanProjectEditPage({ params }: Props) {
         budgetYear={project.budgetYear}
         workgroups={workgroups}
         people={people}
+        strategies={strategies}
         cancelHref={`/modules/plan/projects/${id}`}
         defaultValues={{
           codeClus: project.codeClus,

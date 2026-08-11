@@ -4,7 +4,7 @@ import {
   count,
   desc,
   eq,
-  ilike,
+  like,
   inArray,
   isNull,
   lt,
@@ -66,8 +66,8 @@ function searchCondition(q: string) {
   if (q.length < 2) return undefined;
   const pattern = `%${q}%`;
   return or(
-    ilike(bookDocuments.subject, pattern),
-    ilike(bookDocuments.bookNo, pattern),
+    like(bookDocuments.subject, pattern),
+    like(bookDocuments.bookNo, pattern),
   );
 }
 
@@ -127,13 +127,13 @@ function inboxDocumentFilterWhere(filter: BookInboxFilter) {
 
 function inboxAckHaving(ack: string, filter: BookInboxFilter) {
   if (filter === "overdue_unack") {
-    return sql`NOT bool_and(${bookRecipients.answered})`;
+    return sql`MIN(CASE WHEN ${bookRecipients.answered} THEN 1 ELSE 0 END) = 0`;
   }
   if (ack === "pending") {
-    return sql`NOT bool_and(${bookRecipients.answered})`;
+    return sql`MIN(CASE WHEN ${bookRecipients.answered} THEN 1 ELSE 0 END) = 0`;
   }
   if (ack === "done") {
-    return sql`bool_and(${bookRecipients.answered})`;
+    return sql`MIN(CASE WHEN ${bookRecipients.answered} THEN 1 ELSE 0 END) = 1`;
   }
   return undefined;
 }
@@ -204,9 +204,9 @@ export async function listBookInboxPage(input: {
       secretLevel: bookDocuments.secretLevel,
       bookType: bookDocuments.bookType,
       officeCode: bookDocuments.officeCode,
-      answered: sql<boolean>`bool_and(${bookRecipients.answered})`,
+      answered: sql<boolean>`MIN(CASE WHEN ${bookRecipients.answered} THEN 1 ELSE 0 END) = 1`,
       recipientCount: sql<number>`(
-        SELECT COUNT(*)::int FROM book_recipients br
+        SELECT COUNT(*) FROM book_recipients br
         WHERE br.ref_id = ${bookDocuments.refId}
       )`,
     })
@@ -292,7 +292,7 @@ export async function listBookSentPage(input: {
       bookType: bookDocuments.bookType,
       officeCode: bookDocuments.officeCode,
       recipientCount: sql<number>`(
-        SELECT COUNT(*)::int FROM book_recipients br
+        SELECT COUNT(*) FROM book_recipients br
         WHERE br.ref_id = ${bookDocuments.refId}
       )`,
     })

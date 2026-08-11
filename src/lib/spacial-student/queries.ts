@@ -3,7 +3,7 @@ import {
   asc,
   count,
   eq,
-  ilike,
+  like,
   isNull,
   notInArray,
   or,
@@ -95,10 +95,10 @@ function buildWhere(
   if (q.length >= 2) {
     conditions.push(
       or(
-        ilike(spacialStudentDisabled.personId, `%${q}%`),
-        ilike(students.studentId, `%${q}%`),
-        ilike(students.name, `%${q}%`),
-        ilike(students.surname, `%${q}%`),
+        like(spacialStudentDisabled.personId, `%${q}%`),
+        like(students.studentId, `%${q}%`),
+        like(students.name, `%${q}%`),
+        like(students.surname, `%${q}%`),
       ),
     );
   }

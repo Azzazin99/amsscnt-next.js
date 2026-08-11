@@ -12,7 +12,7 @@ const ACADEMIC_GROUP_LEGACY_ID = 4;
 const DLTV_SLUG = "dltv";
 
 async function main() {
-  const [group] = await db
+  const [res_group] = await db
     .select({ id: menuGroups.id })
     .from(menuGroups)
     .where(eq(menuGroups.legacyId, ACADEMIC_GROUP_LEGACY_ID))
@@ -44,7 +44,8 @@ async function main() {
     await db.update(modules).set(values).where(eq(modules.id, existing.id));
     console.log(`อัปเดต modules.slug = ${DLTV_SLUG} (id ${existing.id})`);
   } else {
-    const [inserted] = await db.insert(modules).values(values).returning({ id: modules.id });
+    const [inserted] = await db.insert(modules).values(values);
+      const group = { id: res_group.insertId };
     console.log(`เพิ่ม modules.slug = ${DLTV_SLUG} (id ${inserted.id})`);
   }
 }

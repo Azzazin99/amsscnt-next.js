@@ -4,7 +4,7 @@ import {
   count,
   desc,
   eq,
-  ilike,
+  like,
   isNull,
   notInArray,
   or,
@@ -131,11 +131,11 @@ function buildRequestWhere(
   if (q.length >= 2) {
     conditions.push(
       or(
-        ilike(carRequests.personId, `%${q}%`),
-        ilike(people.firstName, `%${q}%`),
-        ilike(people.lastName, `%${q}%`),
-        ilike(people.prefix, `%${q}%`),
-        ilike(carRequests.place, `%${q}%`),
+        like(carRequests.personId, `%${q}%`),
+        like(people.firstName, `%${q}%`),
+        like(people.lastName, `%${q}%`),
+        like(people.prefix, `%${q}%`),
+        like(carRequests.place, `%${q}%`),
       ),
     );
   }

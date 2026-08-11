@@ -438,12 +438,7 @@ export async function syncQuotaBalance(
       used: summary.used,
       carried: summary.carried,
     })
-    .onConflictDoUpdate({
-      target: [
-        leaveQuotaBalances.personId,
-        leaveQuotaBalances.budgetYear,
-        leaveQuotaBalances.leaveType,
-      ],
+    .onDuplicateKeyUpdate({
       set: {
         entitled: summary.entitled ?? 0,
         used: summary.used,

@@ -39,9 +39,11 @@ export default async function AdminSchoolsPage({ searchParams }: Props) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-primary">สถานศึกษา</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            เทียบ <code className="text-xs">system_school</code> —{" "}
-            {total.toLocaleString("th-TH")} รายการ
+          <p className="mt-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+            (ดูได้อย่างเดียวเพื่อประกอบการทำงานระบบบุคลากร การเพิ่ม ลบ แก้ไข สถานศึกษา เป็นหน้าที่ของผู้ดูแลระบบ AMSS++)
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            รายการสถานศึกษาในเขตพื้นที่การศึกษา ({total.toLocaleString("th-TH")} รายการ)
           </p>
         </div>
         <Link

@@ -128,7 +128,7 @@ export function PersonListFilters({
               <option value="">ทั้งหมด</option>
               {schools.map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.schoolCode} {s.name}
+                  {s.name}
                 </option>
               ))}
             </select>

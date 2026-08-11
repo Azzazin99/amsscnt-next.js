@@ -14,7 +14,7 @@
 |------|---------------------------|---------------|
 | เครื่อง | **เครื่อง PHP เดิม** — ติดตั้ง Next.js + PostgreSQL บน server ที่รัน amsscnt.com วันนี้ | **Server แยก** ในเครือข่ายเขต (คนละเครื่องกับ production PHP) |
 | OS | Linux Ubuntu 22.04+ | เหมือน production |
-| Runtime | Node.js 20 LTS + PM2 | เหมือน production |
+| Runtime | Node.js 22 LTS + PM2 | เหมือน production |
 | Database | PostgreSQL 16 (local) | PostgreSQL 16 + dump ชัยนาทจริง |
 | Web | Nginx → `localhost:3000` | Nginx หรือ IP ภายใน (ไม่ใช่ amsscnt.com จน cutover) |
 | ไฟล์ PDF | `/var/amsscnt/storage` | เหมือน production path |
@@ -25,7 +25,7 @@
 ## ความต้องการก่อนเริ่ม
 
 - Ubuntu 22.04+ พร้อมสิทธิ์ `sudo`
-- Node.js 20 LTS, pnpm, PM2 (`npm i -g pm2`)
+- Node.js 22 LTS, pnpm, PM2 (`npm i -g pm2`)
 - PostgreSQL 16
 - Nginx
 - Git + SSH ไป repo `amsscnt-next.js`
@@ -60,6 +60,7 @@ sudo chown -R $USER:www-data /var/amsscnt
 - [ ] Login บุคลากรเขต + โรงเรียน (username/password, เลขบัตรครั้งแรน, multi-school)
 - [ ] ชื่อหน่วยงานแสดงเป็น สพป.ชัยนาท
 - [ ] รายการโรงเรียน / กลุ่ม / กลุ่มงาน ตรง production
+- [ ] รัน `db:migrate-system-admin` หลัง import — นักวิชาการคอมพิวเตอร์เขตได้ `is_admin` · ปิด `username=admin`
 - [ ] สิทธิ์โมดูล (p1/p2/p3) และ module admin ตรง production
 - [ ] รหัสผ่าน legacy (MD5) import แล้ว — ผู้ใช้ reset เป็น bcrypt ได้
 
@@ -150,6 +151,7 @@ pnpm db:load-legacy
 ```bash
 pnpm db:migrate                                    # Drizzle schema เปล่า
 pnpm db:import-smart-area -- --scope=full        # core + bookregister + mail + book
+pnpm db:migrate-system-admin                   # ผู้ดูแลระบบ → นักวิชาการคอมพิวเตอร์เขต (position 15); ปิด username=admin
 # หรือระหว่างพัฒนา: --scope=core,bookregister
 # ทด inbox สงขลา dev: --scope=full --legacy-master (เปิดอัตโนมัติเมื่อมี mail/book ใน scope)
 ```
@@ -428,6 +430,20 @@ rsync -a --delete /var/amsscnt/storage/ /var/amsscnt/backup/storage/
 ### 7.3 ทดสอบกู้คืน
 
 อย่างน้อย **รายไตรมาส** — restore dump + storage บนเครื่องทดสอบ แล้วเปิดแอปได้
+
+### 7.4 LegacyDump จากเว็บ (ไม่ใช่ FullBackup)
+
+| รายการ | FullBackup (cron) | LegacyDump (เว็บ) |
+|--------|-------------------|-------------------|
+| วัตถุประสงค์ | กู้คืนทั้งระบบหลัง incident | handoff ตาราง legacy ไปเครื่อง dev / `db:load-legacy` |
+| รูปแบบ | `pg_dump -Fc` | `pg_dump --inserts` + sanitize (plain `.sql`) |
+| ขอบเขต | ทั้ง DB รวม app tables | legacy tables เท่านั้น (ยกเว้น Drizzle) |
+| สิทธิ์ | root / cron | super-admin (`is_super_admin`) |
+| เปิดใช้ | production | `AMSS_ENABLE_LEGACY_DUMP_EXPORT=1` หรือ `NODE_ENV=development` |
+
+- หน้า: `/admin/dev/export-legacy`
+- API: `GET /api/admin/legacy-dump`
+- ADR: [`docs/adr/001-legacy-dump-web-export.md`](./adr/001-legacy-dump-web-export.md)
 
 ---
 

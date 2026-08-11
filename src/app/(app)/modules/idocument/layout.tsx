@@ -1,5 +1,8 @@
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 import { IdocumentNav } from "@/components/idocument/idocument-nav";
 import { AppBreadcrumb } from "@/components/app-shell/app-breadcrumb";
+import { getModuleSettingsNavMode } from "@/lib/core/permissions";
 import { requireIdocumentScope } from "@/lib/idocument/scope";
 
 export default async function IdocumentLayout({
@@ -7,7 +10,11 @@ export default async function IdocumentLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth();
+  if (!session?.user) redirect("/login");
+
   const { canWrite, canViewInbox } = await requireIdocumentScope();
+  const settingsNavMode = getModuleSettingsNavMode(session.user, "idocument");
 
   return (
     <div className="px-4 py-6 lg:px-8">
@@ -25,7 +32,11 @@ export default async function IdocumentLayout({
         </p>
       </div>
 
-      <IdocumentNav canWrite={canWrite} canViewInbox={canViewInbox} />
+      <IdocumentNav
+        canWrite={canWrite}
+        canViewInbox={canViewInbox}
+        settingsNavMode={settingsNavMode}
+      />
 
       {children}
     </div>

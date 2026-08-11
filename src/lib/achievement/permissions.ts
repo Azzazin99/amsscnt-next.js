@@ -58,6 +58,8 @@ export function canManageAchievementSettings(
   return isAchievementModuleAdmin(user);
 }
 
+export const canManageAchievementStaffPermissions = isAchievementModuleAdmin;
+
 export function canWriteAchievementScore(
   user: AmssSessionUser,
   perms: AchievementPermissionFlags,

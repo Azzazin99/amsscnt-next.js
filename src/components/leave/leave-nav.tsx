@@ -1,9 +1,11 @@
 "use client";
 
+import { buildModuleSettingsNavSection } from "@/components/app-shell/module-settings-nav-section";
 import {
   ModuleNav,
   type ModuleNavSectionDef,
 } from "@/components/app-shell/module-nav";
+import type { ModuleSettingsNavMode } from "@/lib/core/permissions";
 import { listVisibleLeaveReportOptions } from "@/lib/leave/report-nav";
 
 type LeaveApprovalNavItem = {
@@ -12,17 +14,19 @@ type LeaveApprovalNavItem = {
 };
 
 type LeaveNavProps = {
-  showAdmin: boolean;
+  settingsNavMode: ModuleSettingsNavMode;
   scopeKind: "district" | "school";
   isPrincipalViewer: boolean;
   approvalItems: LeaveApprovalNavItem[];
+  cancellationApprovalItems: LeaveApprovalNavItem[];
 };
 
 export function LeaveNav({
-  showAdmin,
+  settingsNavMode,
   scopeKind,
   isPrincipalViewer,
   approvalItems,
+  cancellationApprovalItems,
 }: LeaveNavProps) {
   const navOpts = { scopeKind, isPrincipalViewer };
 
@@ -38,37 +42,47 @@ export function LeaveNav({
     label: item.label,
   }));
 
-  const sections: ModuleNavSectionDef[] = [
+  const cancellationChildren = [
+    { href: "/modules/leave/cancellations", label: "ขอยกเลิกวันลา" },
+    ...cancellationApprovalItems.map((item) => ({
+      href: item.href,
+      label: item.label,
+    })),
+  ];
+
+  const settingsSection = buildModuleSettingsNavSection(settingsNavMode, [
     {
-      title: "ตั้งค่าระบบ",
-      visible: showAdmin,
-      links: [
+      label: "เมนูตั้งค่า",
+      children: [
+        { href: "/modules/leave/years", label: "กำหนดปีงบประมาณ" },
+        { href: "/modules/leave/permissions", label: "กำหนดเจ้าหน้าที่" },
         {
-          label: "เมนูตั้งค่า",
-          children: [
-            { href: "/modules/leave/years", label: "กำหนดปีงบประมาณ" },
-            { href: "/modules/leave/permissions", label: "กำหนดเจ้าหน้าที่" },
-            {
-              href: "/modules/leave/grant-persons",
-              label: "กำหนดผู้อนุมัติ (สพท.)",
-            },
-            {
-              href: "/modules/leave/school-grant-persons",
-              label: "กำหนดผู้อนุมัติ (รร.)",
-            },
-            { href: "/modules/leave/collection", label: "วันลาสะสม" },
-          ],
+          href: "/modules/leave/grant-persons",
+          label: "กำหนดผู้อนุมัติ (สพท.)",
         },
+        {
+          href: "/modules/leave/school-grant-persons",
+          label: "กำหนดผู้อนุมัติ (รร.)",
+        },
+        { href: "/modules/leave/collection", label: "วันลาสะสม" },
       ],
     },
+  ]);
+
+  const sections: ModuleNavSectionDef[] = [
+    ...(settingsSection ? [settingsSection] : []),
     {
       links: [
         {
           label: "ขออนุญาตลา",
           children: [
             {
-              href: "/modules/leave/requests",
+              href: "/modules/leave/requests/new",
               label: "บันทึกขออนุญาตลา",
+            },
+            {
+              href: "/modules/leave/requests",
+              label: "ทะเบียนการลา",
             },
             {
               href: "/modules/leave/job-handover",
@@ -91,21 +105,7 @@ export function LeaveNav({
       links: [
         {
           label: "ขอยกเลิกวันลา",
-          children: [
-            { href: "/modules/leave/cancellations", label: "ขอยกเลิกวันลา" },
-            {
-              href: "/modules/leave/cancellations/approvals/group",
-              label: "ผอ.กลุ่ม",
-            },
-            {
-              href: "/modules/leave/cancellations/approvals/group2",
-              label: "รอง ผอ.สพท.",
-            },
-            {
-              href: "/modules/leave/cancellations/approvals/commander",
-              label: "ผอ.สพท. (โรงเรียน)",
-            },
-          ],
+          children: cancellationChildren,
         },
       ],
     },

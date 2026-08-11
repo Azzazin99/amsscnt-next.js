@@ -1,27 +1,27 @@
 "use client";
 
+import { buildModuleSettingsNavSection } from "@/components/app-shell/module-settings-nav-section";
 import {
   ModuleNav,
   type ModuleNavSectionDef,
 } from "@/components/app-shell/module-nav";
+import type { ModuleSettingsNavMode } from "@/lib/core/permissions";
 
 type CarNavProps = {
   canWrite: boolean;
-  showAdmin: boolean;
+  settingsNavMode: ModuleSettingsNavMode;
 };
 
-export function CarNav({ canWrite, showAdmin }: CarNavProps) {
+export function CarNav({ canWrite, settingsNavMode }: CarNavProps) {
+  const settingsSection = buildModuleSettingsNavSection(settingsNavMode, [
+    { href: "/modules/car/permissions", label: "สิทธิ์การใช้งาน" },
+    { href: "/modules/car/types", label: "ประเภทรถ" },
+    { href: "/modules/car/vehicles", label: "ยานพาหนะ" },
+    { href: "/modules/car/drivers", label: "พนักงานขับรถ" },
+  ]);
+
   const sections: ModuleNavSectionDef[] = [
-    {
-      title: "ตั้งค่าระบบ",
-      visible: showAdmin,
-      links: [
-        { href: "/modules/car/permissions", label: "สิทธิ์การใช้งาน" },
-        { href: "/modules/car/types", label: "ประเภทรถ" },
-        { href: "/modules/car/vehicles", label: "ยานพาหนะ" },
-        { href: "/modules/car/drivers", label: "พนักงานขับรถ" },
-      ],
-    },
+    ...(settingsSection ? [settingsSection] : []),
     {
       title: "ขอใช้รถ",
       links: [

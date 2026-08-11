@@ -1,21 +1,22 @@
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: amss-postgres
+  mariadb:
+    image: mariadb:10.11
+    container_name: amss-mariadb
     restart: unless-stopped
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${MYSQL_PORT:-3306}:3306"
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-amss}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-amss}
-      POSTGRES_DB: ${POSTGRES_DB:-amss}
+      MARIADB_ROOT_PASSWORD: ${MYSQL_PASSWORD:-amss}
+      MARIADB_USER: ${MYSQL_USER:-amss}
+      MARIADB_PASSWORD: ${MYSQL_PASSWORD:-amss}
+      MARIADB_DATABASE: ${MYSQL_DATABASE:-amsscntc_cnt}
     volumes:
-      - amss_pg_data:/var/lib/postgresql/data
+      - amss_mariadb_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-amss} -d ${POSTGRES_DB:-amss}"]
+      test: ["CMD-SHELL", "mariadb-admin ping -h localhost -u ${MYSQL_USER:-amss} -p${MYSQL_PASSWORD:-amss}"]
       interval: 5s
       timeout: 5s
       retries: 10
 
 volumes:
-  amss_pg_data:
+  amss_mariadb_data:

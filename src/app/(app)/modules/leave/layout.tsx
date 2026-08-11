@@ -2,12 +2,12 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AppBreadcrumb } from "@/components/app-shell/app-breadcrumb";
 import { LeaveNav } from "@/components/leave/leave-nav";
-import { resolveLeaveApprovalNavItems } from "@/lib/leave/approval-nav";
 import {
-  canManageLeaveSettings,
-  canViewLeaveList,
-  getLeavePermissions,
-} from "@/lib/leave/permissions";
+  resolveLeaveApprovalNavItems,
+  resolveLeaveCancellationApprovalNavItems,
+} from "@/lib/leave/approval-nav";
+import { getModuleSettingsNavMode } from "@/lib/core/permissions";
+import { canViewLeaveList, getLeavePermissions } from "@/lib/leave/permissions";
 import { resolveSchoolPrincipalReportViewer } from "@/lib/leave/report-access";
 import { resolveLeaveScope, scopeLabel } from "@/lib/leave/scope";
 
@@ -25,7 +25,7 @@ export default async function LaLayout({
   }
 
   const scope = await resolveLeaveScope(session.user, perms);
-  const showAdmin = canManageLeaveSettings(session.user, perms);
+  const settingsNavMode = getModuleSettingsNavMode(session.user, "leave");
   const isPrincipalViewer = scope
     ? await resolveSchoolPrincipalReportViewer(session.user.personId, scope)
     : false;
@@ -34,6 +34,12 @@ export default async function LaLayout({
     perms,
     scope,
   );
+  const cancellationApprovalItems =
+    await resolveLeaveCancellationApprovalNavItems(
+      session.user,
+      perms,
+      scope,
+    );
 
   return (
     <div className="px-4 py-6 lg:px-8">
@@ -47,16 +53,17 @@ export default async function LaLayout({
       <div className="mb-4">
         <h1 className="text-xl font-semibold">ระบบการลา</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          โมดูล leave — สพป.ชัยนาท
+          สพป.ชัยนาท
           {scope ? ` · ${scopeLabel(scope)}` : ""}
         </p>
       </div>
 
       <LeaveNav
-        showAdmin={showAdmin}
+        settingsNavMode={settingsNavMode}
         scopeKind={scope?.kind ?? "district"}
         isPrincipalViewer={isPrincipalViewer}
         approvalItems={approvalItems}
+        cancellationApprovalItems={cancellationApprovalItems}
       />
 
       {children}

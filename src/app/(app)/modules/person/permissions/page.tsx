@@ -6,7 +6,7 @@ import { PersonPermissionDeleteButton } from "@/components/person/person-permiss
 import { formatPersonName } from "@/lib/auth/format-name";
 import { buttonVariants } from "@/components/ui/button";
 import {
-  canManagePersonPermissions,
+  canManagePersonStaffPermissions,
   getPersonPermissions,
 } from "@/lib/person/permissions";
 import { listPersonModulePermissions } from "@/lib/person/permissions/queries";
@@ -17,7 +17,7 @@ export default async function PersonPermissionsPage() {
   if (!session?.user) redirect("/login");
 
   const perms = await getPersonPermissions(Number(session.user.id));
-  if (!canManagePersonPermissions(session.user, perms)) {
+  if (!canManagePersonStaffPermissions(session.user)) {
     redirect("/modules/person/staff");
   }
 

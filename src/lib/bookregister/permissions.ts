@@ -88,6 +88,13 @@ export function canViewSchoolRegisters(user: AmssSessionUser): boolean {
   );
 }
 
+export function canViewSchoolBookregisterSettings(
+  user: AmssSessionUser,
+  _perms?: BookregisterPermissionFlags,
+): boolean {
+  return canViewSchoolRegisters(user);
+}
+
 /** บันทึกทะเบียนโรงเรียน — ผู้บริหาร/ครู (12–14) หรือ p2 */
 export function canWriteSchoolRegisters(
   user: AmssSessionUser,
@@ -228,3 +235,5 @@ export function canDeleteCommandRecord(
   if (isBookregisterModuleAdmin(user)) return true;
   return officerId === Number(user.id);
 }
+
+export const canManageBookregisterStaffPermissions = isBookregisterModuleAdmin;

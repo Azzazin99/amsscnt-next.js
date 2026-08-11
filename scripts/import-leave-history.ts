@@ -72,7 +72,7 @@ async function main() {
   console.log("leave_quota_balances synced:", result.quotaBalancesSynced);
   console.log("Import leave complete.");
 
-  await queryClient.end();
+  // queryClient.end() not needed for mysql pool
 }
 
 main().catch((err) => {

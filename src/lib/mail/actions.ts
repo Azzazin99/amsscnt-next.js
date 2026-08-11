@@ -1,5 +1,7 @@
 "use server";
 
+import { insertAndGetId } from "../db/helpers";
+
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -161,16 +163,14 @@ export async function createMailDocument(formData: FormData) {
 
   const refId = generateMailRefId(user.personId);
 
-  const [inserted] = await db
-    .insert(mailDocuments)
-    .values({
+  const insertedId = await insertAndGetId(mailDocuments, {
       refId,
       senderPersonId: user.personId,
       senderUserId: Number(user.id),
       subject: parsed.data.subject,
       detail: parsed.data.detail ?? null,
-    })
-    .returning({ id: mailDocuments.id });
+    });
+  const inserted = { id: insertedId };
 
   if (!inserted) {
     return { ok: false as const, message: "ไม่สามารถบันทึกได้" };

@@ -1,4 +1,4 @@
-import { and, asc, count, eq, ilike, or } from "drizzle-orm";
+import { and, asc, count, eq, like, or } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { schools, users } from "@/lib/db/schema";
 
@@ -54,9 +54,9 @@ function buildWhere(q: string, status: "all" | "active" | "inactive") {
   if (q.length >= 2) {
     conditions.push(
       or(
-        ilike(users.username, `%${q}%`),
-        ilike(users.name, `%${q}%`),
-        ilike(users.personId, `%${q}%`),
+        like(users.username, `%${q}%`),
+        like(users.name, `%${q}%`),
+        like(users.personId, `%${q}%`),
       ),
     );
   }

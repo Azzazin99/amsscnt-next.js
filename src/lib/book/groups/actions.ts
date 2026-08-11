@@ -1,6 +1,8 @@
 "use server";
 
-import { and, eq, ilike, ne } from "drizzle-orm";
+import { insertAndGetId } from "../../db/helpers";
+
+import { and, eq, like, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { bookGroupMembers, bookGroups } from "@/lib/db/schema";
@@ -42,8 +44,8 @@ async function nameTaken(name: string, excludeId?: number): Promise<boolean> {
     .from(bookGroups)
     .where(
       excludeId != null
-        ? and(ilike(bookGroups.name, trimmed), ne(bookGroups.id, excludeId))
-        : ilike(bookGroups.name, trimmed),
+        ? and(like(bookGroups.name, trimmed), ne(bookGroups.id, excludeId))
+        : like(bookGroups.name, trimmed),
     )
     .limit(1);
   return row != null;
@@ -90,13 +92,11 @@ export async function createBookGroup(formData: FormData) {
     return { ok: false as const, message: "ชื่อกลุ่มนี้มีในระบบแล้ว" };
   }
 
-  const [inserted] = await db
-    .insert(bookGroups)
-    .values({
+  const insertedId = await insertAndGetId(bookGroups, {
       name: parsed.data.name,
       sortOrder: parsed.data.sortOrder,
-    })
-    .returning({ id: bookGroups.id });
+    });
+  const inserted = { id: insertedId };
 
   if (!inserted) {
     return { ok: false as const, message: "ไม่สามารถบันทึกได้" };

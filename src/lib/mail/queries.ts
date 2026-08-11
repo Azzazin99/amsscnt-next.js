@@ -4,7 +4,7 @@ import {
   count,
   desc,
   eq,
-  ilike,
+  like,
   inArray,
   isNull,
   ne,
@@ -62,8 +62,8 @@ function searchCondition(q: string) {
   if (q.length < 2) return undefined;
   const pattern = `%${q}%`;
   return or(
-    ilike(mailDocuments.subject, pattern),
-    ilike(mailDocuments.detail, pattern),
+    like(mailDocuments.subject, pattern),
+    like(mailDocuments.detail, pattern),
   );
 }
 
@@ -81,10 +81,10 @@ function inboxSearchWhere(q: string) {
 
 function inboxAckHaving(ack: string) {
   if (ack === "pending") {
-    return sql`NOT bool_and(${mailRecipients.answered})`;
+    return sql`MIN(CASE WHEN ${mailRecipients.answered} THEN 1 ELSE 0 END) = 0`;
   }
   if (ack === "done") {
-    return sql`bool_and(${mailRecipients.answered})`;
+    return sql`MIN(CASE WHEN ${mailRecipients.answered} THEN 1 ELSE 0 END) = 1`;
   }
   return undefined;
 }
@@ -143,9 +143,9 @@ export async function listMailInboxPage(input: {
       subject: mailDocuments.subject,
       sendDate: mailDocuments.sendDate,
       senderPersonId: mailDocuments.senderPersonId,
-      answered: sql<boolean>`bool_and(${mailRecipients.answered})`,
+      answered: sql<boolean>`MIN(CASE WHEN ${mailRecipients.answered} THEN 1 ELSE 0 END) = 1`,
       recipientCount: sql<number>`(
-        SELECT COUNT(*)::int FROM mail_recipients mr
+        SELECT COUNT(*) FROM mail_recipients mr
         WHERE mr.ref_id = ${mailDocuments.refId}
       )`,
     })
@@ -216,7 +216,7 @@ export async function listMailSentPage(input: {
       sendDate: mailDocuments.sendDate,
       senderPersonId: mailDocuments.senderPersonId,
       recipientCount: sql<number>`(
-        SELECT COUNT(*)::int FROM mail_recipients mr
+        SELECT COUNT(*) FROM mail_recipients mr
         WHERE mr.ref_id = ${mailDocuments.refId}
       )`,
     })

@@ -1,5 +1,7 @@
 "use server";
 
+import { insertAndGetId } from "../db/helpers";
+
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
@@ -38,8 +40,8 @@ async function syncSchoolAssignments(
   for (const schoolId of schoolIds) {
     await db
       .insert(personSchoolAssignments)
-      .values({ personId, schoolId })
-      .onConflictDoNothing();
+      .ignore()
+      .values({ personId, schoolId });
   }
 }
 
@@ -71,6 +73,8 @@ export async function createPerson(formData: FormData) {
     status: formData.get("status") ?? 0,
     multiSchool: formData.get("multiSchool"),
     serviceStartDate: formData.get("serviceStartDate"),
+    birthDate: formData.get("birthDate"),
+    personOrder: formData.get("personOrder") ?? 0,
   });
 
   if (!parsed.success) {
@@ -96,32 +100,26 @@ export async function createPerson(formData: FormData) {
 
   let insertedId: number;
   try {
-    const [inserted] = await db
-      .insert(people)
-      .values({
-        personId: parsed.data.personId,
-        prefix: parsed.data.prefix,
-        firstName: parsed.data.firstName,
-        lastName: parsed.data.lastName,
-        organizationType: parsed.data.organizationType,
-        schoolId:
-          parsed.data.organizationType === "school" ? parsed.data.schoolId : null,
-        workgroupId:
-          parsed.data.organizationType === "district"
-            ? parsed.data.workgroupId
-            : null,
-        positionCode: parsed.data.positionCode,
-        status: parsed.data.status,
-        multiSchool: parsed.data.multiSchool,
-        serviceStartDate: parsed.data.serviceStartDate,
-        sex,
-      })
-      .returning({ id: people.id });
-
-    if (!inserted) {
-      return { ok: false as const, message: "ไม่สามารถบันทึกได้" };
-    }
-    insertedId = inserted.id;
+    insertedId = await insertAndGetId(people, {
+      personId: parsed.data.personId,
+      prefix: parsed.data.prefix,
+      firstName: parsed.data.firstName,
+      lastName: parsed.data.lastName,
+      organizationType: parsed.data.organizationType,
+      schoolId:
+        parsed.data.organizationType === "school" ? parsed.data.schoolId : null,
+      workgroupId:
+        parsed.data.organizationType === "district"
+          ? parsed.data.workgroupId
+          : null,
+      positionCode: parsed.data.positionCode,
+      status: parsed.data.status,
+      multiSchool: parsed.data.multiSchool,
+      serviceStartDate: parsed.data.serviceStartDate,
+      sex,
+      birthDate: parsed.data.birthDate,
+      personOrder: parsed.data.personOrder,
+    });
 
     await syncSchoolAssignments(
       parsed.data.personId,
@@ -164,6 +162,8 @@ export async function updatePerson(id: number, formData: FormData) {
     status: formData.get("status"),
     multiSchool: formData.get("multiSchool"),
     serviceStartDate: formData.get("serviceStartDate"),
+    birthDate: formData.get("birthDate"),
+    personOrder: formData.get("personOrder") ?? 0,
   });
 
   if (!parsed.success) {
@@ -208,6 +208,8 @@ export async function updatePerson(id: number, formData: FormData) {
         multiSchool: parsed.data.multiSchool,
         serviceStartDate: parsed.data.serviceStartDate,
         sex,
+        birthDate: parsed.data.birthDate,
+        personOrder: parsed.data.personOrder,
       })
       .where(eq(people.id, id));
 
@@ -246,3 +248,42 @@ export async function deactivatePerson(id: number) {
   revalidatePath(STAFF_PATH);
   return { ok: true as const };
 }
+
+export async function approvePerson(id: number) {
+  const { scope } = await requirePersonWriteAccess();
+  const existing = await getPersonById(id);
+  if (!existing) {
+    return { ok: false as const, message: "ไม่พบข้อมูลบุคลากร" };
+  }
+
+  if (scope.kind === "school" && existing.schoolId !== scope.schoolId) {
+    return { ok: false as const, message: "ไม่มีสิทธิ์จัดการรายการนี้" };
+  }
+
+  await db.update(people).set({ status: 0 }).where(eq(people.id, id));
+
+  revalidatePath(STAFF_PATH);
+  return { ok: true as const };
+}
+
+export async function deletePersonPermanent(id: number) {
+  const { user, perms, scope } = await requirePersonWriteAccess();
+  if (!canDeletePerson(user, perms)) {
+    return { ok: false as const, message: "ไม่มีสิทธิ์ลบรายการนี้" };
+  }
+
+  const existing = await getPersonById(id);
+  if (!existing) {
+    return { ok: false as const, message: "ไม่พบข้อมูลบุคลากร" };
+  }
+
+  if (scope.kind === "school" && existing.schoolId !== scope.schoolId) {
+    return { ok: false as const, message: "ไม่มีสิทธิ์ลบรายการนี้" };
+  }
+
+  await db.delete(people).where(eq(people.id, id));
+
+  revalidatePath(STAFF_PATH);
+  return { ok: true as const };
+}
+

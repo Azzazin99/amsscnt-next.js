@@ -44,8 +44,11 @@ export function usePersistedColumnSizing({
 }: UsePersistedColumnSizingOptions): UsePersistedColumnSizingResult {
   const defaultSizingRef = useRef(defaultSizing);
   const lockedSizingRef = useRef(lockedSizing);
-  defaultSizingRef.current = defaultSizing;
-  lockedSizingRef.current = lockedSizing;
+
+  useEffect(() => {
+    defaultSizingRef.current = defaultSizing;
+    lockedSizingRef.current = lockedSizing;
+  }, [defaultSizing, lockedSizing]);
 
   const baselineSizing = useMemo(
     () => mergeSizing(defaultSizing, undefined, lockedSizing),

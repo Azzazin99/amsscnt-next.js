@@ -87,8 +87,7 @@ export async function upsertLeaveCollectRow(data: {
       thisYearDay: data.thisYearDay,
       officerPersonId: data.officerPersonId,
     })
-    .onConflictDoUpdate({
-      target: [leaveCollect.budgetYear, leaveCollect.personId],
+    .onDuplicateKeyUpdate({
       set: {
         collectDay: data.collectDay,
         thisYearDay: data.thisYearDay,

@@ -1,20 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { Paperclip } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { FieldError } from "@/components/shared/field-error";
-import { LeaveStatisticsTable } from "@/components/leave/leave-statistics-table";
-import { ThaiDatePicker } from "@/components/shared/thai-date-picker";
-import { Button } from "@/components/ui/button";
-import { formatThaiDate } from "@/lib/format/thai-date";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { LeaveRequestFormSectionDetails } from "@/components/leave/leave-request-form-section-details";
+import { LeaveRequestFormSectionTypeDate } from "@/components/leave/leave-request-form-section-type-date";
+import { LeaveRequestFormSummaryBar } from "@/components/leave/leave-request-form-summary-bar";
+import {
+  isAllowedLeaveAttachmentName,
+  resolveHalfDayPeriod,
+} from "@/components/leave/leave-request-form-shared";
+import { STANDARD_ATTACHMENT_TYPES_LABEL } from "@/lib/form/attachment-allowed-types";
+import { LeaveRequestQuotaPanel } from "@/components/leave/leave-request-quota-panel";
 import {
   computeLeaveTotal,
-  HALF_DAY_OPTIONS,
   leaveAttachmentHint,
   leaveTypeAllowsBackdate,
   leaveTypeOptionsForSex,
-  leaveTypesRequiringSex,
   requiresLeaveAttachment,
   showsLeaveAttachmentUI,
 } from "@/lib/leave/constants";
@@ -25,10 +26,11 @@ import {
   type LeaveRequesterProfile,
   type StatsLeaveTypeId,
 } from "@/lib/leave/form-context-shared";
-import { LEAVE_TYPES, type HalfDayPeriod, type LeaveTypeId } from "@/lib/leave/regulation/types";
+import type { HalfDayPeriod, LeaveTypeId } from "@/lib/leave/regulation/types";
+import { validateLeaveRequestInput } from "@/lib/leave/regulation/validation";
 import type { QuotaSummary } from "@/lib/leave/quota";
 import { formDataToObject, zodFieldErrors } from "@/lib/form/zod-client";
-import { PHONE_DIGITS_ONLY_MESSAGE } from "@/lib/form/validation-messages";
+import { normalizeThaiMobilePhoneInput } from "@/lib/form/thai-mobile-phone";
 import { leaveRequestCreateSchema } from "@/lib/leave/schemas";
 import type { PersonSex } from "@/lib/person/constants";
 import { cn } from "@/lib/utils";
@@ -62,48 +64,25 @@ type LeaveRequestFormProps = {
   lastLeaveByType: Partial<Record<LeaveTypeId, LastLeaveInfo>>;
   quotaHints?: QuotaSummary[];
   personSex?: PersonSex | null;
+  personId?: string;
   initialValues?: LeaveRequestFormInitialValues;
-  leaveTypeFilter?: LeaveTypeId[];
-  defaultLeaveType?: LeaveTypeId;
   submitLabel?: string;
   formTitle?: string;
   existingAttachmentName?: string | null;
 };
 
-const inputClass =
-  "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
-
-const inlineInputClass =
-  "h-9 min-w-0 flex-1 rounded-lg border border-input bg-background px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
-
-const LEAVE_ATTACHMENT_ACCEPT = ".pdf,.jpg,.jpeg,.png,.gif";
-
-const LEAVE_ATTACHMENT_EXTENSIONS = new Set([
-  ".pdf",
-  ".jpg",
-  ".jpeg",
-  ".png",
-  ".gif",
-]);
-
-function withFieldError(
-  className: string,
-  fieldErrors: Record<string, string>,
-  name: string,
-) {
-  return cn(className, fieldErrors[name] && "border-destructive");
-}
-
-function isAllowedLeaveAttachmentName(fileName: string): boolean {
-  const ext = fileName.includes(".")
-    ? `.${fileName.split(".").pop()!.toLowerCase()}`
-    : "";
-  return LEAVE_ATTACHMENT_EXTENSIONS.has(ext);
-}
-
-function formatDays(value: number): string {
-  return Number.isInteger(value) ? String(value) : value.toFixed(1);
-}
+const SECTION_FIELD_MAP: Record<string, string> = {
+  leaveType: "leave-type-section",
+  leaveStart: "leave-date-section",
+  leaveFinish: "leave-date-section",
+  halfDayPeriod: "leave-date-section",
+  because: "leave-details-section",
+  writeAt: "leave-details-section",
+  contact: "leave-details-section",
+  contactTel: "leave-details-section",
+  attachment: "leave-details-section",
+  jobPersonId: "leave-details-section",
+};
 
 export function LeaveRequestForm({
   action,
@@ -111,7 +90,7 @@ export function LeaveRequestForm({
   todayIso,
   officeName,
   requester,
-  approverOptions,
+  approverOptions: _approverOptions,
   jobPersonOptions,
   statsAgoByType,
   relaxCollect,
@@ -119,22 +98,18 @@ export function LeaveRequestForm({
   lastLeaveByType,
   quotaHints = [],
   personSex = null,
+  personId,
   initialValues,
-  leaveTypeFilter,
-  defaultLeaveType,
   submitLabel = "บันทึกขออนุญาตลา",
   formTitle = "บันทึกขออนุญาตลา",
   existingAttachmentName = null,
 }: LeaveRequestFormProps) {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [sectionError, setSectionError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [leaveType, setLeaveType] = useState(() =>
-    initialValues?.leaveType
-      ? String(initialValues.leaveType)
-      : defaultLeaveType
-        ? String(defaultLeaveType)
-        : "",
+    initialValues?.leaveType ? String(initialValues.leaveType) : "",
   );
   const [halfDay, setHalfDay] = useState(() =>
     Boolean(initialValues?.halfDayPeriod),
@@ -148,18 +123,20 @@ export function LeaveRequestForm({
   const [halfDayPeriod, setHalfDayPeriod] = useState(
     () => initialValues?.halfDayPeriod ?? "",
   );
+  const [writeAt, setWriteAt] = useState(() => initialValues?.writeAt ?? "");
+  const [because, setBecause] = useState(() => initialValues?.because ?? "");
+  const [contact, setContact] = useState(() => initialValues?.contact ?? "");
   const [contactTel, setContactTel] = useState(
     () => initialValues?.contactTel ?? "",
   );
   const [pendingFileName, setPendingFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dateSectionRef = useRef<HTMLElement>(null);
 
-  const leaveTypeOptions = useMemo(() => {
-    const options = leaveTypeOptionsForSex(personSex);
-    if (!leaveTypeFilter?.length) return options;
-    const allowed = new Set(leaveTypeFilter);
-    return options.filter((opt) => allowed.has(opt.value as LeaveTypeId));
-  }, [personSex, leaveTypeFilter]);
+  const leaveTypeOptions = useMemo(
+    () => leaveTypeOptionsForSex(personSex),
+    [personSex],
+  );
 
   const leaveTypeNum = Number(leaveType);
 
@@ -178,18 +155,18 @@ export function LeaveRequestForm({
     [quotaHints],
   );
 
+  const resolvedHalfDay = resolveHalfDayPeriod(halfDay, halfDayPeriod);
+
   const leaveTotal = useMemo(() => {
-    if (!leaveTypeNum || !leaveStart || !leaveFinish) return 0;
-    const period: HalfDayPeriod | null =
-      halfDay && (halfDayPeriod === "morning" || halfDayPeriod === "afternoon")
-        ? halfDayPeriod
-        : null;
+    if (!leaveTypeNum || !leaveStart) return 0;
+    const finish = halfDay ? leaveStart : leaveFinish;
+    if (!finish) return 0;
     try {
-      return computeLeaveTotal(leaveStart, leaveFinish, period);
+      return computeLeaveTotal(leaveStart, finish, resolvedHalfDay);
     } catch {
       return 0;
     }
-  }, [leaveTypeNum, leaveStart, leaveFinish, halfDay, halfDayPeriod]);
+  }, [leaveTypeNum, leaveStart, leaveFinish, halfDay, resolvedHalfDay]);
 
   const lastLeave = useMemo(() => {
     if (!leaveTypeNum) return null;
@@ -205,28 +182,7 @@ export function LeaveRequestForm({
       relaxCollect,
       relaxThisYear,
     );
-  }, [
-    statsAgoByType,
-    leaveTypeNum,
-    leaveTotal,
-    relaxCollect,
-    relaxThisYear,
-  ]);
-
-  const missingServiceStart = Boolean(quotaForType?.missingServiceStart);
-
-  const quotaExhausted =
-    quotaForType &&
-    !quotaForType.unlimited &&
-    !quotaForType.missingServiceStart &&
-    quotaForType.remaining !== null &&
-    quotaForType.remaining <= 0;
-
-  const showQuotaSummaryInline =
-    (leaveTypeNum === 4 || leaveTypeNum === 5) &&
-    quotaForType &&
-    !quotaForType.unlimited &&
-    !quotaForType.missingServiceStart;
+  }, [statsAgoByType, leaveTypeNum, leaveTotal, relaxCollect, relaxThisYear]);
 
   const attachmentVisible = useMemo(() => {
     if (!leaveTypeNum) return false;
@@ -243,8 +199,19 @@ export function LeaveRequestForm({
     return leaveAttachmentHint(leaveTypeNum, leaveTotal);
   }, [leaveTypeNum, leaveTotal]);
 
+  const canSubmit = Boolean(
+    leaveType &&
+      leaveStart &&
+      (halfDay || leaveFinish) &&
+      (!halfDay ||
+        halfDayPeriod === "morning" ||
+        halfDayPeriod === "afternoon") &&
+      because.trim(),
+  );
+
   useEffect(() => {
     if (!attachmentVisible) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clear attachment UI when section hidden
       setPendingFileName(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
@@ -252,9 +219,33 @@ export function LeaveRequestForm({
 
   useEffect(() => {
     if (halfDay && leaveStart && leaveFinish !== leaveStart) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- half-day leave must be single-day
       setLeaveFinish(leaveStart);
     }
   }, [halfDay, leaveStart, leaveFinish]);
+
+  const scrollToSection = useCallback((sectionId: string) => {
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const el = document.getElementById(sectionId);
+    el?.scrollIntoView({
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+      block: "start",
+    });
+  }, []);
+
+  function handleLeaveTypeChange(value: string) {
+    setLeaveType(value);
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.leaveType;
+      return next;
+    });
+    requestAnimationFrame(() => {
+      document.getElementById("leaveStart")?.focus();
+    });
+  }
 
   function handleHalfDayToggle(checked: boolean) {
     setHalfDay(checked);
@@ -270,6 +261,40 @@ export function LeaveRequestForm({
     if (halfDay) setLeaveFinish(iso);
   }
 
+  function validateTypeAndDate(): Record<string, string> {
+    const errors: Record<string, string> = {};
+
+    if (!leaveType) {
+      errors.leaveType = "กรุณาเลือกประเภทการลา";
+    }
+    if (!leaveStart) {
+      errors.leaveStart = "กรุณาระบุวันเริ่มลา";
+    }
+    if (!halfDay && !leaveFinish) {
+      errors.leaveFinish = "กรุณาระบุวันสิ้นสุดลา";
+    }
+    if (
+      halfDay &&
+      halfDayPeriod !== "morning" &&
+      halfDayPeriod !== "afternoon"
+    ) {
+      errors.halfDayPeriod = "กรุณาเลือกช่วงลาครึ่งวัน";
+    }
+
+    return errors;
+  }
+
+  function scrollToFirstError(errors: Record<string, string>) {
+    const firstKey = Object.keys(errors)[0];
+    if (!firstKey) return;
+    const sectionId = SECTION_FIELD_MAP[firstKey] ?? firstKey;
+    scrollToSection(sectionId);
+    const el =
+      document.getElementById(firstKey) ??
+      document.querySelector<HTMLElement>(`[name="${firstKey}"]`);
+    el?.focus();
+  }
+
   function openFilePicker() {
     fileInputRef.current?.click();
   }
@@ -283,7 +308,9 @@ export function LeaveRequestForm({
     if (!isAllowedLeaveAttachmentName(file.name)) {
       if (fileInputRef.current) fileInputRef.current.value = "";
       setPendingFileName(null);
-      setFieldErrors({ attachment: "รองรับเฉพาะ PDF และรูปภาพ" });
+      setFieldErrors({
+        attachment: `รองรับเฉพาะ ${STANDARD_ATTACHMENT_TYPES_LABEL}`,
+      });
       return;
     }
     setFieldErrors((prev) => {
@@ -300,20 +327,17 @@ export function LeaveRequestForm({
   }
 
   function applyContactTelValue(raw: string) {
-    const digitsOnly = raw.replace(/\D/g, "");
-    setContactTel(digitsOnly);
-    if (raw !== digitsOnly) {
-      setFieldErrors((prev) => ({
-        ...prev,
-        contactTel: PHONE_DIGITS_ONLY_MESSAGE,
-      }));
-      return;
-    }
+    const result = normalizeThaiMobilePhoneInput(raw);
+    setContactTel(result.normalized);
+
     setFieldErrors((prev) => {
-      if (!prev.contactTel) return prev;
-      const next = { ...prev };
-      delete next.contactTel;
-      return next;
+      if (result.ok) {
+        if (!prev.contactTel) return prev;
+        const next = { ...prev };
+        delete next.contactTel;
+        return next;
+      }
+      return { ...prev, contactTel: result.message };
     });
   }
 
@@ -333,7 +357,35 @@ export function LeaveRequestForm({
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setFieldErrors({});
+    setSectionError(null);
     setError(null);
+
+    const typeDateErrors = validateTypeAndDate();
+    if (Object.keys(typeDateErrors).length > 0) {
+      setFieldErrors(typeDateErrors);
+      scrollToFirstError(typeDateErrors);
+      return;
+    }
+
+    const remainingQuota =
+      quotaForType && !quotaForType.unlimited && !quotaForType.missingServiceStart
+        ? quotaForType.remaining
+        : null;
+
+    const validationError = validateLeaveRequestInput({
+      leaveType: leaveTypeNum,
+      leaveStart,
+      leaveFinish: halfDay ? leaveStart : leaveFinish,
+      halfDayPeriod: resolvedHalfDay,
+      remainingQuota,
+      personSex,
+    });
+
+    if (validationError) {
+      setSectionError(validationError);
+      scrollToSection("leave-date-section");
+      return;
+    }
 
     const formData = new FormData(e.currentTarget);
 
@@ -341,23 +393,7 @@ export function LeaveRequestForm({
     if (!parsed.success) {
       const nextFieldErrors = zodFieldErrors(parsed.error);
       setFieldErrors(nextFieldErrors);
-      const firstKey = Object.keys(nextFieldErrors)[0];
-      if (firstKey) {
-        const el =
-          e.currentTarget.querySelector<HTMLElement>(`#${CSS.escape(firstKey)}`) ??
-          e.currentTarget.querySelector<HTMLElement>(`[name="${firstKey}"]`);
-        el?.focus();
-        el?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-      return;
-    }
-
-    if (
-      halfDay &&
-      halfDayPeriod !== "morning" &&
-      halfDayPeriod !== "afternoon"
-    ) {
-      setFieldErrors({ halfDayPeriod: "กรุณาเลือกช่วงลาครึ่งวัน" });
+      scrollToFirstError(nextFieldErrors);
       return;
     }
 
@@ -365,6 +401,7 @@ export function LeaveRequestForm({
       const file = fileInputRef.current?.files?.[0];
       if ((!file || file.size === 0) && !existingAttachmentName) {
         setFieldErrors({ attachment: "กรุณาแนบไฟล์หลักฐาน" });
+        scrollToSection("leave-details-section");
         return;
       }
     }
@@ -382,369 +419,126 @@ export function LeaveRequestForm({
     }
   }
 
-  const addressee = `ผู้อำนวยการ${officeName}`;
+  const finishIso = halfDay ? leaveStart : leaveFinish;
 
   return (
-    <form noValidate onSubmit={handleSubmit} className="mx-auto max-w-3xl space-y-5">
+    <form
+      noValidate
+      onSubmit={handleSubmit}
+      className="mx-auto max-w-4xl space-y-5 pb-32 lg:pb-5"
+    >
       <header className="space-y-1 text-center">
-        <h2 className="text-lg font-semibold text-primary">{formTitle}</h2>
+        <h2 className="text-lg font-semibold text-primary text-balance">
+          {formTitle}
+        </h2>
         <p className="text-xs text-muted-foreground">
           ตามระเบียบสำนักนายกรัฐมนตรีว่าด้วยการลาของข้าราชการ พ.ศ. 2555
         </p>
       </header>
 
-      {!personSex ? (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
-          <p>
-            ยังไม่เลือกคำนำหน้าในระบบ — ประเภท{" "}
-            {leaveTypesRequiringSex()
-              .map((id) => LEAVE_TYPES[id].label)
-              .join(", ")}{" "}
-            จะยื่นไม่ได้จนกว่าจะเลือกคำนำหน้า (นาย/นาง/นางสาว) ใน{" "}
-            <Link
-              href="/modules/person/staff"
-              className="font-medium underline underline-offset-2"
-            >
-              ข้อมูลบุคลากร
-            </Link>
-          </p>
-        </div>
-      ) : null}
-
-      <div className="space-y-8 rounded-xl border bg-card p-4 shadow-sm sm:p-6">
-        <fieldset className="space-y-4">
-          <legend className="text-sm font-medium">เนื้อหาคำขอ</legend>
-
-        <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2 gap-y-1 text-sm">
-          <span className="shrink-0 pt-2 font-medium">เขียนที่</span>
-          <div className="min-w-0">
-            <input
-              id="writeAt"
-              name="writeAt"
-              maxLength={100}
-              defaultValue={initialValues?.writeAt ?? ""}
-              aria-invalid={fieldErrors.writeAt ? true : undefined}
-              className={withFieldError(cn(inlineInputClass, "w-full"), fieldErrors, "writeAt")}
-              placeholder="เช่น สำนักงานเขตพื้นที่การศึกษา..."
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(24rem,28rem)]">
+        <div className="min-w-0 space-y-0 rounded-xl border bg-card p-4 sm:p-6">
+          <div id="leave-type-section">
+            <LeaveRequestFormSectionTypeDate
+              sectionRef={dateSectionRef}
+              leaveTypeOptions={leaveTypeOptions}
+              leaveType={leaveType}
+              onLeaveTypeChange={handleLeaveTypeChange}
+              halfDay={halfDay}
+              onHalfDayToggle={handleHalfDayToggle}
+              halfDayPeriod={halfDayPeriod}
+              onHalfDayPeriodChange={setHalfDayPeriod}
+              leaveStart={leaveStart}
+              leaveFinish={leaveFinish}
+              onLeaveStartChange={handleLeaveStartChange}
+              onLeaveFinishChange={setLeaveFinish}
+              leaveTotal={leaveTotal}
+              minIso={minIso}
+              leaveTypeNum={leaveTypeNum}
+              quotaHints={quotaHints}
+              personSex={personSex}
+              fieldErrors={fieldErrors}
+              sectionError={sectionError}
             />
-            <FieldError message={fieldErrors.writeAt} />
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-start gap-x-2 gap-y-2 text-sm">
-          <span className="shrink-0 font-medium">เรื่อง</span>
-          <div className="min-w-[14rem] flex-1">
-            <select
-              id="leaveType"
-              name="leaveType"
-              value={leaveType}
-              onChange={(e) => setLeaveType(e.target.value)}
-              aria-invalid={fieldErrors.leaveType ? true : undefined}
-              className={withFieldError(inputClass, fieldErrors, "leaveType")}
-            >
-              <option value="">— เลือกประเภทการลา —</option>
-              {leaveTypeOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-            <FieldError message={fieldErrors.leaveType} />
-            {missingServiceStart ? (
-              <p className="mt-1 text-sm text-destructive">
-                กรุณาระบุวันเริ่มราชการในข้อมูลบุคลากรก่อนยื่นลาพักผ่อน —{" "}
-                <Link
-                  href="/modules/person/staff"
-                  className="font-medium underline underline-offset-2"
-                >
-                  ข้อมูลบุคลากร
-                </Link>
-              </p>
-            ) : null}
-            {quotaExhausted ? (
-              <p className="mt-1 text-sm text-destructive">
-                สิทธิ{quotaForType!.label}ในปีงบปัจจุบันหมดแล้ว
-              </p>
-            ) : null}
-          </div>
-        </div>
-
-        <p className="text-sm">
-          <span className="font-medium">เรียน</span> {addressee}
-        </p>
-
-        <p className="text-sm leading-relaxed">
-          <span className="font-medium">ข้าพเจ้า</span> {requester.displayName}{" "}
-          ตำแหน่ง{requester.positionLabel}
-        </p>
-
-        <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2 gap-y-1 text-sm">
-          <span className="shrink-0 pt-2 font-medium">เนื่องจาก</span>
-          <div className="min-w-0">
-            <input
-              id="because"
-              name="because"
-              maxLength={250}
-              defaultValue={initialValues?.because ?? ""}
-              aria-invalid={fieldErrors.because ? true : undefined}
-              className={withFieldError(cn(inlineInputClass, "w-full"), fieldErrors, "because")}
-            />
-            <FieldError message={fieldErrors.because} />
-          </div>
-        </div>
-
-        <div className="space-y-3 text-sm">
-          <div className="space-y-2">
-            <label className="flex cursor-pointer items-center gap-2">
-              <input
-                type="checkbox"
-                checked={halfDay}
-                onChange={(e) => handleHalfDayToggle(e.target.checked)}
-              />
-              ลาครึ่งวัน (0.5 วัน)
-            </label>
-            {halfDay ? (
-              <select
-                name="halfDayPeriod"
-                value={halfDayPeriod}
-                onChange={(e) => setHalfDayPeriod(e.target.value)}
-                aria-invalid={fieldErrors.halfDayPeriod ? true : undefined}
-                className={withFieldError(inputClass, fieldErrors, "halfDayPeriod")}
-              >
-                <option value="">— เลือกช่วง —</option>
-                {HALF_DAY_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input type="hidden" name="halfDayPeriod" value="" />
-            )}
-            <FieldError message={fieldErrors.halfDayPeriod} />
           </div>
 
-          <div className="flex flex-wrap items-end gap-2">
-            <span className="font-medium">ขอลาตั้งแต่วันที่</span>
-            <div className="w-44">
-              <ThaiDatePicker
-                key={halfDay ? "leaveStart-half" : "leaveStart-full"}
-                id="leaveStart"
-                name="leaveStart"
-                defaultValue={leaveStart || undefined}
-                minIso={minIso}
-                error={fieldErrors.leaveStart}
-                onChange={handleLeaveStartChange}
-              />
-            </div>
-            {halfDay ? (
-              <input type="hidden" name="leaveFinish" value={leaveStart} />
-            ) : (
-              <>
-                <span>ถึงวันที่</span>
-                <div className="w-44">
-                  <ThaiDatePicker
-                    key={`leaveFinish-${leaveFinish}`}
-                    id="leaveFinish"
-                    name="leaveFinish"
-                    defaultValue={leaveFinish || undefined}
-                    minIso={minIso}
-                    error={fieldErrors.leaveFinish}
-                    onChange={setLeaveFinish}
-                  />
-                </div>
-              </>
-            )}
-            <span>มีกำหนด</span>
-            <span className="inline-flex h-9 min-w-[3rem] items-center justify-center rounded-lg border bg-muted/40 px-2 tabular-nums">
-              {leaveTotal > 0 ? formatDays(leaveTotal) : "—"}
-            </span>
-            <span>วัน</span>
-          </div>
-
-          {!halfDay && minIso ? (
-            <p className="text-xs text-muted-foreground">
-              ลาประเภทนี้เลือกได้ตั้งแต่วันนี้เป็นต้นไป
-            </p>
-          ) : null}
-        </div>
-
-        {leaveTypeNum ? (
-          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">ลาครั้งสุดท้าย</span>
-            {lastLeave ? (
-              <>
-                <span>ตั้งแต่วันที่ {formatThaiDate(lastLeave.leaveStart)}</span>
-                <span>ถึงวันที่ {formatThaiDate(lastLeave.leaveFinish)}</span>
-                <span>มีกำหนด {formatDays(lastLeave.leaveTotal)} วัน</span>
-              </>
-            ) : (
-              <span>— ไม่มีประวัติลาประเภทนี้ที่อนุมัติแล้ว</span>
-            )}
-          </div>
-        ) : null}
-        </fieldset>
-
-        <fieldset className="space-y-4 border-t pt-6">
-          <legend className="text-sm font-medium">การติดต่อและเอกสาร</legend>
-
-        <div className="flex flex-wrap items-start gap-2 text-sm">
-          <span className="shrink-0 font-medium">ระหว่างลาติดต่อได้ที่</span>
-          <input
-            id="contact"
-            name="contact"
-            maxLength={150}
-            defaultValue={initialValues?.contact ?? ""}
-            aria-invalid={fieldErrors.contact ? true : undefined}
-            className={cn(withFieldError(inlineInputClass, fieldErrors, "contact"), "min-w-[10rem] flex-[2]")}
+          <LeaveRequestQuotaPanel
+            className="lg:hidden"
+            leaveTypeNum={leaveTypeNum}
+            quotaForType={quotaForType}
+            vacationQuota={vacationQuota}
+            lastLeave={lastLeave}
+            statistics={statistics}
+            personSex={personSex}
+            personId={personId}
+            variant="inline"
           />
-          <span className="shrink-0">เบอร์โทรศัพท์</span>
-          <input
-            id="contactTel"
-            name="contactTel"
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            maxLength={20}
-            value={contactTel}
-            aria-invalid={fieldErrors.contactTel ? true : undefined}
-            aria-describedby={fieldErrors.contactTel ? "contactTel-error" : undefined}
-            className={cn(withFieldError(inlineInputClass, fieldErrors, "contactTel"), "w-36 shrink-0")}
-            onChange={handleContactTelChange}
-            onPaste={handleContactTelPaste}
-          />
-        </div>
-        <FieldError message={fieldErrors.contact} />
-        <FieldError id="contactTel-error" message={fieldErrors.contactTel} />
 
-        {attachmentVisible ? (
-          <div className="space-y-2">
-            <p className="text-sm font-medium">
-              เอกสาร (ถ้ามี) {attachmentRequired ? "(บังคับ)" : ""}
-            </p>
-            {attachmentHint ? (
-              <p className="text-sm text-muted-foreground">{attachmentHint}</p>
-            ) : null}
-            <div
-              className={cn(
-                "space-y-3 rounded-xl border bg-muted/30 p-4",
-                fieldErrors.attachment && "border-destructive",
-              )}
-            >
-              <input
-                ref={fileInputRef}
-                id="attachment"
-                name="attachment"
-                type="file"
-                accept={LEAVE_ATTACHMENT_ACCEPT}
-                className="sr-only"
-                tabIndex={-1}
-                aria-hidden
-                onChange={handleFileChange}
-              />
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="min-h-10"
-                  onClick={openFilePicker}
-                >
-                  <Paperclip data-icon="inline-start" />
-                  {pendingFileName ? "เปลี่ยนไฟล์แนบ" : "เลือกไฟล์แนบ"}
-                </Button>
-                {pendingFileName ? (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="min-h-10"
-                    onClick={clearFile}
-                  >
-                    ล้างไฟล์
-                  </Button>
-                ) : null}
-              </div>
-              {pendingFileName ? (
-                <p className="text-sm text-foreground">
-                  เลือกแล้ว:{" "}
-                  <span className="font-medium">{pendingFileName}</span>
-                </p>
-              ) : existingAttachmentName ? (
-                <p className="text-sm text-foreground">
-                  ไฟล์เดิม:{" "}
-                  <span className="font-medium">{existingAttachmentName}</span>
-                </p>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  {attachmentRequired
-                    ? "ยังไม่ได้เลือกไฟล์ (บังคับแนบ)"
-                    : "ยังไม่ได้เลือกไฟล์"}
-                </p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                รองรับ PDF และรูปภาพ
-              </p>
-              <FieldError message={fieldErrors.attachment} />
-            </div>
-          </div>
-        ) : null}
-        </fieldset>
-
-        <fieldset className="space-y-4 border-t pt-6">
-          <legend className="text-sm font-medium">สถิติและมอบงาน</legend>
-
-          {statistics ? (
-            <LeaveStatisticsTable
-              rows={statistics.rows}
-              selectedLeaveType={leaveTypeNum}
-              relaxCollect={statistics.relaxCollect}
-              relaxThisYear={statistics.relaxThisYear}
-              missingVacationServiceStart={vacationQuota?.missingServiceStart ?? false}
+          <div id="leave-details-section">
+            <LeaveRequestFormSectionDetails
+              officeName={officeName}
+              requester={requester}
+              leaveType={leaveType}
+              leaveStart={leaveStart}
+              leaveFinish={finishIso}
+              leaveTotal={leaveTotal}
+              halfDayPeriod={resolvedHalfDay}
+              lastLeave={lastLeave}
+              writeAt={writeAt}
+              onWriteAtChange={setWriteAt}
+              because={because}
+              onBecauseChange={setBecause}
+              contact={contact}
+              onContactChange={setContact}
+              contactTel={contactTel}
+              onContactTelChange={handleContactTelChange}
+              onContactTelPaste={handleContactTelPaste}
+              jobPersonOptions={jobPersonOptions}
+              initialJobPersonId={initialValues?.jobPersonId ?? null}
+              attachmentVisible={attachmentVisible}
+              attachmentRequired={attachmentRequired}
+              attachmentHint={attachmentHint}
+              pendingFileName={pendingFileName}
+              existingAttachmentName={existingAttachmentName}
+              fileInputRef={fileInputRef}
+              onOpenFilePicker={openFilePicker}
+              onFileChange={handleFileChange}
+              onClearFile={clearFile}
+              fieldErrors={fieldErrors}
             />
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              เลือกประเภทการลาเพื่อดูสถิติการลา
-            </p>
-          )}
+          </div>
+        </div>
 
-          {showQuotaSummaryInline ? (
-            <p className="text-sm text-muted-foreground">
-              สิทธิ{quotaForType!.label} (ปีงบปัจจุบัน): ใช้ไป {quotaForType!.used} วัน
-              {quotaForType!.entitled !== null
-                ? ` · สิทธิ ${quotaForType!.entitled} วัน`
-                : ""}
-              {quotaForType!.carried > 0 ? ` · สะสม ${quotaForType!.carried} วัน` : ""}
-              {quotaForType!.remaining !== null
-                ? ` · คงเหลือ ${quotaForType!.remaining} วัน`
-                : ""}
-            </p>
-          ) : null}
-
-          <div className="space-y-4 border-t pt-4">
-            <div className="space-y-2">
-              <label htmlFor="jobPersonId" className="text-sm font-medium">
-                ผู้รับมอบงาน (ไม่บังคับ)
-              </label>
-              <p className="text-xs text-muted-foreground">
-                ระบุผู้ที่รับงานแทนระหว่างลา — ผู้รับจะเห็นในเมนู รับมอบงาน
-              </p>
-              <select
-                id="jobPersonId"
-                name="jobPersonId"
-                defaultValue={initialValues?.jobPersonId ?? ""}
-                aria-invalid={fieldErrors.jobPersonId ? true : undefined}
-                className={withFieldError(inputClass, fieldErrors, "jobPersonId")}
-              >
-                <option value="">— ไม่มอบงาน —</option>
-                {jobPersonOptions.map((opt) => (
-                  <option key={opt.personId} value={opt.personId}>
-                    {opt.displayName}
-                  </option>
-                ))}
-              </select>
-              <FieldError message={fieldErrors.jobPersonId} />
+        <aside className="hidden lg:block">
+          <div className="space-y-4 rounded-xl border bg-card p-4 lg:sticky lg:top-4">
+            <LeaveRequestQuotaPanel
+              leaveTypeNum={leaveTypeNum}
+              quotaForType={quotaForType}
+              vacationQuota={vacationQuota}
+              lastLeave={lastLeave}
+              statistics={statistics}
+              personSex={personSex}
+              personId={personId}
+              variant="aside"
+            />
+            <div className="border-t border-border pt-4">
+              <LeaveRequestFormSummaryBar
+              leaveType={leaveType}
+              leaveStart={leaveStart}
+              leaveFinish={finishIso}
+              halfDay={halfDay}
+              halfDayPeriod={halfDayPeriod}
+              leaveTotal={leaveTotal}
+              quotaForType={quotaForType}
+              submitLabel={submitLabel}
+              loading={loading}
+              cancelHref={cancelHref}
+              canSubmit={canSubmit}
+              variant="desktop-aside"
+            />
             </div>
           </div>
-        </fieldset>
+        </aside>
       </div>
 
       {error ? (
@@ -753,10 +547,14 @@ export function LeaveRequestForm({
         </p>
       ) : null}
 
-      <div className="flex flex-wrap gap-3 pt-2">
-        <Button type="submit" disabled={loading} className="min-h-11">
+      <div className="hidden flex-wrap gap-3 lg:flex">
+        <button
+          type="submit"
+          disabled={loading || !canSubmit}
+          className="inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+        >
           {loading ? "กำลังบันทึก…" : submitLabel}
-        </Button>
+        </button>
         <Link
           href={cancelHref}
           className={cn(
@@ -766,6 +564,21 @@ export function LeaveRequestForm({
           ยกเลิก
         </Link>
       </div>
+
+      <LeaveRequestFormSummaryBar
+        leaveType={leaveType}
+        leaveStart={leaveStart}
+        leaveFinish={finishIso}
+        halfDay={halfDay}
+        halfDayPeriod={halfDayPeriod}
+        leaveTotal={leaveTotal}
+        quotaForType={quotaForType}
+        submitLabel={submitLabel}
+        loading={loading}
+        cancelHref={cancelHref}
+        canSubmit={canSubmit}
+        variant="mobile-sticky"
+      />
     </form>
   );
 }

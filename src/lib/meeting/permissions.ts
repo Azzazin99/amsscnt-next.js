@@ -60,6 +60,8 @@ export function canManageMeetingSettings(
   return isMeetingModuleAdmin(user);
 }
 
+export const canManageMeetingStaffPermissions = isMeetingModuleAdmin;
+
 export function canApproveMeeting(
   user: AmssSessionUser,
   perms: MeetingPermissionFlags,
