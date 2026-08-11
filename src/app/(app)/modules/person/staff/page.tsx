@@ -52,6 +52,7 @@ export default async function PersonStaffPage({ searchParams }: Props) {
       parsed.org,
       parsed.schoolId,
       parsed.workgroupId,
+      parsed.filter,
     ),
     scope.kind === "district" ? listSchoolsForPersonFilter() : Promise.resolve([]),
     scope.kind === "district" ? listWorkgroupsForPersonFilter() : Promise.resolve([]),
